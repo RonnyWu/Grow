@@ -1,0 +1,24 @@
+{
+  "name": "com.ronny.grow",
+  "displayName": "Grow",
+  "version": "0.0.1",
+  "unity": "2021.3",
+  "description": "A modular, lightweight Unity game framework.",
+  "keywords": [
+    "framework",
+    "unity",
+    "game"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Ronny Wu",
+    "url": "https://github.com/RonnyWu"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RonnyWu/Grow.git"
+  },
+  "documentationUrl": "https://github.com/RonnyWu/Grow#readme",
+  "changelogUrl": "https://github.com/RonnyWu/Grow/blob/main/Packages/com.ronny.grow/CHANGELOG.md",
+  "dependencies": {}
+}
