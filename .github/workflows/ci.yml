@@ -1,0 +1,13 @@
+name: CI
+
+# Placeholder. Real CI (metadata validation, batch-mode compilation and
+# EditMode tests) will be configured once the testing strategy is designed.
+on:
+  workflow_dispatch:
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Not configured yet
+        run: echo "CI workflow is not configured yet."

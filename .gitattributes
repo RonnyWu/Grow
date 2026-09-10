@@ -1,0 +1,111 @@
+# ================================================ #
+#           Unity .gitattributes                    #
+# ================================================ #
+
+# ---------- Line endings ---------- #
+# Force LF for all text files to avoid cross-platform issues
+* text=auto eol=lf
+
+# Keep the raw carriage-return bytes in .gitignore (macOS "Icon\r" patterns):
+# do not let external tools or Git normalize this file.
+/.gitignore -text
+
+# ---------- Unity YAML assets: smart merge (UnityYAMLMerge) ---------- #
+# Unity serializes these as YAML. Git's default text merge cannot resolve
+# Unity's internal GUID/fileID graph and can corrupt assets, while marking
+# them `binary` only suppresses merging. Route them through UnityYAMLMerge.
+#
+# The driver is local-only; register it once per machine (adjust the path):
+#   git config merge.unityyamlmerge.name   "Unity SmartMerge"
+#   git config merge.unityyamlmerge.driver '"<Unity>/Editor/Data/Tools/UnityYAMLMerge" merge -p %O %A %B %L %P'
+#
+# Without the driver, Git silently falls back to a plain text merge.
+# See: https://docs.unity3d.com/Manual/SmartMerge.html
+*.asset              merge=unityyamlmerge
+*.unity              merge=unityyamlmerge
+*.prefab             merge=unityyamlmerge
+*.mat                merge=unityyamlmerge
+*.cubemap            merge=unityyamlmerge
+*.flare              merge=unityyamlmerge
+*.anim               merge=unityyamlmerge
+*.controller         merge=unityyamlmerge
+*.physicMaterial     merge=unityyamlmerge
+*.physicMaterial2D   merge=unityyamlmerge
+*.fontsettings       merge=unityyamlmerge
+*.renderTexture      merge=unityyamlmerge
+*.spriteatlas        merge=unityyamlmerge
+*.terrainlayer       merge=unityyamlmerge
+*.mixer              merge=unityyamlmerge
+*.playable           merge=unityyamlmerge
+*.signal             merge=unityyamlmerge
+*.guiskin            merge=unityyamlmerge
+*.mask               merge=unityyamlmerge
+*.brush              merge=unityyamlmerge
+*.lighting           merge=unityyamlmerge
+*.giparams           merge=unityyamlmerge
+*.overridecontroller merge=unityyamlmerge
+*.preset             merge=unityyamlmerge
+*.meta               merge=unityyamlmerge
+
+# ---------- Vector graphics (text) ---------- #
+*.svg text
+
+# ---------- Images and audio (binary) ---------- #
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.tga binary
+*.tif binary
+*.tiff binary
+*.psd binary
+*.exr binary
+*.hdr binary
+*.wav binary
+*.mp3 binary
+*.ogg binary
+*.flac binary
+*.aif binary
+*.aiff binary
+
+# ---------- 3D models (binary) ---------- #
+*.fbx binary
+*.blend binary
+*.obj binary
+*.3ds binary
+*.dae binary
+*.max binary
+*.ma binary
+*.mb binary
+*.gltf binary
+*.glb binary
+
+# ---------- Fonts (binary) ---------- #
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# ---------- Shaders ---------- #
+*.shader text
+*.cginc text
+*.hlsl text
+*.glslinc text
+*.compute text
+
+# ---------- Code files (text, LF) ---------- #
+*.cs text diff=csharp
+*.js text
+*.ts text
+*.json text
+*.inputactions text
+*.xml text
+*.yaml text
+*.yml text
+*.toml text
+*.md text
+*.txt text
+*.csv text
+*.html text
+*.css text
