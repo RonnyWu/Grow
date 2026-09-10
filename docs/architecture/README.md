@@ -13,6 +13,7 @@ only its status changes to `superseded by ADR-NNNN`.
 | ADR | Title | Status |
 |---|---|---|
 | [ADR-0001](ADR-0001-project-and-packages.md) | Project and Package Structure | Accepted |
+| [ADR-0002](ADR-0002-git-workflow.md) | Git Workflow | Accepted |
 
 ## Status values
 
