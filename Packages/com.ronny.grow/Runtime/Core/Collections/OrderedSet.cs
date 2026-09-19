@@ -12,6 +12,7 @@ namespace Grow.Core.Collections {
         private readonly List<bool> _alive;
         private readonly Dictionary<T, int> _index;
         private int _version;
+        private int _tombstoneCount;
 
         public OrderedSet() : this(null, DefaultCapacity) { }
 
@@ -42,6 +43,16 @@ namespace Grow.Core.Collections {
         }
 
         public bool Contains(T item) => _index.ContainsKey(item);
+
+        public bool Remove(T item) {
+            if (!_index.TryGetValue(item, out var slot)) return false;
+            _alive[slot] = false;
+            _items[slot] = default;
+            _index.Remove(item);
+            _tombstoneCount++;
+            _version++;
+            return true;
+        }
 
         public Enumerator GetEnumerator() => new Enumerator(this);
 

@@ -50,6 +50,58 @@ namespace Grow.Tests {
             Assert.AreEqual(1, set.Count);
         }
 
+        [Test]
+        public void Remove_ExistingItem_ReturnsTrueAndDecrementsCount() {
+            var set = new OrderedSet<int>();
+            set.Add(1);
+            set.Add(2);
+            Assert.IsTrue(set.Remove(1));
+            Assert.AreEqual(1, set.Count);
+            Assert.IsFalse(set.Contains(1));
+            Assert.IsTrue(set.Contains(2));
+        }
+
+        [Test]
+        public void Remove_MissingItem_ReturnsFalseAndKeepsCount() {
+            var set = new OrderedSet<int>();
+            set.Add(1);
+            Assert.IsFalse(set.Remove(9));
+            Assert.AreEqual(1, set.Count);
+        }
+
+        [Test]
+        public void Remove_PreservesOrderOfSurvivors() {
+            var set = new OrderedSet<int>();
+            set.Add(1);
+            set.Add(2);
+            set.Add(3);
+            set.Add(4);
+            set.Remove(2);
+            set.Remove(4);
+            CollectionAssert.AreEqual(new[] { 1, 3 }, ToArray(set));
+        }
+
+        [Test]
+        public void RemoveThenAdd_AppendsToTail() {
+            var set = new OrderedSet<int>();
+            set.Add(1);
+            set.Add(2);
+            set.Add(3);
+            set.Remove(1);
+            set.Add(1);
+            CollectionAssert.AreEqual(new[] { 2, 3, 1 }, ToArray(set));
+        }
+
+        [Test]
+        public void Enumerate_DuringMutation_Throws() {
+            var set = new OrderedSet<int>();
+            set.Add(1);
+            set.Add(2);
+            Assert.Throws<System.InvalidOperationException>(() => {
+                foreach (var _ in set) set.Add(99);
+            });
+        }
+
         private static T[] ToArray<T>(OrderedSet<T> set) {
             var list = new List<T>(set.Count);
             foreach (var item in set) list.Add(item);
