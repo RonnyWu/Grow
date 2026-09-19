@@ -48,10 +48,17 @@ The framework is an **embedded UPM package at `Packages/com.ronny.grow`**, not u
 
 ## Build / test
 
-- No test assembly exists (`Tests/` only has `.gitkeep`) and no CLI test command is configured.
-  CI (`.github/workflows/ci.yml`) is a `workflow_dispatch` placeholder.
-- Verify by compiling in Unity 2021.3.45f2 and running EditMode tests in the Test Runner once a
-  test asmdef is added. No lint/format tooling is configured.
+- The EditMode test assembly is `Grow.Tests.Editor` at
+  `Packages/com.ronny.grow/Tests/Editor/`, enabled via `"testables": ["com.ronny.grow"]` in
+  `Packages/manifest.json`; the `Grow.Tests` suite runs in the Unity 2021.3.45f2 Test Runner
+  (EditMode).
+- Headless run (PowerShell), omitting `-quit`:
+  `& "D:\UnityEditor\Unity 2021.3.45f2\Editor\Unity.exe" -batchmode -nographics -projectPath
+  "D:\UnityProjects\GrowFramework" -runTests -testPlatform EditMode -testResults <results.xml>
+  -logFile <unity.log>`
+- Caveat: with `-runTests` you must NOT pass `-quit` — it silently suppresses the results/run.
+  CI (`.github/workflows/ci.yml`) is still a `workflow_dispatch` placeholder; no lint/format
+  tooling is configured.
 
 ## Conventions
 
