@@ -102,6 +102,48 @@ namespace Grow.Tests {
             });
         }
 
+        [Test]
+        public void Clear_RemovesAllItemsAndResetsStorage() {
+            var set = new OrderedSet<int>();
+            set.Add(1);
+            set.Add(2);
+            set.Add(3);
+            set.Remove(1);
+            set.Clear();
+            Assert.AreEqual(0, set.Count);
+            Assert.AreEqual(0, set.RegistrationCount);
+            Assert.AreEqual(0, set.TombstoneCount);
+        }
+
+        [Test]
+        public void Clear_AllowsReuseInInsertionOrder() {
+            var set = new OrderedSet<int>();
+            set.Add(1);
+            set.Add(2);
+            set.Clear();
+            set.Add(3);
+            set.Add(4);
+            CollectionAssert.AreEqual(new[] { 3, 4 }, ToArray(set));
+        }
+
+        [Test]
+        public void Version_IsMonotonicAndIgnoresDuplicates() {
+            var set = new OrderedSet<int>();
+            var v0 = set.Version;
+            set.Add(1);
+            var v1 = set.Version;
+            set.Add(1);
+            var v2 = set.Version;
+            set.Remove(1);
+            var v3 = set.Version;
+            set.Clear();
+            var v4 = set.Version;
+            Assert.Greater(v1, v0);
+            Assert.AreEqual(v1, v2);
+            Assert.Greater(v3, v2);
+            Assert.Greater(v4, v3);
+        }
+
         private static T[] ToArray<T>(OrderedSet<T> set) {
             var list = new List<T>(set.Count);
             foreach (var item in set) list.Add(item);

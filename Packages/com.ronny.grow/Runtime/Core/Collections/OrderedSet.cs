@@ -48,6 +48,14 @@ namespace Grow.Core.Collections {
 
         public bool Contains(T item) => _index.ContainsKey(item);
 
+        public void Clear() {
+            _items.Clear();
+            _alive.Clear();
+            _index.Clear();
+            _tombstoneCount = 0;
+            _version++;
+        }
+
         public bool Remove(T item) {
             if (!_index.TryGetValue(item, out var slot)) return false;
             _alive[slot] = false;
