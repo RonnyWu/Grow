@@ -1,0 +1,59 @@
+// Copyright (c) 2026 Ronny Wu
+// Licensed under the MIT License.
+// See LICENSE file in the project root for full license information.
+
+using System.Collections.Generic;
+using Grow.Core.Collections;
+using NUnit.Framework;
+
+namespace Grow.Tests {
+    [TestFixture]
+    public sealed class OrderedSetTests {
+        [Test]
+        public void Add_NewItem_ReturnsTrueAndIncrementsCount() {
+            var set = new OrderedSet<int>();
+            Assert.IsTrue(set.Add(1));
+            Assert.IsTrue(set.Add(2));
+            Assert.AreEqual(2, set.Count);
+        }
+
+        [Test]
+        public void Add_Duplicate_ReturnsFalseAndKeepsCount() {
+            var set = new OrderedSet<int>();
+            set.Add(7);
+            Assert.IsFalse(set.Add(7));
+            Assert.AreEqual(1, set.Count);
+        }
+
+        [Test]
+        public void Contains_ReflectsAdds() {
+            var set = new OrderedSet<int>();
+            set.Add(5);
+            Assert.IsTrue(set.Contains(5));
+            Assert.IsFalse(set.Contains(6));
+        }
+
+        [Test]
+        public void Enumerate_YieldsInsertionOrder() {
+            var set = new OrderedSet<int>();
+            set.Add(3);
+            set.Add(1);
+            set.Add(2);
+            CollectionAssert.AreEqual(new[] { 3, 1, 2 }, ToArray(set));
+        }
+
+        [Test]
+        public void Add_WithCustomComparer_DeduplicatesByComparer() {
+            var set = new OrderedSet<string>(System.StringComparer.OrdinalIgnoreCase, 4);
+            Assert.IsTrue(set.Add("A"));
+            Assert.IsFalse(set.Add("a"));
+            Assert.AreEqual(1, set.Count);
+        }
+
+        private static T[] ToArray<T>(OrderedSet<T> set) {
+            var list = new List<T>(set.Count);
+            foreach (var item in set) list.Add(item);
+            return list.ToArray();
+        }
+    }
+}
