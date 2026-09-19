@@ -37,6 +37,9 @@ namespace Grow.Tests {
             Assert.AreEqual(2, set.RegistrationCount);
             Assert.AreEqual(0, set.TombstoneCount);
             CollectionAssert.AreEqual(new[] { 4, 5 }, ToArray(set));
+            Assert.IsTrue(set.Contains(4));
+            Assert.IsTrue(set.Contains(5));
+            Assert.IsFalse(set.Contains(3));
         }
 
         [Test]

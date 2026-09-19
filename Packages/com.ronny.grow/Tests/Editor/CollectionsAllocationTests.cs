@@ -19,6 +19,9 @@ namespace Grow.Tests {
                 foreach (var item in set) ignored += item;
             }
 
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
             var before = GC.GetTotalMemory(false);
             var sum = 0;
             for (var round = 0; round < 4096; round++) {
@@ -41,6 +44,9 @@ namespace Grow.Tests {
                 set.EndRead();
             }
 
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
             var before = GC.GetTotalMemory(false);
             var sum = 0;
             for (var round = 0; round < 4096; round++) {
