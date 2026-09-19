@@ -39,6 +39,16 @@ namespace Grow.Core.Collections {
 
         public bool Contains(T item) => _set.Contains(item);
 
+        public void Clear() {
+            _set.Clear();
+            if (_depth == 0) {
+                ClearSnapshot();
+                _builtVersion = _set.Version;
+            } else {
+                _builtVersion = -1;
+            }
+        }
+
         public bool BeginRead(out T[] items, out int count) {
             if (_depth == 0 && _builtVersion != _set.Version) {
                 Rebuild();

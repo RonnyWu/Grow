@@ -76,5 +76,67 @@ namespace Grow.Tests {
             Assert.AreSame(first, second);
             set.EndRead();
         }
+
+        [Test]
+        public void NestedRead_ReusesSameSnapshot() {
+            var set = new SnapshotSet<int>();
+            set.Add(1);
+            Assert.IsTrue(set.BeginRead(out var outer, out var outerCount));
+            set.Add(2);
+            Assert.IsTrue(set.BeginRead(out var inner, out var innerCount));
+            Assert.AreSame(outer, inner);
+            Assert.AreEqual(1, innerCount);
+            set.EndRead();
+            Assert.AreEqual(1, outerCount);
+            Assert.AreEqual(1, set.ReadDepth);
+            set.EndRead();
+            Assert.IsTrue(set.BeginRead(out var items, out var count));
+            Assert.AreEqual(2, count);
+            set.EndRead();
+        }
+
+        [Test]
+        public void EndRead_OutermostAfterMutation_ReleasesSnapshot() {
+            var set = new SnapshotSet<int>();
+            set.Add(1);
+            Assert.IsTrue(set.BeginRead(out _, out _));
+            set.Add(2);
+            set.EndRead();
+            Assert.AreEqual(0, set.ReadDepth);
+            Assert.AreEqual(0, set.SnapshotCount);
+        }
+
+        [Test]
+        public void EndRead_WithoutBeginRead_IsNoOp() {
+            var set = new SnapshotSet<int>();
+            set.Add(1);
+            set.EndRead();
+            Assert.AreEqual(0, set.ReadDepth);
+        }
+
+        [Test]
+        public void ClearDuringRead_CurrentRoundRuns_NextRoundEmpty() {
+            var set = new SnapshotSet<int>();
+            set.Add(1);
+            set.Add(2);
+            Assert.IsTrue(set.BeginRead(out var items, out var count));
+            set.Clear();
+            Assert.AreEqual(2, count);
+            Assert.AreEqual(2, items[1]);
+            set.EndRead();
+            Assert.IsFalse(set.BeginRead(out _, out _));
+            Assert.AreEqual(0, set.Count);
+        }
+
+        [Test]
+        public void ClearOutsideRead_ResetsSnapshot() {
+            var set = new SnapshotSet<int>();
+            set.Add(1);
+            Assert.IsTrue(set.BeginRead(out _, out _));
+            set.EndRead();
+            set.Clear();
+            Assert.AreEqual(0, set.SnapshotCount);
+            Assert.IsFalse(set.BeginRead(out _, out _));
+        }
     }
 }
