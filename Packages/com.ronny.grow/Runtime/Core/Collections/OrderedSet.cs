@@ -33,6 +33,10 @@ namespace Grow.Core.Collections {
 
         public int Version => _version;
 
+        internal int RegistrationCount => _items.Count;
+
+        internal int TombstoneCount => _tombstoneCount;
+
         public bool Add(T item) {
             if (_index.ContainsKey(item)) return false;
             _index[item] = _items.Count;
@@ -51,7 +55,32 @@ namespace Grow.Core.Collections {
             _index.Remove(item);
             _tombstoneCount++;
             _version++;
+            CompactIfNeeded();
             return true;
+        }
+
+        private void CompactIfNeeded() {
+            var active = _index.Count;
+            if (_tombstoneCount > 0 && _tombstoneCount >= active) Compact();
+        }
+
+        private void Compact() {
+            var write = 0;
+            var count = _items.Count;
+            for (var read = 0; read < count; read++) {
+                if (!_alive[read]) continue;
+                if (write != read) {
+                    _items[write] = _items[read];
+                    _alive[write] = true;
+                    _index[_items[write]] = write;
+                }
+                write++;
+            }
+            if (write < count) {
+                _items.RemoveRange(write, count - write);
+                _alive.RemoveRange(write, count - write);
+            }
+            _tombstoneCount = 0;
         }
 
         public Enumerator GetEnumerator() => new Enumerator(this);
