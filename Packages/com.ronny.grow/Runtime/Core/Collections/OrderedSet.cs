@@ -91,6 +91,15 @@ namespace Grow.Core.Collections {
             _tombstoneCount = 0;
         }
 
+        internal int CopyActiveTo(T[] buffer) {
+            var write = 0;
+            var count = _items.Count;
+            for (var read = 0; read < count; read++) {
+                if (_alive[read]) buffer[write++] = _items[read];
+            }
+            return write;
+        }
+
         public Enumerator GetEnumerator() => new Enumerator(this);
 
         public struct Enumerator {
