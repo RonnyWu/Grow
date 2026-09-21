@@ -23,6 +23,8 @@
 
 ## 2. 状态与数据结构
 
+> 以下字段为参考形态；实际落地为组合 `Core/Collections` 的 `OrderedSet<T>`/`SnapshotSet<T>`，字段与流程分散在两者中（见 §9 与 `grow-container-catalog.md` §7.2）。
+
 | 字段 | 角色 | 增长/回收 |
 |---|---|---|
 | `_registration : List<TDelegate>` | 顺序权威（含墓碑） | 容量只增；`RemoveRange` 不缩容 |
@@ -70,6 +72,8 @@
 K&R 大括号、极少注释，对齐仓库既有代码（`GrowBoot.cs`）；语义不变量由本文与 `grow-event-design.md` 承载。
 
 ## 6. 引擎代码形态
+
+> 以下为参考形态，**非**最终落地代码；实现为组合 `SnapshotSet<TDelegate>`（见 §9）。
 
 ```csharp
 // Copyright (c) 2026 Ronny Wu

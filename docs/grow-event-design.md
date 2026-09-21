@@ -111,7 +111,8 @@ public sealed class GrowEvent<T0> : IGrowEventRaiser<T0> { /* 同形，Action<T0
 ```csharp
 internal sealed class InvocationList<TDelegate> where TDelegate : Delegate
 {
-    internal InvocationList(int capacity = 8);
+    internal InvocationList();
+    internal InvocationList(int capacity);
     internal int Count { get; }
     internal void Add(TDelegate handler);
     internal void Remove(TDelegate handler);

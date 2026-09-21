@@ -71,6 +71,22 @@ namespace Grow.Tests {
         }
 
         [Test]
+        public void FatalException_PropagatesAndLeavesEventUsable() {
+            var e = new GrowEvent<int>();
+            var ran = false;
+            e.Add(v => throw new StackOverflowException());
+            e.Add(v => ran = true);
+
+            Assert.Throws<StackOverflowException>(() => ((IGrowEventRaiser<int>)e).Invoke(1));
+            Assert.IsFalse(ran);
+
+            ((IGrowEventRaiser<int>)e).Clear();
+            e.Add(v => ran = true);
+            ((IGrowEventRaiser<int>)e).Invoke(1);
+            Assert.IsTrue(ran);
+        }
+
+        [Test]
         public void Clear_EmptiesEventAndLeavesItReusable() {
             var e = new GrowEvent<int>();
             e.Add(v => { });
