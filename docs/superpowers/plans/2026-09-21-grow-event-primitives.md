@@ -764,9 +764,15 @@ namespace Grow.Tests {
         }
 
         [Test]
-        public void Invoke_EmptyEvent_IsNoOp() {
+        public void Invoke_EmptyEvent_IsNoOpAndDoesNotLeakReadDepth() {
             var e = new GrowEvent();
             Assert.DoesNotThrow(() => GrowEventOrderingTests.Raise(e));
+
+            var fired = false;
+            e.Add(() => fired = true);
+            GrowEventOrderingTests.Raise(e);
+
+            Assert.IsTrue(fired);
         }
 
         [Test]
@@ -1201,8 +1207,8 @@ namespace Grow.Tests {
 
         [Test]
         public void Raiser_IsContravariant() {
-            var e = new GrowEvent<string>();
-            IGrowEventRaiser<object> raiser = e;
+            var e = new GrowEvent<object>();
+            IGrowEventRaiser<string> raiser = e;
             var seen = new List<object>();
             e.Add(v => seen.Add(v));
 
