@@ -74,9 +74,15 @@ namespace Grow.Tests {
         }
 
         [Test]
-        public void Invoke_EmptyEvent_IsNoOp() {
+        public void Invoke_EmptyEvent_IsNoOpAndDoesNotLeakReadDepth() {
             var e = new GrowEvent();
             Assert.DoesNotThrow(() => GrowEventOrderingTests.Raise(e));
+
+            var fired = false;
+            e.Add(() => fired = true);
+            GrowEventOrderingTests.Raise(e);
+
+            Assert.IsTrue(fired);
         }
 
         [Test]
