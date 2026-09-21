@@ -1,6 +1,6 @@
 # GrowEvent 技术设计（Core/Event 事件原语 v1）
 
-- 状态：阶段性结论（Draft，待实现验证）
+- 状态：已实现（`Runtime/Core/Event/`；`InvocationList` 按 container-catalog §7 组合 `SnapshotSet<T>`）
 - 日期：2026-09-19
 - 范围：`Packages/com.ronny.grow/Runtime/Core/Event/*`、`Packages/com.ronny.grow/Tests/Editor/*`
 - 关联：`docs/grow-event-invocationlist.md`（派发内核专题）、`docs/grow-architecture-rationale.md` §8、`docs/architecture/ADR-0002-domain-reload-disabled.md`
