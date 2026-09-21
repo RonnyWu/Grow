@@ -1,6 +1,6 @@
 # InvocationList 引擎设计（GrowEvent 派发内核）
 
-- 状态：阶段性结论（Draft，待实现验证）
+- 状态：已实现（`Runtime/Core/Event/`；`InvocationList` 按 container-catalog §7 组合 `SnapshotSet<T>`）
 - 日期：2026-09-19
 - 范围：`Packages/com.ronny.grow/Runtime/Core/Event/InvocationList.cs`
 - 关联：`docs/grow-event-design.md`（事件原语设计）、`docs/grow-architecture-rationale.md` §8
