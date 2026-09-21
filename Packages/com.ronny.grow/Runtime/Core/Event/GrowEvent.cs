@@ -25,7 +25,14 @@ namespace Grow.Core.Event {
         void IGrowEventRaiser.Invoke() {
             if (!_list.BeginDispatch(out var snapshot, out var count)) return;
             try {
-                for (var i = 0; i < count; i++) snapshot[i]();
+                for (var i = 0; i < count; i++) {
+                    var action = snapshot[i];
+                    try {
+                        action();
+                    } catch (Exception ex) when (!EventFaults.IsFatal(ex)) {
+                        try { EventFaults.Report(action, ex); } catch { }
+                    }
+                }
             } finally {
                 _list.EndDispatch();
             }
