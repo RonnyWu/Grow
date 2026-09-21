@@ -23,11 +23,12 @@ namespace Grow.Tests {
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
+            var sinkBefore = sink;
             var before = GC.GetTotalMemory(false);
             for (var round = 0; round < 4096; round++) GrowEventOrderingTests.Raise(e);
             var after = GC.GetTotalMemory(false);
 
-            Assert.Greater(sink, 0);
+            Assert.Greater(sink - sinkBefore, 0);
             Assert.Less(after - before, 4096, "steady-state invoke must allocate ~0 bytes");
         }
 

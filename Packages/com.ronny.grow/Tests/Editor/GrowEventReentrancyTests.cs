@@ -77,5 +77,28 @@ namespace Grow.Tests {
             GrowEventOrderingTests.Raise(e);
             Assert.AreEqual(0, calls);
         }
+
+        [Test]
+        public void ClearDuringNestedInvoke_StillRunsOuterSnapshot() {
+            var e = new GrowEvent();
+            var seen = new List<string>();
+            var nested = false;
+            Action second = () => seen.Add("second");
+            Action first = null;
+            first = () => {
+                seen.Add("first");
+                if (nested) return;
+                nested = true;
+                ((IGrowEventRaiser)e).Clear();
+                GrowEventOrderingTests.Raise(e);
+            };
+            e.Add(first);
+            e.Add(second);
+
+            GrowEventOrderingTests.Raise(e);
+
+            CollectionAssert.AreEqual(new[] { "first", "first", "second", "second" }, seen);
+            Assert.AreEqual(0, e.Count);
+        }
     }
 }
