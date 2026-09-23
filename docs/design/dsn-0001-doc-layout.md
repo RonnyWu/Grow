@@ -7,18 +7,23 @@
 ## 1. 目标
 
 - **权威文档随克隆可得**：架构、设计、决策必须进入版本控制。
-- **过程草稿不污染历史**：计划、spec、探索笔记留在本地。
+- **过程草稿不污染历史**：计划、spec 留在本地。
 - **结构对人与 AI 都直观**：贡献者不必先读规范即可猜到落点。
 - **规则成本低**：单人维护为主，不引入机器强制。
 
-## 2. 总体分布
+## 2. 分布总览
 
 | 区域 | 职责 | 版本控制 |
 |---|---|---|
-| 仓库根 | 门面与契约入口 | 跟踪 |
+| 仓库根 | 门面与契约入口（清单见 §4） | 跟踪 |
+| `Packages/com.ronny.grow/` | 框架包本体；包内 `README.md`、`CHANGELOG.md`、`LICENSE.md`、`Third Party Notices.md` 遵循 UPM 惯例，**不受本文命名规则约束** | 跟踪 |
 | `docs/` | 文档正文，两条轨（见 §3） | 跟踪 |
 | `.github/` | 平台元数据：workflows、PR/issue 模板、dependabot | 跟踪 |
-| `.drafts/` | 过程草稿：计划、spec、探索笔记 | **不跟踪** |
+| `.drafts/` | 过程草稿：计划、spec | **不跟踪** |
+
+`Assets/`（仅 `.gitkeep`）、`ci/` 等非文档目录不在本文范围内。
+
+根 `README.md` 的仓库布局表与 `CONTRIBUTING.md` 的要点是本文的只读摘要；规则冲突时以本文为准。
 
 ## 3. `docs/` 的两条轨
 
@@ -34,20 +39,27 @@
 - **Reference** —— 工作时需要查的确定事实（信息导向）。
 - **Explanation** —— 理解背景与取舍（理解导向）。
 
-**工程记录永不放入四象限**：ADR 与设计文档是决策档案，不是教学或速查材料。
+**两条轨并列、不混放**：工程记录（ADR、设计）是决策档案，不作为教学或速查材料出现在四象限。
 
 ## 4. 文件清单（穷举）
 
-正文命名统一为 `<前缀>-<nnnn>-<topic>.md`：前缀按类型固定，编号四位补零、各类型独立、从 `0001` 起、分配后不复用；`index.md` 与 `README.md` 为固定例外。
+正文命名统一为 `<前缀>-<nnnn>-<topic>.md`：
+
+- 前缀按类型固定：`adr-` / `dsn-` / `exp-` / `ref-` / `how-` / `tut-`。
+- 编号四位补零，各类型内独立；一经分配即固定——不复用、不重排（ADR 采用创建顺序，其余类型由维护者按需分配）。
+- **例外一**：`index.md`（目录落地页）与 `README.md`（仓库/包入口）不加前缀与编号。
+- **例外二**：ADR 的 `0000` 保留给 `adr-0000-template.md`，正文从 `0002` 起（`0001` 从未创建且不回填，见 `docs/architecture/index.md`）。
 
 | 路径 | 名称 | 反例 | 职责 |
 |---|---|---|---|
-| `/` | `README.md` | `README`（漏扩展名） | 开源库门面：是什么、安装、快速开始 |
-| `/` | `LICENSE` | `LICENSE.md`（多加扩展名） | 开源协议（MIT）全文 |
+| `/` | `README.md` | `README`（缺扩展名） | 开源库门面：是什么、安装、快速开始 |
+| `/` | `LICENSE` | `LICENSE.md`（根目录多加扩展名） | 开源协议（MIT）全文 |
 | `/` | `CONTRIBUTING.md` | `CONTRIBUTE.md` | 如何贡献代码与文档 |
 | `/` | `AGENTS.md` | `AGENT.md` | AI 协作者规则 |
-| `/` | `SECURITY.md`（可选） | `SECURITY.txt` | 漏洞报告方式；公开发布后添加 |
-| `/` | `.gitignore` | `.gitignore.txt` | 忽略规则 |
+| `/` | `SECURITY.md`（可选） | `SECURITY` | 漏洞报告方式；公开发布后添加 |
+| `/` | `.gitattributes` | — | 行尾与 diff 属性 |
+| `/` | `.gitignore` | — | 忽略规则 |
+| `/` | `GrowFramework.sln.DotSettings` | `*.DotSettings.user`（个人设置不入库） | 共享 Rider 设置 |
 | `/.github/` | `workflows/<name>.yml` | `ci.yaml`（扩展名混用）、`CI.yml`（大写） | GitHub Actions 工作流 |
 | `/.github/` | `pull_request_template.md` | `PULL_REQUEST_TEMPLATE.md`（大写）、`pr_template.md` | PR 默认模板 |
 | `/.github/` | `ISSUE_TEMPLATE/config.yml` | `config.yaml` | issue 选择器配置 |
@@ -55,13 +67,14 @@
 | `/.github/` | `dependabot.yml` | `dependabot.yaml` | 依赖更新（仅 `github-actions`） |
 | `/.drafts/` | `plans/YYYY-MM-DD-topic.md` | 无日期前缀 | 实施计划（不跟踪） |
 | `/.drafts/` | `specs/YYYY-MM-DD-topic.md` | 无日期前缀 | 设计稿（不跟踪） |
+| `/Packages/com.ronny.grow/` | `README.md`、`CHANGELOG.md`、`LICENSE.md`、`Third Party Notices.md` | 套用 `docs/` 命名 | 包内元数据（UPM 惯例，不受本文约束） |
 | `/docs/` | `README.md` | `index.md`（与子目录混用） | 文档总入口与地图 |
-| `/docs/architecture/` | `index.md`、`adr-0000-template.md`、`adr-nnnn-topic.md` | `README.md`；`template.md`；`ADR-0002-…`（大写）、`0002-…`（缺前缀） | ADR 索引与规则 + 模板（`0000` 专用于模板）+ 正文 |
-| `/docs/design/` | `index.md`、`dsn-nnnn-topic.md` | `README.md`；`design-…`、`documentation-layout.md`（缺编号） | 设计索引 + 工程设计与规范正文 |
-| `/docs/explanation/` | `index.md`、`exp-nnnn-topic.md` | `README.md`、`explanation-…` | 象限落地页 + 理解导向正文 |
-| `/docs/reference/` | `index.md`、`ref-nnnn-topic.md` | `README.md`、`reference-…` | 象限落地页 + 信息导向正文 |
-| `/docs/how-to/` | `index.md`、`how-nnnn-topic.md` | `README.md`、`howto-…`、`how-to-…` | 象限落地页 + 任务导向正文 |
-| `/docs/tutorials/` | `index.md`、`tut-nnnn-topic.md` | `README.md`、`tutorial-…`（缺前缀） | 象限落地页 + 学习导向正文 |
+| `/docs/architecture/` | `index.md`、`adr-0000-template.md`、`adr-nnnn-topic.md` | `README.md`；`ADR-0002-…`（大写）、`0002-…`（缺前缀） | ADR 索引与规则 + 模板（`0000` 专用）+ 正文 |
+| `/docs/design/` | `index.md`、`dsn-nnnn-topic.md` | `README.md`；`documentation-layout.md`（缺编号） | 设计索引 + 工程设计与规范正文 |
+| `/docs/explanation/` | `index.md`、`exp-nnnn-topic.md` | `README.md`；`explanation-…` | 象限落地页 + 理解导向正文 |
+| `/docs/reference/` | `index.md`、`ref-nnnn-topic.md` | `README.md`；`reference-…` | 象限落地页 + 信息导向正文 |
+| `/docs/how-to/` | `index.md`、`how-nnnn-topic.md` | `README.md`；`how-to-…`（前缀多一横） | 象限落地页 + 任务导向正文 |
+| `/docs/tutorials/` | `index.md`、`tut-nnnn-topic.md` | `README.md`；`tutorial-…`（缺前缀） | 象限落地页 + 学习导向正文 |
 
 **两条额外约束**：
 
@@ -71,14 +84,17 @@
 ## 5. 生命周期
 
 ```
-草稿(.drafts/)  ──定稿──▶  工程设计(docs/design/)  ──决策冻结──▶  ADR(docs/architecture/)
-      │                          │
-      └──废弃──▶ 删除             └──转为面向读者──▶  四象限
+草稿(.drafts/) ──定稿──▶ 文档正文(docs/)
+   │                        ├─ 工程记录轨：design/
+   │                        └─ 面向读者轨：tutorials/ how-to/ reference/ explanation/
+   └──废弃──▶ 删除
+
+重大且难回滚的选型 ──冻结──▶ ADR(docs/architecture/)   ← 与文档正文并列，可由 design 引用
 ```
 
 - `docs/design/` 的每篇文档在开头标注状态：`草稿` / `已实现` / `已废弃`。
-- ADR 一经 `Accepted` 不可改写；被取代时新增一条，并在旧条目标注 `Superseded by ADR-NNNN`。
 - 四象限无状态头；内容过时即直接修改。
+- ADR 的状态词与"一经 `Accepted` 不可改写"规则以 `docs/architecture/index.md` 为准，本文不重复。
 - 跟踪判定一句话：**承载已冻结结论、契约或对外承诺的，入库；仅是过程记录的，留在 `.drafts/`。**
 
 ## 6. 与 ADR 的分工
@@ -89,4 +105,4 @@
 | 可变性 | 不可改写，只能被取代 | 随需更新 |
 | 触发时机 | 难以回滚、跨模块、易起争论 | 结构或约定变化时 |
 
-简言之：ADR 回答"为什么当初这样定"，本文回答"现在应该怎么放"。本设计文档不重复记录 ADR 的决策理由，只引用。
+简言之：ADR 回答"为什么当初这样定"，本文回答"现在应该怎么放"。本设计文档不重复记录 ADR 的决策理由与状态规则，只引用。
