@@ -1,9 +1,9 @@
 # Grow 容器必要性验证（Necessity Review）
 
-- 状态：草稿（流程 + 首个实例结论）
-- 日期：2026-09-19
-- 范围：`Core/Collections`、`Core/Pool` 每个容器**实现前**的必要性核验
-- 关联：`docs/design/dsn-0002-container-catalog.md`（§2.1 原语优先、§5 清单、§10 路线图）、
+- Status: Draft（流程 + 首个实例结论）
+- Date: 2026-09-19
+- Scope: `Core/Collections`、`Core/Pool` 每个容器**实现前**的必要性核验
+- Related: `docs/design/dsn-0002-container-catalog.md`（§2.1 原语优先、§5 清单、§10 路线图）、
   `docs/design/dsn-0005-event-invocationlist-analysis.md`（首个消费方）
 - 目的：在动手写代码前证明每个自研容器满足「**真正有需求 + 通用 + 官方在目标基线缺失**」，
   避免自造轮子与造库无消费方。

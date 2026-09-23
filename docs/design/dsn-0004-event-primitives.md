@@ -1,9 +1,9 @@
 # GrowEvent 技术设计（Core/Event 事件原语 v1）
 
-- 状态：已实现（`Runtime/Core/Event/`；`InvocationList` 按 dsn-0002-container-catalog §7 组合 `SnapshotSet<T>`）
-- 日期：2026-09-19
-- 范围：`Packages/com.ronny.grow/Runtime/Core/Event/*`、`Packages/com.ronny.grow/Tests/Editor/*`
-- 关联：`docs/design/dsn-0005-event-invocationlist-analysis.md`（派发内核专题）、`docs/explanation/exp-0001-architecture-rationale.md` §8、`docs/architecture/adr-0002-domain-reload-disabled.md`
+- Status: Implemented（`Runtime/Core/Event/`；`InvocationList` 按 dsn-0002-container-catalog §7 组合 `SnapshotSet<T>`）
+- Date: 2026-09-19
+- Scope: `Packages/com.ronny.grow/Runtime/Core/Event/*`、`Packages/com.ronny.grow/Tests/Editor/*`
+- Related: `docs/design/dsn-0005-event-invocationlist-analysis.md`（派发内核专题）、`docs/explanation/exp-0001-architecture-rationale.md` §8、`docs/architecture/adr-0002-domain-reload-disabled.md`
 - 参考：`com.ronnywu.grow@3.1.0-exp.3/com.grow.core/Runtime/Events/*` 及其 `GrowEvent-ADR.md`
 
 ## 1. 背景与目标

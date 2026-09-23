@@ -1,20 +1,20 @@
-# <教程标题>
+# <Tutorial title>
 
-<一句话：学完这个教程能做什么。>
+<One sentence: what the reader can do after finishing this.>
 
-## 前置条件
+## Prerequisites
 
 - …
 
-## 步骤
+## Steps
 
 1. …
 2. …
 
-## 完成后的结果
+## Result
 
-<读者应该看到什么。>
+<What the reader should see.>
 
-## 下一步
+## Next Steps
 
-- <相关的 how-to 或 explanation 链接>
+- <related how-to or explanation links>

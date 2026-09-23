@@ -1,17 +1,17 @@
-# <主题>
+# <Topic>
 
-<一句话：本文覆盖哪些确定事实。>
+<One sentence: which facts this document covers.>
 
-## <条目组>
+## <Group>
 
-| 项 | 值 / 说明 |
+| Item | Value / Notes |
 |---|---|
 | … | … |
 
-## <条目组>
+## <Group>
 
 - …
 
-## 参考
+## References
 
-- <链接或代码路径>
+- <link or code path>

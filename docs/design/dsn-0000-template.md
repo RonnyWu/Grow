@@ -1,41 +1,41 @@
-# <设计标题>
+# <Design title>
 
-- 状态：草稿
-- 日期：YYYY-MM-DD
-- 关联：<相关文档、ADR、代码路径>
+- Status: Draft
+- Date: YYYY-MM-DD
+- Related: <related docs, ADRs, code paths>
 
-## 1. 背景
+## 1. Context
 
-<为什么要做这个设计？涉及哪些既有事实与约束？>
+<Why does this design exist? What established facts and constraints does it involve?>
 
-## 2. 目标与非目标
+## 2. Goals and Non-Goals
 
-**目标**
-
-- …
-
-**非目标**
+**Goals**
 
 - …
 
-## 3. 设计
+**Non-Goals**
 
-<结构、机制、关键决策。可配示意图或伪代码。>
+- …
 
-## 4. 契约与接口
+## 3. Design
 
-<对外暴露的类型、方法、约束；调用方需要知道的语义。>
+<Structure, mechanism, key decisions. Diagrams or pseudo-code welcome.>
 
-## 5. 测试与验证
+## 4. Contracts and Interfaces
 
-<如何证明它工作：测试锚点、边界条件、分配/性能判据。>
+<Types, methods, and constraints exposed; what callers must know.>
 
-## 6. 风险与开放问题
+## 5. Testing and Verification
 
-| 项 | 处理 |
+<How to prove it works: test anchors, boundary cases, allocation/performance criteria.>
+
+## 6. Risks and Open Questions
+
+| Item | Handling |
 |---|---|
 | … | … |
 
-## 7. 参考
+## 7. References
 
-- <链接或代码路径>
+- <link or code path>

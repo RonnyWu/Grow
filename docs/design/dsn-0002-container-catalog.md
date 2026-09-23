@@ -1,9 +1,9 @@
 # Grow 自定义容器目录（Core/Collections · Core/Pool 需求 Spec）
 
-- 状态：草稿（需求目录，待逐项立项）
-- 日期：2026-09-19
-- 范围：未来 `Packages/com.ronny.grow/Runtime/Core/Collections/*` 与 `Runtime/Core/Pool/*`
-- 关联：`docs/design/dsn-0003-container-necessity-review.md`（实现前的必要性验证流程与登记表）、
+- Status: Draft（需求目录，待逐项立项）
+- Date: 2026-09-19
+- Scope: 未来 `Packages/com.ronny.grow/Runtime/Core/Collections/*` 与 `Runtime/Core/Pool/*`
+- Related: `docs/design/dsn-0003-container-necessity-review.md`（实现前的必要性验证流程与登记表）、
   `docs/design/dsn-0005-event-invocationlist-analysis.md`（机制复用与 LRU 纠正）、`docs/design/dsn-0004-event-primitives.md`、
   `docs/explanation/exp-0001-architecture-rationale.md` §8（目录与归属）、`docs/architecture/adr-0002-domain-reload-disabled.md`
 - 产物边界：本目录只回答「Unity 常用但 C#/Unity 未直接提供、需自研的容器有哪些、各自缺口与契约是什么」。

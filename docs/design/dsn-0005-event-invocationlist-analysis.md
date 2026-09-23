@@ -1,9 +1,9 @@
 # InvocationList 引擎设计（GrowEvent 派发内核）
 
-- 状态：已实现（`Runtime/Core/Event/`；`InvocationList` 按 dsn-0002-container-catalog §7 组合 `SnapshotSet<T>`）
-- 日期：2026-09-19
-- 范围：`Packages/com.ronny.grow/Runtime/Core/Event/InvocationList.cs`
-- 关联：`docs/design/dsn-0004-event-primitives.md`（事件原语设计）、`docs/explanation/exp-0001-architecture-rationale.md` §8
+- Status: Implemented（`Runtime/Core/Event/`；`InvocationList` 按 dsn-0002-container-catalog §7 组合 `SnapshotSet<T>`）
+- Date: 2026-09-19
+- Scope: `Packages/com.ronny.grow/Runtime/Core/Event/InvocationList.cs`
+- Related: `docs/design/dsn-0004-event-primitives.md`（事件原语设计）、`docs/explanation/exp-0001-architecture-rationale.md` §8
 
 ## 1. 定位与不变量
 

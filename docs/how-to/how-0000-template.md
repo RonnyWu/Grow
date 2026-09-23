@@ -1,20 +1,20 @@
-# <动词开头的标题>
+# <Verb-first title>
 
-<一句话：本文解决什么具体问题。>
+<One sentence: which specific problem this solves.>
 
-## 前置条件
+## Prerequisites
 
 - …
 
-## 步骤
+## Steps
 
 1. …
 2. …
 
-## 验证
+## Verification
 
-<如何确认做对了。>
+<How to confirm it worked.>
 
-## 相关
+## See Also
 
-- <相关文档链接>
+- <related doc links>

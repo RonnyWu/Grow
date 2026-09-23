@@ -1,8 +1,8 @@
 # ADR-0003: 文档体系采用 Diátaxis 四象限预建结构
 
-- 状态：Accepted
-- 日期：2026-09-23
-- 关联：`docs/design/dsn-0001-doc-layout.md`（文档分布设计）、`docs/explanation/exp-0001-architecture-rationale.md`、`CONTRIBUTING.md`
+- Status: Accepted
+- Date: 2026-09-23
+- Related: `docs/design/dsn-0001-doc-layout.md`（文档分布设计）、`docs/explanation/exp-0001-architecture-rationale.md`、`CONTRIBUTING.md`
 
 ## 背景（Context）
 

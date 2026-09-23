@@ -1,21 +1,21 @@
-# <主题>
+# <Topic>
 
-<一句话：这篇解释什么，读者读完会理解什么。>
+<One sentence: what this explains and what the reader will understand.>
 
-## 背景
+## Background
 
-<这个问题从哪来，为什么存在取舍。>
+<Where the problem comes from and why there is a trade-off.>
 
-## 为什么这样设计
+## Why It Is Designed This Way
 
-<设计选择的理由与推导。>
+<The reasoning behind the design choices.>
 
-## 取舍
+## Trade-offs
 
-| 选择 | 得到什么 | 放弃什么 |
+| Choice | Gained | Given up |
 |---|---|---|
 | … | … | … |
 
-## 参考
+## References
 
-- <链接或代码路径>
+- <link or code path>

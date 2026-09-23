@@ -1,8 +1,8 @@
 # 文档分布设计
 
-- 状态：已实现
-- 日期：2026-09-24
-- 关联：`docs/README.md`（导航入口）、`docs/architecture/adr-0003-diataxis-documentation-layout.md`、`CONTRIBUTING.md`、`AGENTS.md`
+- Status: Implemented
+- Date: 2026-09-24
+- Related: `docs/README.md`（导航入口）、`docs/architecture/adr-0003-diataxis-documentation-layout.md`、`CONTRIBUTING.md`、`AGENTS.md`
 
 ## 1. 目标
 
@@ -115,7 +115,7 @@
 重大且难回滚的选型 ──冻结──▶ ADR(docs/architecture/)   ← 与文档正文并列，可由 design 引用
 ```
 
-- `docs/design/` 的每篇文档在开头标注状态：`草稿` / `已实现` / `已废弃`。
+- `docs/design/` 的每篇文档在开头标注状态：`Draft` / `Implemented` / `Deprecated`。
 - 四象限无状态头；内容过时即直接修改。
 - ADR 的状态词与"一经 `Accepted` 不可改写"规则以 `docs/architecture/index.md` 为准，本文不重复。
 - 跟踪判定一句话：**承载已冻结结论、契约或对外承诺的，入库；仅是过程记录的，留在 `.drafts/`。**
