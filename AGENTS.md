@@ -18,7 +18,7 @@ The framework is an **embedded UPM package at `Packages/com.ronny.grow`**, not u
   `/.superpowers/` (scratch from a prior architecture that references packages like
   `com.grow.framework` and `grow-core` that no longer exist).
 
-## Architecture (authority: `docs/grow-architecture-rationale.md`, §8)
+## Architecture (authority: `docs/explanation/architecture-rationale.md`, §8)
 
 - Microkernel shape: `Core → Kernel → Services → {Integrations, Tooling}`. Dependencies point
   inward. `Integrations` and `Tooling` are adapter rings; nothing may depend on them, and they
@@ -31,8 +31,10 @@ The framework is an **embedded UPM package at `Packages/com.ronny.grow`**, not u
   `Internal/`. Third-party/backend code lives only in `Integrations/<Tech>` and is gated by
   asmdef `versionDefines` + `defineConstraints`.
 - Banned L1 names: `Utils`, `Common`, `Misc`, `Helpers`, `Managers`.
-- ADRs live in `docs/architecture/ADR-NNNN-topic.md`. ADR-0002 (Domain Reload disabled) is the
-  only one present; `ADR-0001` is referenced by old notes but does not exist.
+- ADRs live in `docs/architecture/ADR-NNNN-topic.md`. Present: ADR-0002 (Domain Reload
+  disabled) and ADR-0003 (Diátaxis doc layout). `ADR-0001` was never created.
+- Documentation layout and conventions: `docs/README.md` (single source of truth). Drafts
+  live in the gitignored `.drafts/`; only authoritative docs are committed.
 
 ## Domain-reload contract (ADR-0002) — hard rule
 
