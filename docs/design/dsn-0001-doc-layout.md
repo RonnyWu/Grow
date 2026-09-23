@@ -15,7 +15,7 @@
 
 | 区域 | 职责 | 版本控制 |
 |---|---|---|
-| 仓库根 | 门面与契约入口（清单见 §4） | 跟踪 |
+| 仓库根 | 门面与契约入口（清单见 §5） | 跟踪 |
 | `Packages/com.ronny.grow/` | 框架包本体；包内 `README.md`、`CHANGELOG.md`、`LICENSE.md`、`Third Party Notices.md` 遵循 UPM 惯例，**不受本文命名规则约束** | 跟踪 |
 | `docs/` | 文档正文，两条轨（见 §3） | 跟踪 |
 | `.github/` | 平台元数据：workflows、PR/issue 模板、dependabot | 跟踪 |
@@ -41,14 +41,41 @@
 
 **两条轨并列、不混放**：工程记录（ADR、设计）是决策档案，不作为教学或速查材料出现在四象限。
 
-## 4. 文件清单（穷举）
+## 4. 命名与编号规则
 
-正文命名统一为 `<前缀>-<nnnn>-<topic>.md`：
+正文文件名统一为 `<前缀>-<nnnn>-<topic>.md`。
 
-- 前缀按类型固定：`adr-` / `dsn-` / `exp-` / `ref-` / `how-` / `tut-`。
-- 编号四位补零，各类型内独立；一经分配即固定——不复用、不重排（ADR 采用创建顺序，其余类型由维护者按需分配）。
-- **例外一**：`index.md`（目录落地页）与 `README.md`（仓库/包入口）不加前缀与编号。
-- **例外二**：ADR 的 `0000` 保留给 `adr-0000-template.md`，正文从 `0002` 起（`0001` 从未创建且不回填，见 `docs/architecture/index.md`）。
+### 4.1 前缀
+
+每个文档类型使用固定的类型缩写前缀（全小写），与目录一一对应：
+
+| 目录 | 前缀 | 示例 |
+|---|---|---|
+| `architecture/` | `adr-` | `adr-0002-domain-reload-disabled.md` |
+| `design/` | `dsn-` | `dsn-0001-doc-layout.md` |
+| `explanation/` | `exp-` | `exp-0001-architecture-rationale.md` |
+| `reference/` | `ref-` | `ref-0001-naming-conventions.md` |
+| `how-to/` | `how-` | `how-0001-add-a-collection.md` |
+| `tutorials/` | `tut-` | `tut-0001-get-started.md` |
+
+### 4.2 编号
+
+- 四位补零，各类型内独立。
+- 一经分配即固定——**不复用、不重排**；ADR 采用创建顺序，其余类型由维护者按需分配。
+- **历史例外**：ADR 的 `0000` 保留给 `adr-0000-template.md`，正文从 `0002` 起（`0001` 从未创建且不回填，见 `docs/architecture/index.md`）。
+
+### 4.3 例外
+
+- `index.md`（目录落地页）与 `README.md`（仓库/包入口）**不加前缀与编号**。
+- `Packages/com.ronny.grow/` 内的文档遵循 UPM 惯例，不受本节约束。
+
+### 4.4 其他约束
+
+- `docs/` 内的文件一律不带 `grow-` 项目前缀——目录本身已表明是 Grow 仓库。
+- `topic` 用小写 kebab-case；`how-to/` 用动词开头。
+- 目录名一律小写，多词用连字符（`how-to/`、`explanation/`）。
+
+## 5. 文件清单（穷举）
 
 | 路径 | 名称 | 反例 | 职责 |
 |---|---|---|---|
@@ -76,12 +103,7 @@
 | `/docs/how-to/` | `index.md`、`how-nnnn-topic.md` | `README.md`；`how-to-…`（前缀多一横） | 象限落地页 + 任务导向正文 |
 | `/docs/tutorials/` | `index.md`、`tut-nnnn-topic.md` | `README.md`；`tutorial-…`（缺前缀） | 象限落地页 + 学习导向正文 |
 
-**两条额外约束**：
-
-- `docs/` 内的文件一律不带 `grow-` 项目前缀——目录本身已表明是 Grow 仓库。
-- 目录名一律小写，多词用连字符（`how-to/`、`explanation/`）。
-
-## 5. 生命周期
+## 6. 生命周期与状态
 
 ```
 草稿(.drafts/) ──定稿──▶ 文档正文(docs/)
@@ -97,7 +119,7 @@
 - ADR 的状态词与"一经 `Accepted` 不可改写"规则以 `docs/architecture/index.md` 为准，本文不重复。
 - 跟踪判定一句话：**承载已冻结结论、契约或对外承诺的，入库；仅是过程记录的，留在 `.drafts/`。**
 
-## 6. 与 ADR 的分工
+## 7. 与 ADR 的分工
 
 | | ADR | 本设计文档 |
 |---|---|---|
