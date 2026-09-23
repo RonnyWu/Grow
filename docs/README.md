@@ -49,6 +49,7 @@
 | 四象限文档 | 小写 kebab-case；how-to 用动词开头 | `how-to/add-a-collection.md` |
 | ADR | `adr-nnnn-topic.md`，四位补零 | `adr-0003-diataxis-documentation-layout.md` |
 | 设计文档 | 小写 kebab-case | `design/container-catalog.md` |
+| 目录索引 | `index.md`（仅仓库根与 `docs/` 顶层用 `README.md`） | `docs/how-to/index.md` |
 | 草稿 | `YYYY-MM-DD-topic.md` | `.drafts/specs/2026-09-23-doc-layout-design.md` |
 | 目录 | 小写，多词用连字符 | `docs/explanation/` |
 
@@ -79,7 +80,7 @@
 
 | 路径 | 内容 |
 |---|---|
-| `docs/architecture/` | ADR 决策记录，见其 `README.md` |
+| `docs/architecture/` | ADR 决策记录，见其 `index.md` |
 | `docs/design/` | `container-catalog.md`（容器需求目录）、`container-necessity-review.md`（必要性验证与登记表）、`event-primitives.md`（事件原语设计）、`event-invocationlist-analysis.md`（派发内核机制分析与纠正） |
 | `docs/explanation/` | `architecture-rationale.md`（架构总理由） |
-| `docs/tutorials/` `docs/how-to/` `docs/reference/` | 暂无内容，见各自 README |
+| `docs/tutorials/` `docs/how-to/` `docs/reference/` | 暂无内容，见各自 `index.md` |
