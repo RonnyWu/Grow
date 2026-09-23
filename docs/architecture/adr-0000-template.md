@@ -1,46 +1,48 @@
-# ADR-NNNN: <标题>
+# ADR-NNNN: <title>
 
-- 状态：Proposed
-- 日期：YYYY-MM-DD
-- 取代：<可选。本 ADR 取代的 ADR 编号>
-- 被取代：<可选。状态改为 Superseded 时填 ADR 编号>
-- 关联：<相关文档、代码路径、其他 ADR>
+- Status: Proposed
+- Date: YYYY-MM-DD
+- Supersedes: <optional. The ADR number this one replaces>
+- Superseded by: <optional. The ADR number, when this status becomes Superseded>
+- Related: <related docs, code paths, other ADRs>
 
-## 背景与问题（Context）
+## Context
 
-<问题、约束与促成因素。为什么现在必须做这个决策？涉及哪些既有事实？>
+<The problem, constraints, and forces at play. Why must this decision be made now?
+What established facts does it involve?>
 
-## 决策驱动（Decision Drivers）
+## Decision Drivers
 
-<!-- 可选；没有内容就删掉本节 -->
+<!-- Optional; delete this section if empty -->
 
-- <质量属性 / 约束 / 相互冲突的力量>
+- <quality attribute / constraint / conflicting force>
 
-## 决策（Decision）
+## Decision
 
-<逐条列出决定。要可执行、可验证；必要时给出具体路径、接口或配置。>
+<List the decision point by point. Keep it actionable and verifiable; give concrete
+paths, interfaces, or settings where relevant.>
 
 1. …
 2. …
 
-## 结果（Consequences）
+## Consequences
 
-**正面**
-
-- …
-
-**负面**
+**Positive**
 
 - …
 
-**中性**
+**Negative**
 
 - …
 
-## 备选方案（Alternatives）
+**Neutral**
 
-- **<方案名>**：<它是什么>；未采纳，因为 <原因>。
+- …
 
-## 参考（References）
+## Alternatives
 
-- <链接或代码路径>
+- **<option name>**: <what it is>; not chosen because <reason>.
+
+## References
+
+- <link or code path>
