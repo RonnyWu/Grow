@@ -18,4 +18,4 @@ Reference 服务于"我正在进行的工作"；explanation 服务于"我的理�
 
 ## 现状
 
-暂无内容。候选：`ref-0001-repository-layout.md`、`ref-0002-naming-conventions.md`、`ref-0003-namespace-rules.md`、`ref-0004-package-metadata.md`。
+暂无内容。新建请从 [`ref-0000-template.md`](ref-0000-template.md) 复制。候选：`ref-0001-repository-layout.md`、`ref-0002-naming-conventions.md`、`ref-0003-namespace-rules.md`、`ref-0004-package-metadata.md`。

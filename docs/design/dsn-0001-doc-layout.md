@@ -84,7 +84,7 @@
 | `/` | `LICENSE` | `LICENSE.md`（根目录多加扩展名） | 开源协议（MIT）全文 |
 | `/` | `CONTRIBUTING.md` | `CONTRIBUTE.md` | 如何贡献代码与文档 |
 | `/` | `AGENTS.md` | `AGENT.md` | AI 协作者规则 |
-| `/` | `SECURITY.md`（可选） | `SECURITY` | 漏洞报告方式；公开发布后添加 |
+| `/` | `SECURITY.md`（可选） | `SECURITY` | 漏洞报告方式与支持版本 |
 | `/` | `.gitattributes` | — | 行尾与 diff 属性 |
 | `/` | `.gitignore` | — | 忽略规则 |
 | `/` | `GrowFramework.sln.DotSettings` | `*.DotSettings.user`（个人设置不入库） | 共享 Rider 设置 |
@@ -98,11 +98,11 @@
 | `/Packages/com.ronny.grow/` | `README.md`、`CHANGELOG.md`、`LICENSE.md`、`Third Party Notices.md` | 套用 `docs/` 命名 | 包内元数据（UPM 惯例，不受本文约束） |
 | `/docs/` | `README.md` | `index.md`（与子目录混用） | 文档总入口与地图 |
 | `/docs/architecture/` | `index.md`、`adr-0000-template.md`、`adr-nnnn-topic.md` | `README.md`；`ADR-0002-…`（大写）、`0002-…`（缺前缀） | ADR 索引与规则 + 模板（`0000` 专用）+ 正文 |
-| `/docs/design/` | `index.md`、`dsn-nnnn-topic.md` | `README.md`；`documentation-layout.md`（缺编号） | 设计索引 + 工程设计与规范正文 |
-| `/docs/explanation/` | `index.md`、`exp-nnnn-topic.md` | `README.md`；`explanation-…` | 象限落地页 + 理解导向正文 |
-| `/docs/reference/` | `index.md`、`ref-nnnn-topic.md` | `README.md`；`reference-…` | 象限落地页 + 信息导向正文 |
-| `/docs/how-to/` | `index.md`、`how-nnnn-topic.md` | `README.md`；`how-to-…`（前缀多一横） | 象限落地页 + 任务导向正文 |
-| `/docs/tutorials/` | `index.md`、`tut-nnnn-topic.md` | `README.md`；`tutorial-…`（缺前缀） | 象限落地页 + 学习导向正文 |
+| `/docs/design/` | `index.md`、`dsn-0000-template.md`、`dsn-nnnn-topic.md` | `README.md`；`documentation-layout.md`（缺编号） | 设计索引 + 模板 + 工程设计与规范正文 |
+| `/docs/explanation/` | `index.md`、`exp-0000-template.md`、`exp-nnnn-topic.md` | `README.md`；`explanation-…` | 象限落地页 + 模板 + 理解导向正文 |
+| `/docs/reference/` | `index.md`、`ref-0000-template.md`、`ref-nnnn-topic.md` | `README.md`；`reference-…` | 象限落地页 + 模板 + 信息导向正文 |
+| `/docs/how-to/` | `index.md`、`how-0000-template.md`、`how-nnnn-topic.md` | `README.md`；`how-to-…`（前缀多一横） | 象限落地页 + 模板 + 任务导向正文 |
+| `/docs/tutorials/` | `index.md`、`tut-0000-template.md`、`tut-nnnn-topic.md` | `README.md`；`tutorial-…`（缺前缀） | 象限落地页 + 模板 + 学习导向正文 |
 
 ## 6. 生命周期与状态
 

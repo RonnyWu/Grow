@@ -19,4 +19,6 @@ Explanation 与 ADR 的区别：ADR 记录**一个具体决策**及其备选；e
 
 ## 现状
 
+暂无内容。新建请从 [`exp-0000-template.md`](exp-0000-template.md) 复制。
+
 - [`exp-0001-architecture-rationale.md`](exp-0001-architecture-rationale.md) —— 微内核形态、L1 划分、归属判定阶梯等总体理由。

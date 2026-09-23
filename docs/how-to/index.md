@@ -19,4 +19,4 @@ How-to 解决"怎么做"；explanation 回答"为什么这么做"。原理讲得
 
 ## 现状
 
-暂无内容。候选：`how-0001-run-editmode-tests.md`、`how-0002-add-a-collection.md`、`how-0003-add-an-adr.md`。
+暂无内容。新建请从 [`how-0000-template.md`](how-0000-template.md) 复制。候选：`how-0001-run-editmode-tests.md`、`how-0002-add-a-collection.md`、`how-0003-add-an-adr.md`。
