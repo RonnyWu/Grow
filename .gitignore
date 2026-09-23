@@ -482,8 +482,8 @@ InitTestScene*.unity*
 # Local agent-session scratch from the SDD / superpowers workflow
 /.superpowers/
 
-# Local-only design notes, intentionally not tracked
-/docs/
+# Local agent-session drafts (plans, specs), intentionally not tracked
+/.drafts/
 
 # Secrets - never commit credentials
 .env
