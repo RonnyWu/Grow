@@ -291,9 +291,9 @@ xcuserdata/
 # CRUSH.md
 # QWEN.md
 
-# OpenAI Codex
+# OpenAI Codex (AGENTS.md is shared and tracked; local CLI config is not)
 # AGENTS.md
-# .codex/
+.codex/
 
 # Aider
 .aider.input.history
@@ -474,6 +474,10 @@ InitTestScene*.unity*
 
 # Local CI artifacts
 /ci/logs/
+
+# Rider solution-level config is machine-local here (nested .idea layout);
+# overrides the shared-.idea policy of the JetBrains block above.
+/.idea/
 
 # Local agent-session scratch from the SDD / superpowers workflow
 /.superpowers/
