@@ -14,9 +14,7 @@ The framework is an **embedded UPM package at `Packages/com.ronny.grow`**, not u
   (`old`, `backup-*`) exist. Run `git status`/`git log` before assuming a clean or linear tree;
   runtime and doc files are frequently staged but uncommitted.
 - Gitignored, do not trust or edit: root `*.csproj`/`*.sln` (Unity-generated; the stale
-  `GrowFrameworkEditTests.csproj` points at an old `Packages/grow-framework/` path) and
-  `/.superpowers/` (scratch from a prior architecture that references packages like
-  `com.grow.framework` and `grow-core` that no longer exist).
+  `GrowFrameworkEditTests.csproj` points at an old `Packages/grow-framework/` path).
 
 ## Architecture (authority: `docs/explanation/architecture-rationale.md`, §8)
 
