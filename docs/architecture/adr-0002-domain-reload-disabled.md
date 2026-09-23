@@ -1,4 +1,4 @@
-# ADR-0002: 关闭 Domain Reload 作为 Grow 默认运行模式
+# ADR-0002: Disable Domain Reload as the default run mode
 
 - Status: Accepted
 - Date: 2026-09-18

@@ -50,5 +50,5 @@ in any language, but keep a single document in one language.
 
 | Number | Title | Status |
 |---|---|---|
-| `ADR-0002` | [关闭 Domain Reload 作为 Grow 默认运行模式](adr-0002-domain-reload-disabled.md) | Accepted |
-| `ADR-0003` | [文档体系采用 Diátaxis 四象限预建结构](adr-0003-diataxis-documentation-layout.md) | Accepted |
+| `ADR-0002` | [Disable Domain Reload as the default run mode](adr-0002-domain-reload-disabled.md) | Accepted |
+| `ADR-0003` | [Adopt a pre-built Diátaxis four-quadrant documentation layout](adr-0003-diataxis-documentation-layout.md) | Accepted |

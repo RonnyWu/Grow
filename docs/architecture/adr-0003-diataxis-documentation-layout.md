@@ -1,4 +1,4 @@
-# ADR-0003: 文档体系采用 Diátaxis 四象限预建结构
+# ADR-0003: Adopt a pre-built Diátaxis four-quadrant documentation layout
 
 - Status: Accepted
 - Date: 2026-09-23
