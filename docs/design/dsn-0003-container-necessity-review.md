@@ -3,8 +3,8 @@
 - 状态：草稿（流程 + 首个实例结论）
 - 日期：2026-09-19
 - 范围：`Core/Collections`、`Core/Pool` 每个容器**实现前**的必要性核验
-- 关联：`docs/design/container-catalog.md`（§2.1 原语优先、§5 清单、§10 路线图）、
-  `docs/design/event-invocationlist-analysis.md`（首个消费方）
+- 关联：`docs/design/dsn-0002-container-catalog.md`（§2.1 原语优先、§5 清单、§10 路线图）、
+  `docs/design/dsn-0005-event-invocationlist-analysis.md`（首个消费方）
 - 目的：在动手写代码前证明每个自研容器满足「**真正有需求 + 通用 + 官方在目标基线缺失**」，
   避免自造轮子与造库无消费方。
 
@@ -113,7 +113,7 @@
 | 游戏物理库的 Quick 系容器（如 Bepu `QuickDictionary`/`QuickSet`） | 字典 + 数组，删除用 swap-remove | 乱序，不满足 R-1 | 待核验 |
 | 社区 `OrderedSet<T>` 实现（如 Towel） | 字典 + 链表族 | 满足 R-1/R-3，但节点分配与指针遍历（R-4 次优） | 待核验 |
 | .NET 泛型 `OrderedDictionary` 长期提案 → .NET 9 落地 | 官方诉求存在 | 印证官方缺口真实；但其选择 List-like 语义，非 O(1) 删 | 已核验（§5.3） |
-| `UniTask PlayerLoopRunner` / `R3` 派发前取快照数组 | 快照派发 | 印证「枚举期安全」是**独立关切**，不属有序集合语义 | 已核验（见 `event-primitives.md` §5） |
+| `UniTask PlayerLoopRunner` / `R3` 派发前取快照数组 | 快照派发 | 印证「枚举期安全」是**独立关切**，不属有序集合语义 | 已核验（见 `dsn-0004-event-primitives.md` §5） |
 
 ### 5.5 缺口判定
 
@@ -182,7 +182,7 @@
 
 | 来源 | 形态 | 关系 | 核验 |
 |---|---|---|---|
-| `UniTask` `PlayerLoopRunner` | 遍历前取数组快照 | 印证策略；但快照内联于 runner，非可复用类型 | 已核验（`event-primitives.md` §5） |
+| `UniTask` `PlayerLoopRunner` | 遍历前取数组快照 | 印证策略；但快照内联于 runner，非可复用类型 | 已核验（`dsn-0004-event-primitives.md` §5） |
 | `R3` | 派发前物化、异常不回灌当前轮 | 印证「变更/异常下一次生效」 | 已核验（同上） |
 | 常见事件系统 `ToArray()`/复制列表 | 每轮分配 | 反例：正是要消除的分配 | 待核验 |
 
@@ -220,7 +220,7 @@
 ## 7. 下一步
 
 1. 已确认：拆分，且 `SnapshotSet<T>` 同步交付。
-2. 已修正 `docs/design/container-catalog.md` §5.7 与首发描述。
+2. 已修正 `docs/design/dsn-0002-container-catalog.md` §5.7 与首发描述。
 3. 对 `OrderedSet<T>` + `SnapshotSet<T>` 启动 `writing-plans` 实现计划（含 EditMode 测试程序集搭建）。
 
 ---

@@ -4,7 +4,7 @@
 
 ## 收录
 
-- 单主题的实操步骤，标题以动词开头（`add-a-collection.md`）。
+- 单主题的实操步骤，标题以动词开头（`how-0001-add-a-collection.md`）。
 - 假设读者已具备基本背景，不解释原理。
 
 ## 不收录
@@ -19,4 +19,4 @@ How-to 解决"怎么做"；explanation 回答"为什么这么做"。原理讲得
 
 ## 现状
 
-暂无内容。候选：`run-editmode-tests.md`、`add-a-collection.md`、`add-an-adr.md`。
+暂无内容。候选：`how-0001-run-editmode-tests.md`、`how-0002-add-a-collection.md`、`how-0003-add-an-adr.md`。

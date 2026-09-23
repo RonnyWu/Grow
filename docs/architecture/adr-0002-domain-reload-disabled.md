@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 日期：2026-09-18
-- 关联：`docs/explanation/architecture-rationale.md`（§8.6 Kernel 掌时）、`Runtime/Kernel/Entry/GrowBoot.cs`、`Editor/Setup/GrowProjectSetup.cs`
+- 关联：`docs/explanation/exp-0001-architecture-rationale.md`（§8.6 Kernel 掌时）、`Runtime/Kernel/Entry/GrowBoot.cs`、`Editor/Setup/GrowProjectSetup.cs`
 
 ## 背景（Context）
 

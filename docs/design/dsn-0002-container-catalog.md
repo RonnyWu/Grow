@@ -3,9 +3,9 @@
 - 状态：草稿（需求目录，待逐项立项）
 - 日期：2026-09-19
 - 范围：未来 `Packages/com.ronny.grow/Runtime/Core/Collections/*` 与 `Runtime/Core/Pool/*`
-- 关联：`docs/design/container-necessity-review.md`（实现前的必要性验证流程与登记表）、
-  `docs/design/event-invocationlist-analysis.md`（机制复用与 LRU 纠正）、`docs/design/event-primitives.md`、
-  `docs/explanation/architecture-rationale.md` §8（目录与归属）、`docs/architecture/adr-0002-domain-reload-disabled.md`
+- 关联：`docs/design/dsn-0003-container-necessity-review.md`（实现前的必要性验证流程与登记表）、
+  `docs/design/dsn-0005-event-invocationlist-analysis.md`（机制复用与 LRU 纠正）、`docs/design/dsn-0004-event-primitives.md`、
+  `docs/explanation/exp-0001-architecture-rationale.md` §8（目录与归属）、`docs/architecture/adr-0002-domain-reload-disabled.md`
 - 产物边界：本目录只回答「Unity 常用但 C#/Unity 未直接提供、需自研的容器有哪些、各自缺口与契约是什么」。
   每个容器的逐步 TDD 实现步骤另行以 `writing-plans` 产出，本文不含 checkbox 任务。
 
@@ -54,7 +54,7 @@ Unity 运行时长期缺少一批「高频、通用、但 BCL 不提供或 Unity
 
 优先级：`P0` 消费方明确且高频；`P1` 明确但可用现成结构临时顶替；`P2` 有价值、消费方待定，先不实现。
 
-**实现前门禁**：通过 G-1…G-4 后，还须通过 `docs/design/container-necessity-review.md` 的 Necessity Gate
+**实现前门禁**：通过 G-1…G-4 后，还须通过 `docs/design/dsn-0003-container-necessity-review.md` 的 Necessity Gate
 （N-1…N-6，官方盘点 + 最近似对照 + 社区先例 + 通用性判定），产出经证据的结论写入其登记表；未通过不得开工。
 
 ### 2.1 原语优先原则（anti-proliferation）
@@ -258,7 +258,7 @@ namespace Grow.Core.Collections {
 
 - 用途：资源缓存、寻路结果缓存、UI 页缓存、局部化字符串缓存。
 - 缺口：BCL/Unity 均无。
-- 机制（**关键决策**）：`event-invocationlist-analysis.md` §9 明确指出「LRU 需访问即 move-to-front，
+- 机制（**关键决策**）：`dsn-0005-event-invocationlist-analysis.md` §9 明确指出「LRU 需访问即 move-to-front，
   与 append-only 插入序冲突，强行复用墓碑方案会造成墓碑风暴」；故采用经典
   **`Dictionary<TKey,int>` + 侵入式双向链表（并行数组实现）**，全程 O(1) 且稳态零分配。
 
@@ -349,10 +349,10 @@ namespace Grow.Core.Collections {
 - 现有消费者：`InvocationList<TDelegate>`（事件派发内核）——即它**已经是第二个消费方**，
   满足 G-3，故直接 `P0`，不再「等出现第二消费方」。
 - 用途：插入序注册表、FIFO 插入序缓存、确定性迭代的字典/集合、事件派发。
-- 缺口（见 `container-necessity-review.md` §5）：`SortedDictionary` 按键排序而非插入序；
+- 缺口（见 `dsn-0003-container-necessity-review.md` §5）：`SortedDictionary` 按键排序而非插入序；
   `KeyedCollection` / 非泛型 `Specialized.OrderedDictionary` 的删除是 O(n) 或装箱；泛型
   `Generic.OrderedDictionary<K,V>` 是 .NET 9+（基线不可用）且为 List-like，删除非 O(1)。
-- 机制：`event-invocationlist-analysis.md` §9 判定为「高机制吻合度」的
+- 机制：`dsn-0005-event-invocationlist-analysis.md` §9 判定为「高机制吻合度」的
   **插入序注册集（append + 墓碑 + 惰性压缩）+ 哈希索引 + 稳定枚举**；这是该机制在框架内的**唯一实现**。
 - 快照迭代的归属（已定）：必要性验证 §5.6/§6 将「枚举期变更安全」拆为独立原语 `SnapshotSet<T>`，
   与 `OrderedSet<T>` **同步首发**；`SnapshotSet<T>` 内部组合存储、自维护版本快照，不把迭代协议塞进
@@ -650,14 +650,14 @@ namespace Grow.Core.Collections {
 
 拿掉「委托/异常」策略，剩下的结构对任意 `T` 都成立 → 它是原语（§2.1 口诀）。
 
-### 7.2 与 `event-invocationlist-analysis.md` §9 的对齐与修订
+### 7.2 与 `dsn-0005-event-invocationlist-analysis.md` §9 的对齐与修订
 
 §9 结论「等出现第二个真实消费方再抽」在当时成立；但**本目录规划的 `OrderedSet`/`OrderedDictionary`
 本身就是第二个消费方**，触发条件已满足。故：
 
 1. **修订**：不再「等」，立即将**存储机制**回填为 `OrderedSet<T>`/`OrderedDictionary<K,V>`，
    `InvocationList` 改为**组合**（G-5 硬约束）；**快照机制**按必要性验证 §5.6 独立为 `SnapshotSet<T>`
-   或先私有。`event-invocationlist-analysis.md` §9 的推迟结论由本文取代。
+   或先私有。`dsn-0005-event-invocationlist-analysis.md` §9 的推迟结论由本文取代。
 2. **保留**：§9 对「`InvocationList<T>` 不加约束」的否决依然有效——原语泛化、`T : Delegate`
    的强类型叶子仍留在 `Core/Event`，身份语义由 `IEqualityComparer<T>`（默认委托相等）承载。
 3. **沿用**：LRU「低吻合、不复用墓碑」、否决 COW/ImmutableArray 两条判据不变（见 §5.4、§9）。
@@ -692,7 +692,7 @@ namespace Grow.Core.Collections {
 > 每个批次另以 `writing-plans` 产出独立 TDD 计划；本文只定义批次与依赖。
 
 **首发**：B1 的第一件为原语对 `OrderedSet<T>` + `SnapshotSet<T>`（§5.7）。理由：唯一具名消费方
-`InvocationList` 已存在，两者必要性验证均已通过（`container-necessity-review.md` §5/§6），
+`InvocationList` 已存在，两者必要性验证均已通过（`dsn-0003-container-necessity-review.md` §5/§6），
 契约与测试锚点最完整，且是把「存储」与「迭代」两侧机制一次性收敛为唯一实现的第一道闸。其实现
 计划需同时建立包内 EditMode 测试程序集（`Tests/Editor/` + `Packages/manifest.json` 的 `testables`）。
 
@@ -723,10 +723,10 @@ Pool<T> ─► Services/Pooling
 | 与 `UnityEngine.Pool` / BCL 重复 | §9 明确边界：只补缺口，不提供等价并行 API |
 | 基线 API 误用 | 禁用 `PriorityQueue<T,P>`、`BitOperations`、泛型 `OrderedDictionary`；专题文档列「基线可用性」核对表 |
 | 静态状态违反 ADR-0002 | 默认零静态；`EnumSet` 枚举上界缓存、`PoolRegistry` 等必须登记 `GrowBoot.OnReset` |
-| GC 断言在编辑器抖动 | 同 `event-primitives.md` §9：预热 + 宽松阈值 + 可过滤 Category |
+| GC 断言在编辑器抖动 | 同 `dsn-0004-event-primitives.md` §9：预热 + 宽松阈值 + 可过滤 Category |
 | 枚举器失效语义不统一 | 每个容器专题文档固定「修改中遍历」的行为（抛 / 快照 / 未定义），并纳入测试锚点 |
 | 专用容器继续增生 / 原语被绕过 | G-5：机制在框架内只允许一份实现；`InvocationList` 必须回填至 `OrderedSet`；评审以「是否复制了状态机」为硬性否决项（§2.1） |
-| `event-invocationlist-analysis.md` §9 与本文的取向 | 已同步修订该文 §9：机制回填原语、`InvocationList` 改组合；实现落地后记入 `CHANGELOG.md` |
+| `dsn-0005-event-invocationlist-analysis.md` §9 与本文的取向 | 已同步修订该文 §9：机制回填原语、`InvocationList` 改组合；实现落地后记入 `CHANGELOG.md` |
 | 是否公开 `Core/Collections` | 一旦公开即成 API 契约；B1 前确认公开面最小化与向后兼容策略 |
 
 ---
@@ -739,11 +739,11 @@ Unity 2021.3 基线在优先级队列、LRU、双端/覆盖缓冲、插入序有
 统一原则是**原语优先**（§2.1）：专用容器不得自带一套机制，只能组合原语或在原语上叠领域策略。
 据此，本目录的**第一原语对**是 `OrderedSet<T>`/`OrderedDictionary<K,V>` + `SnapshotSet<T>`
 （存储：泛型、插入序、O(1) 增删、稳定枚举；迭代：枚举边界快照、变更下一次生效；必要性验证见
-`container-necessity-review.md` §5/§6）——`InvocationList` 的存储机制回填到前者、快照机制回填到
+`dsn-0003-container-necessity-review.md` §5/§6）——`InvocationList` 的存储机制回填到前者、快照机制回填到
 后者，降为「原语 + 事件策略」的薄组合。这正是对「InvocationList 未被当作容器」的纠正，也是防止
 专用容器增生的硬约束。
 
 B1（P0）第一批：**上述原语 + `InvocationList` 重构**、`MinHeap`/`PriorityQueue`/`IndexedMinHeap`、
 `Deque`、`RingBuffer`、`Pool<T>`、`LruCache`；B2/B3 按具名消费方逐项立项；边界容器回归各自 L1。
-所有容器服从 §6 契约与 §2 门槛；LRU 采用 `event-invocationlist-analysis.md` §9 的纠正路线
+所有容器服从 §6 契约与 §2 门槛；LRU 采用 `dsn-0005-event-invocationlist-analysis.md` §9 的纠正路线
 （字典 + 侵入式链表），不复用墓碑方案。

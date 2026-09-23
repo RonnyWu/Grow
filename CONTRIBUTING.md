@@ -4,8 +4,9 @@ Thanks for your interest in Grow.
 
 ## Documentation
 
-The documentation layout and conventions are defined in [`docs/README.md`](docs/README.md) —
-read it before adding or moving a document. In short:
+The documentation layout and conventions are defined in
+[`docs/design/dsn-0001-doc-layout.md`](docs/design/dsn-0001-doc-layout.md) — read it
+before adding or moving a document. In short:
 
 - **Decisions** are recorded as ADRs under [`docs/architecture/`](docs/architecture), named
   `adr-nnnn-topic.md`. Each new decision takes the next zero-padded four-digit number.

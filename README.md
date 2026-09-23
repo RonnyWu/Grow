@@ -29,8 +29,8 @@ Unity 2021.3.45f2; the package at `Packages/com.ronny.grow` is picked up automat
 
 ## Documentation
 
-Start at [`docs/README.md`](docs/README.md), which maps every document and states the
-conventions.
+Start at [`docs/README.md`](docs/README.md) for the document map; the conventions live in
+[`docs/design/dsn-0001-doc-layout.md`](docs/design/dsn-0001-doc-layout.md).
 
 ## Contributing
 

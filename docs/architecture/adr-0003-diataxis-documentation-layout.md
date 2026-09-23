@@ -2,7 +2,7 @@
 
 - 状态：Accepted
 - 日期：2026-09-23
-- 关联：`docs/README.md`（文档规范正文）、`docs/explanation/architecture-rationale.md`、`CONTRIBUTING.md`
+- 关联：`docs/design/dsn-0001-doc-layout.md`（文档分布设计）、`docs/explanation/exp-0001-architecture-rationale.md`、`CONTRIBUTING.md`
 
 ## 背景（Context）
 
@@ -18,7 +18,7 @@
 1. **`docs/` 采用双轨**：产品文档轨走 Diátaxis 四象限（`tutorials/` `how-to/` `reference/` `explanation/`）；工程记录轨独立为 `architecture/`（ADR）与 `design/`（设计文档）。**工程记录永不放入四象限。**
 2. **预建四个象限目录**，这是对 Diátaxis 官方建议的**有意偏离**。偏离的代价以"每个象限放一份 `index.md` landing page"来抵消：目录因此**不是空结构**，而是一份写明清收范围与象限边界的导航页。
 3. 象限 `index.md` 中明确"本象限暂无内容"，避免贡献者误判为未完成。
-4. 本决策由 `docs/README.md` 作为规范正文承载；根 `README.md`、`CONTRIBUTING.md`、`AGENTS.md` 只引用不重写。
+4. 本决策由 `docs/design/dsn-0001-doc-layout.md` 作为文档分布设计承载；根 `README.md`、`CONTRIBUTING.md`、`AGENTS.md` 只引用不重写。
 
 ## 结果（Consequences）
 
@@ -30,7 +30,7 @@
 
 **负面**
 
-- 与 Diátaxis 官方建议相悖，未来若引入外部文档贡献者可能引起疑问——由本文与 `docs/README.md` 解释即可。
+- 与 Diátaxis 官方建议相悖，未来若引入外部文档贡献者可能引起疑问——由本文与 `docs/design/dsn-0001-doc-layout.md` 解释即可。
 - 空象限存在被误读为"没做完"的风险，靠 `index.md` 文案缓解。
 - 四个目录在内容填充前，导航收益大于实际内容收益。
 
@@ -48,5 +48,5 @@
 
 - Diátaxis — How to use Diátaxis：https://diataxis.fr/how-to-use-diataxis/
 - Diátaxis — Complex hierarchies：https://diataxis.fr/complex-hierarchies/
-- `docs/README.md`
+- `docs/design/dsn-0001-doc-layout.md`
 - `docs/architecture/adr-0002-domain-reload-disabled.md`（ADR 格式先例）

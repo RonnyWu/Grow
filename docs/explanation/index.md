@@ -19,4 +19,4 @@ Explanation 与 ADR 的区别：ADR 记录**一个具体决策**及其备选；e
 
 ## 现状
 
-- [`architecture-rationale.md`](architecture-rationale.md) —— 微内核形态、L1 划分、归属判定阶梯等总体理由。
+- [`exp-0001-architecture-rationale.md`](exp-0001-architecture-rationale.md) —— 微内核形态、L1 划分、归属判定阶梯等总体理由。

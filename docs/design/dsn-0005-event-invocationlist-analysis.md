@@ -1,9 +1,9 @@
 # InvocationList 引擎设计（GrowEvent 派发内核）
 
-- 状态：已实现（`Runtime/Core/Event/`；`InvocationList` 按 container-catalog §7 组合 `SnapshotSet<T>`）
+- 状态：已实现（`Runtime/Core/Event/`；`InvocationList` 按 dsn-0002-container-catalog §7 组合 `SnapshotSet<T>`）
 - 日期：2026-09-19
 - 范围：`Packages/com.ronny.grow/Runtime/Core/Event/InvocationList.cs`
-- 关联：`docs/design/event-primitives.md`（事件原语设计）、`docs/explanation/architecture-rationale.md` §8
+- 关联：`docs/design/dsn-0004-event-primitives.md`（事件原语设计）、`docs/explanation/exp-0001-architecture-rationale.md` §8
 
 ## 1. 定位与不变量
 
@@ -23,7 +23,7 @@
 
 ## 2. 状态与数据结构
 
-> 以下字段为参考形态；实际落地为组合 `Core/Collections` 的 `OrderedSet<T>`/`SnapshotSet<T>`，字段与流程分散在两者中（见 §9 与 `container-catalog.md` §7.2）。
+> 以下字段为参考形态；实际落地为组合 `Core/Collections` 的 `OrderedSet<T>`/`SnapshotSet<T>`，字段与流程分散在两者中（见 §9 与 `dsn-0002-container-catalog.md` §7.2）。
 
 | 字段 | 角色 | 增长/回收 |
 |---|---|---|
@@ -69,7 +69,7 @@
 理由：若在 `finally` 内直接重建（O(n)、可能分配），一旦此时正有 fatal 异常传播，会掩盖原异常；「置空 + 标脏」等价地达到了尽快释放引用的目的，且天然异常安全。
 
 **改动 3 —— 风格**
-K&R 大括号、极少注释，对齐仓库既有代码（`GrowBoot.cs`）；语义不变量由本文与 `event-primitives.md` 承载。
+K&R 大括号、极少注释，对齐仓库既有代码（`GrowBoot.cs`）；语义不变量由本文与 `dsn-0004-event-primitives.md` 承载。
 
 ## 6. 引擎代码形态
 
@@ -236,11 +236,11 @@ namespace Grow.Core.Event {
 | FIFO / 插入序缓存 | 高 | 按插入序淘汰即本结构的序 |
 | LRU 缓存 | 低 | LRU 需访问即重排（move-to-front），与 append-only 序冲突，强行实现会造成墓碑风暴；应用「字典 + 侵入式双向链表」经典实现 |
 
-**抽取：触发条件已满足，不再推迟。** `docs/design/container-catalog.md` §7 规划的 `OrderedSet<T>` / `OrderedDictionary<K,V>` 即第二个真实消费方，故按该文 §2.1「原语优先」原则处理：
+**抽取：触发条件已满足，不再推迟。** `docs/design/dsn-0002-container-catalog.md` §7 规划的 `OrderedSet<T>` / `OrderedDictionary<K,V>` 即第二个真实消费方，故按该文 §2.1「原语优先」原则处理：
 
-- **存储机制**（插入序注册集 + 哈希索引 + 墓碑惰性压缩，I-1/I-2/I-6/I-7）回填为 `Core/Collections` 的 `OrderedSet<T>`，作为框架内的**唯一实现**；**快照迭代协议**（I-3/I-4/I-5）独立为 `SnapshotSet<T>` 或先私有于 `Core/Event`（见 `container-necessity-review.md` §5.6）；
+- **存储机制**（插入序注册集 + 哈希索引 + 墓碑惰性压缩，I-1/I-2/I-6/I-7）回填为 `Core/Collections` 的 `OrderedSet<T>`，作为框架内的**唯一实现**；**快照迭代协议**（I-3/I-4/I-5）独立为 `SnapshotSet<T>` 或先私有于 `Core/Event`（见 `dsn-0003-container-necessity-review.md` §5.6）；
 - `InvocationList<TDelegate>` 降为「原语 + 事件策略」的薄组合，只保留 `where TDelegate : Delegate` 的身份去重与异常隔离；
-- 本文原「等第二个消费方再抽」的结论作废，以 `container-catalog.md` §2.1 / §7 为准。
+- 本文原「等第二个消费方再抽」的结论作废，以 `dsn-0002-container-catalog.md` §2.1 / §7 为准。
 
 ## 10. 结论
 

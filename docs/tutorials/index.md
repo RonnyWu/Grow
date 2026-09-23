@@ -19,4 +19,4 @@ Tutorial 面向"我不知道"；how-to 面向"我知道要做什么，但不知�
 
 ## 现状
 
-暂无内容。第一篇建议：`get-started.md`（用 Unity 打开工程并跑通 EditMode 测试）。
+暂无内容。第一篇建议：`tut-0001-get-started.md`（用 Unity 打开工程并跑通 EditMode 测试）。
