@@ -1,21 +1,24 @@
 # Reference
 
-**信息导向** —— 工作过程中需要查阅的确定事实。
+**Information-oriented** — the settled facts you look up while working.
 
-## 收录
+## Contains
 
-- 目录结构、命名规则、类型与 API 签名、配置项、枚举值。
-- 结构与格式稳定、可被检索、无需按顺序阅读。
+- Directory structure, naming rules, type and API signatures, settings, enum values.
+- Stable in structure and format, searchable, not meant to be read in order.
 
-## 不收录
+## Does Not Contain
 
-- 教学步骤 → `../tutorials/` `../how-to/`
-- 决策理由 → `../explanation/` 与 `../architecture/`
+- Teaching steps → `../tutorials/` `../how-to/`
+- Decision rationale → `../explanation/` and `../architecture/`
 
-## 边界
+## Boundary
 
-Reference 服务于"我正在进行的工作"；explanation 服务于"我的理解"。写 reference 时保持中立描述，不要夹带论证。
+Reference serves the work in front of you; explanation serves your understanding. Keep
+reference neutral — no arguments.
 
-## 现状
+## Current
 
-暂无内容。新建请从 [`ref-0000-template.md`](ref-0000-template.md) 复制。候选：`ref-0001-repository-layout.md`、`ref-0002-naming-conventions.md`、`ref-0003-namespace-rules.md`、`ref-0004-package-metadata.md`。
+Nothing yet. Start new documents from [`ref-0000-template.md`](ref-0000-template.md).
+Candidates: `ref-0001-repository-layout.md`, `ref-0002-naming-conventions.md`,
+`ref-0003-namespace-rules.md`, `ref-0004-package-metadata.md`.

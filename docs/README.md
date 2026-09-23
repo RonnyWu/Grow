@@ -1,18 +1,18 @@
-# Grow 文档
+# Grow Documentation
 
-本目录是 Grow 的文档正文。各部分的职责、命名与分布规则见
-[`design/dsn-0001-doc-layout.md`](design/dsn-0001-doc-layout.md)；
-决策记录见 [`architecture/index.md`](architecture/index.md)。
+This directory holds Grow's documentation. Duties, naming, and placement rules live in
+[`design/dsn-0001-doc-layout.md`](design/dsn-0001-doc-layout.md); decision records live in
+[`architecture/index.md`](architecture/index.md).
 
-## 目录
+## Contents
 
-| 路径 | 内容 |
+| Path | Content |
 |---|---|
-| `architecture/` | ADR 决策记录 —— [索引](architecture/index.md) |
-| `design/` | 模块与体系设计 —— [索引](design/index.md) |
-| `explanation/` | 理解导向 —— [索引](explanation/index.md) |
-| `how-to/` | 任务导向 —— [索引](how-to/index.md)（暂无内容） |
-| `reference/` | 信息导向 —— [索引](reference/index.md)（暂无内容） |
-| `tutorials/` | 学习导向 —— [索引](tutorials/index.md)（暂无内容） |
+| `architecture/` | ADRs — [index](architecture/index.md) |
+| `design/` | Module and system designs — [index](design/index.md) |
+| `explanation/` | Understanding-oriented — [index](explanation/index.md) |
+| `how-to/` | Task-oriented — [index](how-to/index.md) (empty so far) |
+| `reference/` | Information-oriented — [index](reference/index.md) (empty so far) |
+| `tutorials/` | Learning-oriented — [index](tutorials/index.md) (empty so far) |
 
-过程草稿（计划、spec）不入库，放在仓库根的 `.drafts/`。
+Drafts (plans, specs) are not tracked; they live in `.drafts/` at the repository root.

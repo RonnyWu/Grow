@@ -1,22 +1,26 @@
 # Tutorials
 
-**学习导向** —— 手把手带一个完全不了解 Grow 的人从零跑到第一个可见结果。
+**Learning-oriented** — takes someone who knows nothing about Grow to their first visible
+result.
 
-## 收录
+## Contains
 
-- 从零开始的完整引导：环境准备、安装、第一个可运行结果。
-- 每一步都有确定的产出，读者不需要自己做设计决策。
+- Complete from-scratch walkthroughs: setup, installation, first working result.
+- Every step has a definite outcome; the reader makes no design decisions.
 
-## 不收录
+## Does Not Contain
 
-- 解决某个已知问题的步骤 → `../how-to/`
-- 事实查询（目录、命名、API） → `../reference/`
-- 背景与取舍 → `../explanation/`
+- Steps for a known problem → `../how-to/`
+- Fact lookups (layout, naming, API) → `../reference/`
+- Background and trade-offs → `../explanation/`
 
-## 边界
+## Boundary
 
-Tutorial 面向"我不知道"；how-to 面向"我知道要做什么，但不知道怎么下手"。
+A tutorial serves "I don't know"; a how-to serves "I know what I want but not how to get
+there".
 
-## 现状
+## Current
 
-暂无内容。新建请从 [`tut-0000-template.md`](tut-0000-template.md) 复制。第一篇建议：`tut-0001-get-started.md`（用 Unity 打开工程并跑通 EditMode 测试）。
+Nothing yet. Start new documents from [`tut-0000-template.md`](tut-0000-template.md).
+First suggestion: `tut-0001-get-started.md` (open the project in Unity and run the EditMode
+tests).
