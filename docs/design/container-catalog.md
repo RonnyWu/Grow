@@ -5,7 +5,7 @@
 - 范围：未来 `Packages/com.ronny.grow/Runtime/Core/Collections/*` 与 `Runtime/Core/Pool/*`
 - 关联：`docs/design/container-necessity-review.md`（实现前的必要性验证流程与登记表）、
   `docs/design/event-invocationlist-analysis.md`（机制复用与 LRU 纠正）、`docs/design/event-primitives.md`、
-  `docs/explanation/architecture-rationale.md` §8（目录与归属）、`docs/architecture/ADR-0002-domain-reload-disabled.md`
+  `docs/explanation/architecture-rationale.md` §8（目录与归属）、`docs/architecture/adr-0002-domain-reload-disabled.md`
 - 产物边界：本目录只回答「Unity 常用但 C#/Unity 未直接提供、需自研的容器有哪些、各自缺口与契约是什么」。
   每个容器的逐步 TDD 实现步骤另行以 `writing-plans` 产出，本文不含 checkbox 任务。
 

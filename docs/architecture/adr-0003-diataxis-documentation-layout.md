@@ -49,4 +49,4 @@
 - Diátaxis — How to use Diátaxis：https://diataxis.fr/how-to-use-diataxis/
 - Diátaxis — Complex hierarchies：https://diataxis.fr/complex-hierarchies/
 - `docs/README.md`
-- `docs/architecture/ADR-0002-domain-reload-disabled.md`（ADR 格式先例）
+- `docs/architecture/adr-0002-domain-reload-disabled.md`（ADR 格式先例）

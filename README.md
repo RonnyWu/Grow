@@ -10,7 +10,7 @@ Runtime and editor framework for Unity, distributed as the embedded UPM package
 
 - Unity **2021.3.45f2** (C# 9). Newer Unity APIs are not used.
 - Domain Reload disabled, Scene Reload kept — see
-  [`docs/architecture/ADR-0002`](docs/architecture/ADR-0002-domain-reload-disabled.md).
+  [`docs/architecture/ADR-0002`](docs/architecture/adr-0002-domain-reload-disabled.md).
 
 ## Repository layout
 

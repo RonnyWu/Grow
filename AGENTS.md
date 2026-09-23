@@ -29,7 +29,7 @@ The framework is an **embedded UPM package at `Packages/com.ronny.grow`**, not u
   `Internal/`. Third-party/backend code lives only in `Integrations/<Tech>` and is gated by
   asmdef `versionDefines` + `defineConstraints`.
 - Banned L1 names: `Utils`, `Common`, `Misc`, `Helpers`, `Managers`.
-- ADRs live in `docs/architecture/ADR-NNNN-topic.md`. Present: ADR-0002 (Domain Reload
+- ADRs live in `docs/architecture/adr-nnnn-topic.md`. Present: ADR-0002 (Domain Reload
   disabled) and ADR-0003 (Diátaxis doc layout). `ADR-0001` was never created.
 - Documentation layout and conventions: `docs/README.md` (single source of truth). Drafts
   live in the gitignored `.drafts/`; only authoritative docs are committed.

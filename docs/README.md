@@ -47,7 +47,7 @@
 | 对象 | 规则 | 示例 |
 |---|---|---|
 | 四象限文档 | 小写 kebab-case；how-to 用动词开头 | `how-to/add-a-collection.md` |
-| ADR | `ADR-NNNN-topic.md`，四位补零 | `ADR-0003-diataxis-documentation-layout.md` |
+| ADR | `adr-nnnn-topic.md`，四位补零 | `adr-0003-diataxis-documentation-layout.md` |
 | 设计文档 | 小写 kebab-case | `design/container-catalog.md` |
 | 草稿 | `YYYY-MM-DD-topic.md` | `.drafts/specs/2026-09-23-doc-layout-design.md` |
 | 目录 | 小写，多词用连字符 | `docs/explanation/` |
@@ -70,7 +70,7 @@
 
 按顺序问：
 
-1. 它记录的是**一个已经做出的决策**吗？→ `docs/architecture/ADR-NNNN-topic.md`
+1. 它记录的是**一个已经做出的决策**吗？→ `docs/architecture/adr-nnnn-topic.md`
 2. 它是**某个模块的实现设计或规划**吗？→ `docs/design/`
 3. 它是**给读者的文档**吗？→ 按 §3 选象限
 4. 以上都不是（过程草稿、计划、spec）？→ `.drafts/`

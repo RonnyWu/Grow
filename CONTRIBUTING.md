@@ -8,7 +8,7 @@ The documentation layout and conventions are defined in [`docs/README.md`](docs/
 read it before adding or moving a document. In short:
 
 - **Decisions** are recorded as ADRs under [`docs/architecture/`](docs/architecture), named
-  `ADR-NNNN-topic.md`. Each new decision takes the next zero-padded four-digit number.
+  `adr-nnnn-topic.md`. Each new decision takes the next zero-padded four-digit number.
 - **Module designs** live in `docs/design/`, each carrying a status header.
 - **Reader-facing docs** follow Diátaxis under `docs/tutorials/`, `docs/how-to/`,
   `docs/reference/`, and `docs/explanation/`.
