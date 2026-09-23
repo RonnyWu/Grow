@@ -8,6 +8,7 @@ a record is immutable.
 - Filename `adr-nnnn-topic.md` — four zero-padded digits, `topic` a short lowercase
   kebab-case description.
 - Numbers increase in **creation order**; never reuse or renumber.
+- `0000` is reserved for the template (`adr-0000-template.md`).
 - Records start at `ADR-0002` (`ADR-0001` was never created and will not be backfilled).
 
 ## Status
