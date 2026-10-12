@@ -1,48 +1,42 @@
 # Grow
 
-A lightweight, modular Unity game framework.
+**Read this in other languages:** [English](README.md) | [简体中文](i18n/README.zh-CN.md)
 
-> **Status: early planning (`v3.0.0-exp.1`).** The repository restarted from a clean baseline; the
-> API and structure are not stable yet.
+A modular Unity game framework built on a thin kernel.
 
+- Status: **early planning** — the API and structure are not stable yet.
 - Package: [`Packages/com.ronny.grow`](Packages/com.ronny.grow)
-- Unity: **2022.3 LTS** (development uses **2022.3.62f3**)
-
-Open the repository with Unity 2022.3.62f3; the package at `Packages/com.ronny.grow` is picked up
-automatically. All code belongs in the package — `Assets/` stays empty.
+- Unity: **2022.3 LTS**
 
 ## Architecture
 
-Grow is a **thin kernel plus an optional capability layer**. The kernel owns the *mechanisms* a game
-needs to run — startup, lifetime, update driving, module registration, scheduling — and a small set
-of passive primitives. It never owns or wraps a *capability*; assets, saves, UI, audio and the like
-live in separate, replaceable packages built on mature libraries.
+Grow is a **thin kernel plus a capability layer**: the kernel handles mechanisms, and game features
+are added as replaceable capabilities.
 
-Layers (each depends on the ones below):
+- **Kernel** — mechanisms only: startup, lifetime, frame driving, module registration, scheduling,
+  plus a few utilities that have no timing concerns, such as logging. It neither touches nor wraps any
+  game feature.
+- **Capability** — a game feature such as assets, saves, UI, or audio. Each one ships as its own
+  package and exposes a single stable **contract**; no third-party type appears in that contract, so
+  the implementation can be replaced wholesale without touching the caller.
 
-| Layer | Contents |
-|---|---|
-| Game | user game / application code |
-| Framework | meta package — assembles a recommended capability set and a default composition root |
-| Capabilities | contracts + implementations (third-party backends) + kernel adapters |
-| Kernel | mechanisms — entry, modules, service registry, loop, lifecycle |
-| Core | passive, time-free primitives; no third-party dependencies |
+Layers, each depending only on the ones below it:
 
-A capability is a *contract + implementation + kernel adapter*. The contract is the stable,
-user-facing API and never exposes a third-party type, so an implementation can be swapped without
-touching its consumers.
+| Layer | Contents | State |
+|---|---|---|
+| Game | Your own game / application code | — |
+| Framework | Meta package: wires a set of capabilities with default composition | Planned |
+| Capabilities | Contract + implementation (the implementation wraps third-party libraries) | Planned |
+| Kernel | Mechanisms — entry, modules, service registry, lifetime, loop | In progress |
+| Core | Low-level primitives with no third-party dependencies | In progress |
 
-**Architecture layers and delivery packages are two different axes.** Layers describe the module
-structure; packages describe how code is shipped:
+## Contributing
 
-- `com.ronny.grow` — kernel package: Core + Kernel, no third-party dependencies
-- `com.ronny.grow.<cap>.contracts` — capability contracts, no third-party dependencies
-- `com.ronny.grow.<cap>[.<backend>]` — capability implementations, bringing their own dependencies
-- `com.ronny.grow.framework` — meta package that pulls in a recommended capability set
+The project is still in early planning, so please [open an issue](https://github.com/RonnyWu/Grow/issues)
+before starting on a pull request.
 
-**v1 targets the kernel only** — entry, modules, a minimal service registry (not a DI container),
-lifecycle and loop, plus logging — shipped as the single kernel package. Capabilities and the meta
-package come later.
+- All first-party code lives in the UPM package at `Packages/com.ronny.grow`; `Assets/` is empty by
+  design and must stay that way.
 
 ## License
 
