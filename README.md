@@ -1,15 +1,41 @@
 # Grow
 
-A lightweight, modular Unity game framework.
+**Read this in other languages:** [English](README.md) | [简体中文](i18n/README.zh-CN.md)
 
-> **Status: early planning (`v3.0.0-exp.1`).** The repository restarted from a clean baseline; the
-> API and structure are not stable yet.
+A modular Unity game framework built on a thin kernel.
 
+- Status: **early planning** — the API and structure are not stable yet.
 - Package: [`Packages/com.ronny.grow`](Packages/com.ronny.grow)
-- Unity: **2022.3 LTS** (development uses **2022.3.62f3**)
+- Unity: **2022.3 LTS**
 
-Open the repository with Unity 2022.3.62f3; the package at `Packages/com.ronny.grow` is picked up
-automatically. All code belongs in the package — `Assets/` stays empty.
+## Architecture
+
+Grow is a **thin kernel plus a capability layer**: the kernel provides only mechanisms, and game
+features are added as replaceable capabilities.
+
+- **Kernel** — mechanisms only: the runtime plumbing that starts a game and drives its per-frame
+  updates. It never owns or wraps any game feature.
+- **Capability** — a game feature such as assets, saves, UI, or audio. Each one ships as its own
+  package and exposes a single stable **contract**; no third-party type appears in that contract, so
+  the implementation can be replaced wholesale without touching the caller.
+
+Each layer depends only on the layers below it:
+
+| Layer | Contents | State |
+|---|---|---|
+| Game | Your own game / application code | — |
+| Framework | Meta package: assembles a recommended set of capabilities | Planned |
+| Capabilities | Contract + implementation (implementations wrap third-party libraries) | Planned |
+| Kernel | Mechanisms — entry, modules, service registry, lifetime, loop | In progress |
+| Core | Passive primitives (e.g. logging); no third-party dependencies | In progress |
+
+## Contributing
+
+The project is still in early planning, so please [open an issue](https://github.com/RonnyWu/Grow/issues)
+before starting on a pull request.
+
+- All first-party code lives in the UPM package at `Packages/com.ronny.grow`; `Assets/` is empty by
+  design and must stay that way.
 
 ## License
 

@@ -3,7 +3,7 @@
   "displayName": "Grow",
   "version": "3.0.0-exp.1",
   "unity": "2022.3",
-  "description": "A lightweight, modular Unity game framework.",
+  "description": "A modular Unity game framework built on a thin kernel.",
   "keywords": [
     "framework",
     "unity",
