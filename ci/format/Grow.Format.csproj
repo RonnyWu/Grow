@@ -1,0 +1,24 @@
+<!--
+  Format-only project.
+
+  It exists so the whitespace formatter can check this repository without Unity.
+  That formatter works on syntax alone and never compiles, so the missing
+  UnityEngine references do not matter and this project is never built.
+
+  See the "Format" workflow for the CI invocation. Locally, run the same command
+  without the verify-only flag to rewrite the files in place.
+
+  The glob covers every embedded package under Packages/; registry packages live
+  in Library/PackageCache and are therefore untouched.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Mirrors the package toolchain (AGENTS.md): C# 9, .NET Standard 2.1. -->
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Packages/**/*.cs" />
+  </ItemGroup>
+</Project>
