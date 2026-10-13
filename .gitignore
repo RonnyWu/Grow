@@ -319,6 +319,8 @@ xcuserdata/
 /[Aa]ssets/Plugins/Editor/JetBrains*
 # Jetbrains Rider personal-layer settings
 *.DotSettings.user
+# Rider settings attached to the generated .csproj files (ignored above)
+*.csproj.DotSettings
 
 # Visual Studio cache directory
 .vs/
@@ -401,6 +403,12 @@ InitTestScene*.unity*
 
 # Local CI artifacts
 /ci/logs/
+
+# The format-only project is source, not a generated artefact, so it overrides
+# the `*.csproj` rule above; its build output stays local.
+!ci/format/Grow.Format.csproj
+/ci/format/obj/
+/ci/format/bin/
 
 # Rider solution-level config is machine-local here (nested .idea layout);
 # overrides the shared-.idea policy of the JetBrains block above.

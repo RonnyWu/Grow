@@ -1,0 +1,178 @@
+# EditorConfig — https://editorconfig.org
+#
+# The repository's shared baseline for file formatting and for the C# conventions
+# listed below. Editors apply it subject to their own support; what CI actually
+# enforces is exactly these two commands:
+#
+#   dotnet format whitespace ci/format/Grow.Format.csproj --verify-no-changes
+#   dotnet format style ci/format/Grow.Format.csproj --diagnostics IDE1006 --severity info --verify-no-changes
+#
+# `--severity info` matters: the rules below are declared `suggestion`. Anything
+# not listed here is applied by the IDE alone.
+#
+# Style: K&R braces, four-space indent, 100-column margin, and the naming
+# convention below.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# `.gitattributes` marks .gitignore as `-text` so that its raw CR bytes survive
+# (the macOS `Icon\r` patterns). That only stops Git from normalizing the file, so
+# opt it out here as well — otherwise an editor saving it could strip those bytes.
+[/.gitignore]
+end_of_line = unset
+trim_trailing_whitespace = false
+
+# Markdown uses two trailing spaces as a hard line break.
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# A right margin for the editor only — neither `dotnet format` nor the CI steps
+# wrap long lines, so this is a hint, not a gate.
+max_line_length = 100
+
+# --- Braces: K&R -------------------------------------------------------------
+# An opening brace stays on the line of its construct, and `} else {` /
+# `} catch {` share one line.
+csharp_new_line_before_open_brace = none
+csharp_new_line_before_else = false
+csharp_new_line_before_catch = false
+csharp_new_line_before_finally = false
+csharp_new_line_before_members_in_object_initializers = false
+csharp_new_line_between_query_expression_clauses = false
+
+# `if (x) return;` and `{ get; }` stay on one line — the formatter must not expand
+# them into a block. Neither key governs *whether* braces are required, so a
+# brace-less single statement stays allowed and no brace preference is pinned here.
+csharp_preserve_single_line_statements = true
+csharp_preserve_single_line_blocks = true
+
+# --- Layout ------------------------------------------------------------------
+# Inside a `switch`, the `case` labels are indented one level and their contents
+# one more.
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+
+# Imports go above the namespace, `System` first, no blank line between groups.
+# IDE-only: `csharp_using_directive_placement` (IDE0065) and the two sorting
+# options are not whitespace fixes, so the CI steps above ignore them.
+csharp_using_directive_placement = outside_namespace:suggestion
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+# C# 9 — file-scoped namespaces are unavailable, so block-scoped is the rule.
+csharp_style_namespace_declarations = block_scoped:suggestion
+
+# --- Naming ------------------------------------------------------------------
+# Mirrors the built-in ReSharper defaults (Editor | Code Style | C# | Naming, with
+# "use auto-detected rules" off) so that the IDE and CI agree. Checked by
+# `dotnet format style` (IDE1006) in CI.
+#
+# Rules are ranked by the tool, not by their position here: the more specific a
+# rule is about accessibility, modifiers and symbol kind, the higher it ranks.
+#
+# Private field names are deliberately absent — Roslyn cannot express them without
+# breaking Unity serialized fields; see "Not covered by CI" below. Note also that a
+# `const` *field* is UpperCamelCase while a `const` *local* stays lowerCamelCase,
+# and that `static readonly` fields are UpperCamelCase with or without `private`.
+dotnet_naming_rule.interfaces_i_prefix.severity = suggestion
+dotnet_naming_rule.interfaces_i_prefix.symbols = grow_interfaces
+dotnet_naming_rule.interfaces_i_prefix.style = grow_i_pascal
+dotnet_naming_symbols.grow_interfaces.applicable_kinds = interface
+dotnet_naming_symbols.grow_interfaces.applicable_accessibilities = *
+dotnet_naming_style.grow_i_pascal.required_prefix = I
+dotnet_naming_style.grow_i_pascal.capitalization = pascal_case
+
+dotnet_naming_rule.type_parameters_t_prefix.severity = suggestion
+dotnet_naming_rule.type_parameters_t_prefix.symbols = grow_type_parameters
+dotnet_naming_rule.type_parameters_t_prefix.style = grow_t_pascal
+dotnet_naming_symbols.grow_type_parameters.applicable_kinds = type_parameter
+dotnet_naming_symbols.grow_type_parameters.applicable_accessibilities = *
+dotnet_naming_style.grow_t_pascal.required_prefix = T
+dotnet_naming_style.grow_t_pascal.capitalization = pascal_case
+
+dotnet_naming_rule.constant_fields_pascal.severity = suggestion
+dotnet_naming_rule.constant_fields_pascal.symbols = grow_constant_fields
+dotnet_naming_rule.constant_fields_pascal.style = grow_pascal
+dotnet_naming_symbols.grow_constant_fields.applicable_kinds = field
+dotnet_naming_symbols.grow_constant_fields.applicable_accessibilities = *
+dotnet_naming_symbols.grow_constant_fields.required_modifiers = const
+dotnet_naming_style.grow_pascal.capitalization = pascal_case
+
+dotnet_naming_rule.static_readonly_fields_pascal.severity = suggestion
+dotnet_naming_rule.static_readonly_fields_pascal.symbols = grow_static_readonly_fields
+dotnet_naming_rule.static_readonly_fields_pascal.style = grow_pascal
+dotnet_naming_symbols.grow_static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.grow_static_readonly_fields.applicable_accessibilities = *
+dotnet_naming_symbols.grow_static_readonly_fields.required_modifiers = static, readonly
+
+dotnet_naming_rule.types_and_members_pascal.severity = suggestion
+dotnet_naming_rule.types_and_members_pascal.symbols = grow_types_and_members
+dotnet_naming_rule.types_and_members_pascal.style = grow_pascal
+dotnet_naming_symbols.grow_types_and_members.applicable_kinds = namespace, class, struct, enum, delegate, method, property, event, local_function
+dotnet_naming_symbols.grow_types_and_members.applicable_accessibilities = *
+
+dotnet_naming_rule.non_private_fields_pascal.severity = suggestion
+dotnet_naming_rule.non_private_fields_pascal.symbols = grow_non_private_fields
+dotnet_naming_rule.non_private_fields_pascal.style = grow_pascal
+dotnet_naming_symbols.grow_non_private_fields.applicable_kinds = field
+dotnet_naming_symbols.grow_non_private_fields.applicable_accessibilities = public, internal, protected, protected_internal
+
+dotnet_naming_rule.parameters_camel.severity = suggestion
+dotnet_naming_rule.parameters_camel.symbols = grow_parameters
+dotnet_naming_rule.parameters_camel.style = grow_camel
+dotnet_naming_symbols.grow_parameters.applicable_kinds = parameter
+dotnet_naming_symbols.grow_parameters.applicable_accessibilities = *
+dotnet_naming_style.grow_camel.capitalization = camel_case
+
+dotnet_naming_rule.locals_camel.severity = suggestion
+dotnet_naming_rule.locals_camel.symbols = grow_locals
+dotnet_naming_rule.locals_camel.style = grow_camel
+dotnet_naming_symbols.grow_locals.applicable_kinds = local
+dotnet_naming_symbols.grow_locals.applicable_accessibilities = *
+
+# --- Not covered by CI --------------------------------------------------------
+# Applied by the IDE alone — either JetBrains-only (`resharper_*`) or impossible
+# for Roslyn to express, so this file does not reproduce them:
+#
+#   private field names — Roslyn matches fields by accessibility and modifiers,
+#   never by attribute, so it cannot tell `[SerializeField] private float speed;`
+#   (the defaults want lowerCamelCase) from an ordinary private field (the defaults
+#   want `_lowerCamelCase`). One rule would have to pick a single style and would
+#   then wrongly flag the other case, so the IDE's own rules govern both.
+#   `Unity serialized field` is a JetBrains-only kind for the same reason.
+#
+#   enum member names — `enum_member` likewise has no counterpart in the .NET
+#   naming conventions, so `dotnet format` cannot see them either
+#
+#   blank lines, line wrapping, finer syntax style
+#
+# Consequence: these are the IDE's *defaults*, which a different editor, IDE version
+# or settings profile may answer differently. Exporting the ReSharper properties
+# into this file is the only way to make them reproducible — a trade-off against
+# keeping this file small.
+
+# --- File headers -------------------------------------------------------------
+# Deliberately no `file_header_template`. A per-file notice has to name a copyright
+# holder, and a contributor's file is theirs — so requiring one here would both
+# misattribute and pin a year. The MIT notice lives in LICENSE, which is where the
+# license asks for it; the existing headers stay as they are and new files need none.
+
+# Assembly definitions are hand-maintained JSON, indented with four spaces.
+[*.asmdef]
+indent_style = space
+indent_size = 4
+
+# Workflows and other YAML.
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
