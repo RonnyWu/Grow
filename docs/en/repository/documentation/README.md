@@ -6,7 +6,7 @@
 
 What belongs here:
 
-- [`documentation-system.md`](documentation-system.md) — why there are two layers, what the
+- [`documentation.md`](documentation.md) — why there are two layers, what the
   sections are for, and what the checks cost;
 - [`conventions.md`](conventions.md) — the rules every page must follow.
 

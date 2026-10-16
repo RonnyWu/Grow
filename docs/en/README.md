@@ -20,5 +20,5 @@ reference. The rules are in
 [`repository/documentation/conventions.md`](repository/documentation/conventions.md).
 
 Start with
-[`repository/documentation/documentation-system.md`](repository/documentation/documentation-system.md),
+[`repository/documentation/documentation.md`](repository/documentation/documentation.md),
 which walks through how this documentation is organised.

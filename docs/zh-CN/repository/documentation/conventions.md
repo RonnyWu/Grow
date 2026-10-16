@@ -1,4 +1,4 @@
-<!-- source: docs/en/repository/documentation/conventions.md @ blob:e2903332b0873139d1c32eba30164c38f2f2df91 -->
+<!-- source: docs/en/repository/documentation/conventions.md @ blob:144b77c3328d812e0ff9da9a3716245ae7609fbe -->
 <!-- 中文译文；以英文 docs/en/repository/documentation/conventions.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/repository/documentation/conventions.md 核验。 -->
 
 # 文档约定
@@ -6,7 +6,7 @@
 **其他语言：** [English](../../../en/repository/documentation/conventions.md) | [简体中文](conventions.md)
 
 `docs/` 下每一页都要遵守的规则。为什么这样组织，见
-[`documentation-system.md`](documentation-system.md)。
+[`documentation.md`](documentation.md)。
 
 ## 一页该放哪
 
@@ -33,9 +33,10 @@
 
 ## 文件命名
 
-- 小写 `kebab-case` + `.md`，例如 `documentation-system.md`、`log-chunking.md`。
+- 小写 `kebab-case` + `.md`，例如 `conventions.md`、`log-chunking.md`。
 - 文件名在**同一语言树内唯一**。
-- `README.md` 是目录的落地页，是上面规则的**唯一例外**。
+- `README.md` 是**分区目录**的落地页，也是上面规则的唯一例外；`framework/` 与 `repository/`
+  只是分组目录、不放页面，因此没有落地页。
 
 ## 语言
 
@@ -76,11 +77,12 @@
 
 - `markdownlint-cli2`，配置见 `.markdownlint-cli2.jsonc`；
 - `lychee`，查死链；
-- `ci/docs/check-docs.mjs`，查结构性规则——两棵树互为镜像、同一语言树内文件名唯一、每篇译文都有 `source` 标记。
+- `ci/docs/check-docs.mjs`，查结构性规则——两棵树互为镜像、同一语言树内文件名唯一、每篇译文的 `source` 标记存在**且 blob 哈希仍与英文一致**。
 
-本地运行：
+规范与结构两项，装着 Node 就能跑；链接检查需要 `lychee` 可执行文件：
 
 ```bash
 npx markdownlint-cli2 "docs/**/*.md"
 node ci/docs/check-docs.mjs
+lychee --config .lychee.toml "docs/**/*.md"
 ```

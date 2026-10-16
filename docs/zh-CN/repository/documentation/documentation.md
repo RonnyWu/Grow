@@ -1,9 +1,9 @@
-<!-- source: docs/en/repository/documentation/documentation-system.md @ blob:ee4ac4110ee728e899d5682939af379913f24704 -->
-<!-- 中文译文；以英文 docs/en/repository/documentation/documentation-system.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/repository/documentation/documentation-system.md 核验。 -->
+<!-- source: docs/en/repository/documentation/documentation.md @ blob:1036b9bd89e210ff4ada9a8479039b230e014239 -->
+<!-- 中文译文；以英文 docs/en/repository/documentation/documentation.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/repository/documentation/documentation.md 核验。 -->
 
 # 文档体系
 
-**其他语言：** [English](../../../en/repository/documentation/documentation-system.md) | [简体中文](documentation-system.md)
+**其他语言：** [English](../../../en/repository/documentation/documentation.md) | [简体中文](documentation.md)
 
 Grow 的文档为什么这样分。每一页必须遵守的规则见 [`conventions.md`](conventions.md)。
 
@@ -53,7 +53,7 @@ Grow 同时是「库」和「代码库」，两者的读者不同。文档就按
 译文会记下自己译自哪份英文，以及那份英文的内容哈希：
 
 ```text
-<!-- source: docs/en/repository/documentation/documentation-system.md @ blob:<sha> -->
+<!-- source: docs/en/repository/documentation/documentation.md @ blob:<sha> -->
 ```
 
 哈希让「配对」变得可校验：英文改了而标记没跟着更新，译文就**确定**过期了——不需要猜。所以这行标记放在每篇译文的第一行；也所以「翻译」是编辑一页的一部分，而不是可以往后拖的记账。

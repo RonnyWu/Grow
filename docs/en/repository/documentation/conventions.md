@@ -3,7 +3,7 @@
 **Read this in other languages:** [English](conventions.md) | [简体中文](../../../zh-CN/repository/documentation/conventions.md)
 
 The rules every page in `docs/` follows. For why the documentation is arranged this way, see
-[`documentation-system.md`](documentation-system.md).
+[`documentation.md`](documentation.md).
 
 ## Where a page goes
 
@@ -32,10 +32,12 @@ Every page has this shape:
 
 ## File names
 
-- Lower-case `kebab-case` with a `.md` extension — for example `documentation-system.md`,
+- Lower-case `kebab-case` with a `.md` extension — for example `conventions.md`,
   `log-chunking.md`.
 - A file name is unique **within its locale tree**.
-- `README.md` is the landing page of a folder and is the only exception to the rule above.
+- `README.md` is the landing page of a section folder, and the only exception to the rule above.
+  `framework/` and `repository/` group sections instead of holding pages, so they have no landing
+  page.
 
 ## Language
 
@@ -80,11 +82,14 @@ The `Docs` workflow runs on every pull request:
 - `markdownlint-cli2`, configured by `.markdownlint-cli2.jsonc`;
 - `lychee`, for broken links;
 - `ci/docs/check-docs.mjs`, for the structural rules — mirrored trees, unique file names within a
-  locale, and a `source` marker on every translation.
+  locale, and a `source` marker on every translation whose blob hash still matches the English
+  text.
 
-Run them locally:
+The lint and structure checks run anywhere Node is installed. The link check needs the `lychee`
+binary:
 
 ```bash
 npx markdownlint-cli2 "docs/**/*.md"
 node ci/docs/check-docs.mjs
+lychee --config .lychee.toml "docs/**/*.md"
 ```

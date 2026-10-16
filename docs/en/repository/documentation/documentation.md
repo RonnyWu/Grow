@@ -1,6 +1,6 @@
 # Documentation system
 
-**Read this in other languages:** [English](documentation-system.md) | [简体中文](../../../zh-CN/repository/documentation/documentation-system.md)
+**Read this in other languages:** [English](documentation.md) | [简体中文](../../../zh-CN/repository/documentation/documentation.md)
 
 Why Grow's documentation is split the way it is. The rules a page must follow are in
 [`conventions.md`](conventions.md).
@@ -66,7 +66,7 @@ be compared file by file.
 A translation records the English text it came from, by content hash:
 
 ```text
-<!-- source: docs/en/repository/documentation/documentation-system.md @ blob:<sha> -->
+<!-- source: docs/en/repository/documentation/documentation.md @ blob:<sha> -->
 ```
 
 The hash is what makes the pairing checkable. When the English text changes and the marker is not

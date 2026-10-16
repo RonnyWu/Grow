@@ -1,4 +1,4 @@
-<!-- source: docs/en/README.md @ blob:08b368e834898ff9cfb712bde6178c5ad66a3fff -->
+<!-- source: docs/en/README.md @ blob:969709d117ebb5debbc53414de740b1c9cb348b6 -->
 <!-- 中文译文；以英文 docs/en/README.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/README.md 核验。 -->
 
 # Grow 文档
@@ -21,5 +21,5 @@
 [`repository/documentation/conventions.md`](repository/documentation/conventions.md)。
 
 建议从
-[`repository/documentation/documentation-system.md`](repository/documentation/documentation-system.md)
+[`repository/documentation/documentation.md`](repository/documentation/documentation.md)
 读起——它讲这套文档是怎么组织的。
