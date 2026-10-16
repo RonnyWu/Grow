@@ -1,4 +1,4 @@
-<!-- source: docs/en/README.md @ blob:690afb8ca31a18141f89b498076c1c2f56ac4b87 -->
+<!-- source: docs/en/README.md @ blob:e2b8eb1ffaacc64d5e198037c7604ad16cddf697 -->
 <!-- 中文译文；以英文 docs/en/README.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/README.md 核验。 -->
 
 # Grow 文档
@@ -18,3 +18,4 @@
 | [`reference/`](reference/) | 参考——术语与约定 |
 
 每一页都遵循 [`guides/documentation.md`](guides/documentation.md) 的约定。
+建议从 [`architecture/documentation-system.md`](architecture/documentation-system.md) 读起——它讲这套文档是怎么组织的。

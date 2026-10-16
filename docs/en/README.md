@@ -16,3 +16,5 @@ ships with the package itself, at
 | [`reference/`](reference/) | Reference — glossary and terminology |
 
 Every page follows the conventions in [`guides/documentation.md`](guides/documentation.md).
+Start with [`architecture/documentation-system.md`](architecture/documentation-system.md), which
+walks through how this documentation is organised.
