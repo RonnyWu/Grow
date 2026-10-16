@@ -36,6 +36,7 @@ before starting on a pull request.
 
 - All first-party code lives in the UPM package at `Packages/com.ronny.grow`; `Assets/` is empty by
   design and must stay that way.
+- Contributor documentation lives in [`docs/`](docs/README.md).
 
 ## License
 

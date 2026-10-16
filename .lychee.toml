@@ -1,0 +1,14 @@
+# Link checking for the documentation.
+# https://lychee.cli.rs/configuration/
+
+max_concurrency = 4
+timeout = 20
+# lychee's default (all 2xx), plus 429 -- what a rate-limited host returns.
+accept = ["100..=103", "200..=299", "429"]
+# Fragment (heading anchor) checking stays off. `include_fragments` is an enum
+# (`none` / `anchor-only` / `text-only` / `full`), not a boolean, and its default
+# is already "none" -- so the key is deliberately absent rather than set to a value.
+exclude = [
+  # Unity's documentation host is slow and occasionally blocks CI runners.
+  "https://docs\\.unity3d\\.com/.*",
+]

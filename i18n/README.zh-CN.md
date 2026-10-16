@@ -1,4 +1,4 @@
-<!-- source: README.md @ blob:9f6aefddfb035c0e4c46b216b8cd0aa63bbd5aa2 -->
+<!-- source: README.md @ blob:f9c15ee400651c04283d38ebb4f97ea034ac4148 -->
 <!-- 中文译文；以英文 README.md 为准，译文可能滞后于原文。blob 是 README.md 的内容 sha，可用 git hash-object README.md 核验。 -->
 
 # Grow
@@ -33,6 +33,7 @@ Grow 采用**薄内核 + 能力层**的结构：内核只负责机制，游戏�
 项目还在早期规划阶段；动手写 PR 之前，请先[开一个 issue](https://github.com/RonnyWu/Grow/issues) 沟通。
 
 - 第一方代码一律放在 UPM 包 `Packages/com.ronny.grow` 内；`Assets/` 按设计保持为空，请不要在其中放代码。
+- 贡献者文档在 [`docs/`](../docs/README.md)。
 
 ## 许可证
 

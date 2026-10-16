@@ -1,0 +1,24 @@
+{
+  // markdownlint configuration for the repository documentation.
+  // Rules: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+  "config": {
+    "default": true,
+    // Line length is not enforced anywhere, so the rule would only add noise.
+    "MD013": false,
+    // Repeated headings are allowed when they are not siblings.
+    "MD024": { "siblings_only": true },
+    // Tables are used heavily; keep them readable rather than enforcing a pipe style.
+    "MD055": false,
+    // The delimiter row `|---|---|` is the established style in this repository (README, CHANGELOG).
+    "MD060": false
+  },
+  // The package's table of contents is deliberately a list of links: Unity renders it, and it is
+  // not a page. Every other file opens with a level-1 heading.
+  "overrides": [
+    {
+      "filter": ["Packages/com.ronny.grow/Documentation~/TableOfContents.md"],
+      "config": { "MD041": false },
+      "combine": "merge"
+    }
+  ]
+}

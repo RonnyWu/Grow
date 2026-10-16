@@ -18,7 +18,5 @@
     "type": "git",
     "url": "https://github.com/RonnyWu/Grow.git"
   },
-  "documentationUrl": "https://github.com/RonnyWu/Grow#readme",
-  "changelogUrl": "https://github.com/RonnyWu/Grow/blob/main/Packages/com.ronny.grow/CHANGELOG.md",
   "dependencies": {}
 }
