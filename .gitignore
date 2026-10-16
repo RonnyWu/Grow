@@ -420,8 +420,6 @@ InitTestScene*.unity*
 # `Documentation~` is the Unity package documentation folder (Unity ignores any
 # path ending in `~`, so it needs no .meta files). The `*~` rule in the Linux
 # block above would ignore it as well -- re-include the package's docs.
-# Note: lychee skips paths matched by .gitignore (markdownlint does not), so this
-# exception is also what keeps Documentation~ in the Docs workflow's link check.
 !Packages/com.ronny.grow/Documentation~/
 
 # Secrets - never commit credentials

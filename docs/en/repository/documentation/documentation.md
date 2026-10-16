@@ -15,9 +15,10 @@ documentation is split along that line rather than by topic:
 | Package docs | `Packages/com.ronny.grow/Documentation~/` | Someone who installs the package | Yes |
 | Repository docs | `docs/` | Someone who builds the framework | No |
 
-The package layer is what the Unity Package Manager opens from **View documentation**, so it
-travels with every release. The repository layer explains how the framework is built and why; it
-would only add weight to a package someone installed in order to *use* it.
+The package layer travels with every release: it is what the Package Manager's **Documentation**
+link opens, from the `Documentation~` folder inside the package. The repository layer explains how
+the framework is built and why; shipping it would only add weight to a package someone installed in
+order to *use* it.
 
 So a mechanism's internals are never explained in the package docs, and installing the package is
 never explained in the repository docs.
@@ -36,57 +37,47 @@ is designed — and mixing them makes both harder to find.
 Within a subject, the split is by **what the reader is trying to do**, not by where they are in
 the codebase:
 
-| Section | Reader's need | Example question |
-| --- | --- | --- |
-| `architecture/` | Understand the system | Why is the kernel separate from the capabilities? |
-| `design/` | Understand a past design | How was the entry sequence designed? |
-| `guides/` | Get something done | How do I run the tests? |
-| `reference/` | Look something up | What does *capability* mean here? |
+| Subject | Section | Reader's need | Example question |
+| --- | --- | --- | --- |
+| `framework/` | `architecture/` | Understand the system | Why is the kernel separate from the capabilities? |
+| `framework/` | `design/` | Understand a settled design | How was the entry sequence designed? |
+| `framework/` | `reference/` | Look something up | What does *capability* mean here? |
+| `repository/` | `documentation/` | Understand how this documentation works | Why are there two doc trees? |
+| `repository/` | `guides/` | Get something done | How do I run the tests? |
 
-That second split is [Diátaxis](https://diataxis.fr/), and its point is that these needs differ:
-a reader who wants to *do* something is not helped by a page that explains, and the reverse also
-holds. A page therefore serves exactly one of them.
+Those needs come from [Diátaxis](https://diataxis.fr/), which sorts documentation into tutorials,
+how-tos, reference and explanation. This tree follows that split with two departures: `design/` holds
+design records, which Diátaxis has no quadrant for, and there is no tutorials section — learning to
+*use* the package is what the package docs are for.
+
+The point of the split survives both: a reader who wants to *do* something is not helped by a page
+that explains, so a page serves exactly one need.
 
 Every subject does not need every section. `repository/` has no `architecture/`, because there is
 no architecture to explain; it has `documentation/` instead, because that is what it needs to
 explain.
 
-`design/` holds a design once it has settled. While a design is still moving it is a draft and
-stays outside the repository, so that no half-formed proposal is mistaken for a decision.
+`design/` holds a design once it has settled. While a design is still moving it is a draft and stays
+outside the repository, so that no half-formed proposal is mistaken for a decision.
 
-Decision records are **not published** here. What reaches these pages is the reasoning that is
-useful to someone reading the framework, not the deliberation that produced it.
+A design record is not a decision record. A design record explains part of the framework to whoever
+reads it; a decision record logs the deliberation that chose it. Decision records are **not published
+yet** — this repository does not carry them today, and when it does they will get their own home
+rather than being mixed into `design/`.
 
 ## One language, mirrored
 
-English is canonical: every page lives in `docs/en/`, and that is the text a translation is made
-from. A translation lives at the **same relative path** under `docs/zh-CN/`, so the two trees can
-be compared file by file.
+English is canonical, and every page is mirrored. Where a translation lives and what the `source`
+marker records are mechanics, and they are in [`conventions.md`](conventions.md).
 
-A translation records the English text it came from, by content hash:
-
-```text
-<!-- source: docs/en/repository/documentation/documentation.md @ blob:<sha> -->
-```
-
-The hash is what makes the pairing checkable. When the English text changes and the marker is not
-updated, the translation is *known* to be stale — nothing has to guess. That is why the marker is
-the first line of every translated page, and why translating is part of editing a page rather
-than bookkeeping that can wait.
-
-Prose is translated. Code, commands, links, paths and identifiers are copied unchanged.
+The mirror is worth its cost because of what it prevents: a translation that quietly falls behind is
+worse than none at all, so the pairing is made checkable rather than trusted. That is why translating
+a page is part of editing it, not bookkeeping that can wait.
 
 ## What is checked
 
-A `Docs` workflow runs on every pull request:
-
-- **Markdown lint** — formatting and structure rules.
-- **Link check** — repository-relative links and external URLs.
-- **Structure check** — that both trees hold the same pages, that a file name occurs once per
-  tree, and that every `source` marker exists and matches the English text.
-
-The last one is the price of mirroring. A mirrored tree is only worth having if the halves stay
-in step, and the only way to know they have is to compare hashes.
+The `Docs` workflow enforces all of the above on every pull request, as a required check on `main`.
+What it runs, and how to run it locally, is in [`conventions.md`](conventions.md).
 
 ## What is deliberately absent
 

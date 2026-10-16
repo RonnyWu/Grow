@@ -2,7 +2,7 @@ name: Docs
 
 on:
   pull_request:
-  # The Docs job reads only the working tree, so it can be re-run by hand -- for
+  # Both jobs read only the working tree, so either can be re-run by hand -- for
   # example when an external link rots without any commit to trigger it.
   workflow_dispatch:
 
@@ -10,12 +10,18 @@ permissions:
   contents: read
 
 jobs:
-  docs:
+  structure:
+    # Deterministic: no network, and the same input always gives the same
+    # answer. This is the half `main` requires.
     name: Check documentation
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+
+      # First, so that a later failure cannot hide the result.
+      - name: Check structure
+        run: node ci/docs/check-docs.mjs
 
       - name: Lint Markdown
         uses: DavidAnson/markdownlint-cli2-action@v24
@@ -27,13 +33,29 @@ jobs:
             Packages/**/CHANGELOG.md
             README.md
 
-      - name: Check links
+      - name: Check repository-relative links
         uses: lycheeverse/lychee-action@v2
         with:
+          lycheeVersion: v0.24.2
+          args: >-
+            --config .lychee.toml --offline --no-progress
+            './docs/**/*.md' './i18n/**/*.md' './Packages/**/Documentation~/**/*.md'
+            './Packages/**/CHANGELOG.md' './README.md'
+
+  links:
+    # Only the external URLs need the network, so this job stays advisory: an
+    # unreachable third-party site must not be able to block a merge.
+    name: Check external links
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check external links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          lycheeVersion: v0.24.2
           args: >-
             --config .lychee.toml --no-progress
             './docs/**/*.md' './i18n/**/*.md' './Packages/**/Documentation~/**/*.md'
             './Packages/**/CHANGELOG.md' './README.md'
-
-      - name: Check structure
-        run: node ci/docs/check-docs.mjs

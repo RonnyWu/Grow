@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Structural checks for docs/ (see docs/en/guides/documentation.md):
+// Structural checks for docs/ and i18n/ (see docs/en/repository/documentation/conventions.md):
 //   1. docs/en and docs/zh-CN hold the same set of pages (mirrored trees);
 //   2. a file name is unique within a locale tree, except for README.md;
 //   3. every translated page starts with a `source` marker pointing at an existing page;

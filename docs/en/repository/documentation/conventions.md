@@ -30,27 +30,47 @@ Every page has this shape:
 3. The body, starting at `##`. Never skip a heading level.
 4. A closing `## See also` section when there is anywhere useful to go next.
 
-## File names
+A section's landing page has that shape, and additionally:
 
-- Lower-case `kebab-case` with a `.md` extension — for example `conventions.md`,
-  `log-chunking.md`.
-- A file name is unique **within its locale tree**.
-- `README.md` is the landing page of a section folder, and the only exception to the rule above.
-  `framework/` and `repository/` group sections instead of holding pages, so they have no landing
-  page.
+1. Opens with the section's content type — `*Explanation* — …`, `*Reference* — …`, `*How-to* — …` or
+   `*Design record* — …`.
+2. Lists `What belongs here` and `What does **not** belong here`, pointing at the neighbouring
+   sections so the boundary is explicit.
+
+## Folders and file names
+
+Three kinds of folder, and only the last two hold pages:
+
+| Folder | Holds | Landing page |
+| --- | --- | --- |
+| `docs/`, and each locale root (`en/`, `zh-CN/`) | the locale's subject folders | `README.md` |
+| a subject folder (`framework/`, `repository/`) | section folders | none |
+| a section folder (`architecture/`, `design/`, `reference/`, `documentation/`, `guides/`) | pages | `README.md` |
+
+- Lower-case `kebab-case` with a `.md` extension — for example `conventions.md`, `log-chunking.md`.
+- A file name is unique **within its locale tree**. `README.md` is the only exception: each landing
+  page sits in its own folder.
+- `docs/README.md` is the root of this documentation. It sits outside the locale trees, so it carries
+  no `source` marker and is not mirrored.
 
 ## Language
 
-- **English is canonical.** A page lives at a relative path under `docs/en/`.
-- **`zh-CN` is a mirror.** The translation lives at the same relative path under `docs/zh-CN/`.
-- A translation starts with a marker naming the English source and its content hash:
+English is canonical. Two kinds of page are mirrored, each with its own path rule:
 
-  ```text
-  <!-- source: docs/en/repository/documentation/conventions.md @ blob:<sha> -->
-  ```
+- a page under `docs/en/` mirrors to the **same relative path** under `docs/zh-CN/`;
+- a page at the repository root mirrors to `i18n/<name>.<locale>.md`, so `README.md` mirrors to
+  `i18n/README.zh-CN.md`.
 
-  where `<sha>` is `git hash-object` of the English file. Update the marker in the same commit
-  that changes the English text.
+Whichever the rule, a translation starts with a marker naming the English source and its content
+hash:
+
+```text
+<!-- source: docs/en/repository/documentation/conventions.md @ blob:<sha> -->
+```
+
+where `<sha>` is `git hash-object` of the English file. Update the marker in the same commit that
+changes the English text — the structure check fails otherwise.
+
 - A page carries a language switcher directly under its title, linking to the mirror.
 - Translate prose only. Code, commands, links, paths and identifiers are copied verbatim.
 
@@ -66,6 +86,8 @@ Every page has this shape:
 - Describe the link target in the link text; never write "click here" or a bare URL.
 - Link with repository-relative paths, so links work on GitHub and in the package documentation
   viewer.
+- Link to a page, never to one of its headings: a translation renames its headings, so a fragment
+  would break there.
 - Use a term consistently, and define it in
   [`../../framework/reference/glossary.md`](../../framework/reference/glossary.md).
 
@@ -77,19 +99,23 @@ Every page has this shape:
 
 ## Automated checks
 
-The `Docs` workflow runs on every pull request:
+The `Docs` workflow runs on every pull request, over `docs/**`, `i18n/**`,
+`Packages/**/Documentation~/**`, `Packages/**/CHANGELOG.md` and the root `README.md`:
 
 - `markdownlint-cli2`, configured by `.markdownlint-cli2.jsonc`;
-- `lychee`, for broken links;
 - `ci/docs/check-docs.mjs`, for the structural rules — mirrored trees, unique file names within a
-  locale, and a `source` marker on every translation whose blob hash still matches the English
-  text.
+  locale, and a `source` marker on every translation whose blob hash still matches the English text;
+- `lychee`, for broken links.
 
-The lint and structure checks run anywhere Node is installed. The link check needs the `lychee`
-binary:
+The first two, and the repository-relative half of the link check, are deterministic and run as one
+job — that is the job `main` requires. The external link check needs the network, so it is a second,
+advisory job.
+
+Run the deterministic half locally. `markdownlint-cli2` and `check-docs.mjs` need Node; `lychee`
+needs its binary:
 
 ```bash
-npx markdownlint-cli2 "docs/**/*.md"
+npx markdownlint-cli2 "docs/**/*.md" "i18n/**/*.md" "Packages/**/Documentation~/**/*.md" "Packages/**/CHANGELOG.md" "README.md"
 node ci/docs/check-docs.mjs
-lychee --config .lychee.toml "docs/**/*.md"
+lychee --config .lychee.toml --offline './docs/**/*.md' './i18n/**/*.md' './Packages/**/Documentation~/**/*.md' './Packages/**/CHANGELOG.md' './README.md'
 ```
