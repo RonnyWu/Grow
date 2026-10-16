@@ -1,8 +1,9 @@
 {
     "name": "Grow.Editor",
-    "rootNamespace": "Grow.Editor",
+    "rootNamespace": "Grow",
     "references": [
-        "Grow"
+        "Grow.Core",
+        "Grow.Kernel"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,8 +1,9 @@
 {
     "name": "Grow.Tests.Editor",
-    "rootNamespace": "Grow.Tests",
+    "rootNamespace": "Grow",
     "references": [
-        "Grow",
+        "Grow.Core",
+        "Grow.Kernel",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
