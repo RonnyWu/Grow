@@ -1,9 +1,9 @@
-<!-- source: docs/en/reference/glossary.md @ blob:4727187b8811ee677523f8880fa1bc97bc13b207 -->
-<!-- 中文译文；以英文 docs/en/reference/glossary.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/reference/glossary.md 核验。 -->
+<!-- source: docs/en/framework/reference/glossary.md @ blob:2684e3d128ffe5edb9fb96c1105349c5f57c730c -->
+<!-- 中文译文；以英文 docs/en/framework/reference/glossary.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/framework/reference/glossary.md 核验。 -->
 
 # 术语表
 
-**其他语言：** [English](../../en/reference/glossary.md) | [简体中文](glossary.md)
+**其他语言：** [English](../../../en/framework/reference/glossary.md) | [简体中文](glossary.md)
 
 Grow 文档里用到的术语定义。全程统一用词。
 

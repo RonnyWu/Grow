@@ -1,6 +1,6 @@
 # Architecture
 
-**Read this in other languages:** [English](README.md) | [简体中文](../../zh-CN/architecture/README.md)
+**Read this in other languages:** [English](README.md) | [简体中文](../../../zh-CN/framework/architecture/README.md)
 
 *Explanation* — what Grow is and why it is shaped this way.
 
@@ -12,6 +12,6 @@ What belongs here:
 
 What does **not** belong here:
 
-- step-by-step instructions — see [`../guides/`](../guides/);
+- step-by-step instructions — see [`../../repository/guides/`](../../repository/guides/);
 - settled per-topic designs — see [`../design/`](../design/);
 - terms and definitions — see [`../reference/glossary.md`](../reference/glossary.md).

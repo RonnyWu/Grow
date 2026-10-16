@@ -1,6 +1,6 @@
 # Glossary
 
-**Read this in other languages:** [English](glossary.md) | [简体中文](../../zh-CN/reference/glossary.md)
+**Read this in other languages:** [English](glossary.md) | [简体中文](../../../zh-CN/framework/reference/glossary.md)
 
 Definitions of the terms used across Grow's documentation. Use these words consistently.
 

@@ -6,15 +6,19 @@ Contributor-facing documentation for the Grow framework. Documentation for *usin
 ships with the package itself, at
 [`Packages/com.ronny.grow/Documentation~/`](../../Packages/com.ronny.grow/Documentation~).
 
-## Sections
+## Two subjects
 
-| Folder | Purpose |
-| --- | --- |
-| [`architecture/`](architecture/) | Explanation — what Grow is and why it is shaped this way |
-| [`design/`](design/) | Settled design records, one per topic |
-| [`guides/`](guides/) | How-to — contributor tasks |
-| [`reference/`](reference/) | Reference — glossary and terminology |
+These pages cover two different things, and each subject keeps its own sections:
 
-Every page follows the conventions in [`guides/documentation.md`](guides/documentation.md).
-Start with [`architecture/documentation-system.md`](architecture/documentation-system.md), which
-walks through how this documentation is organised.
+| Subject | Folder | Covers |
+| --- | --- | --- |
+| The framework | [`framework/`](framework/) | What Grow is, how it is designed, and the terms it uses |
+| This repository | [`repository/`](repository/) | How the documentation works, and how to build and check the code |
+
+Within a subject, a page serves exactly one need — explanation, a design record, how-to, or
+reference. The rules are in
+[`repository/documentation/conventions.md`](repository/documentation/conventions.md).
+
+Start with
+[`repository/documentation/documentation-system.md`](repository/documentation/documentation-system.md),
+which walks through how this documentation is organised.

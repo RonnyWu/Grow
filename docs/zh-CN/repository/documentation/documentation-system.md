@@ -1,12 +1,11 @@
-<!-- source: docs/en/architecture/documentation-system.md @ blob:cdb3cc74d8b69786e803f18a45e45aa0e438e4fb -->
-<!-- 中文译文；以英文 docs/en/architecture/documentation-system.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/architecture/documentation-system.md 核验。 -->
+<!-- source: docs/en/repository/documentation/documentation-system.md @ blob:ee4ac4110ee728e899d5682939af379913f24704 -->
+<!-- 中文译文；以英文 docs/en/repository/documentation/documentation-system.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/repository/documentation/documentation-system.md 核验。 -->
 
 # 文档体系
 
-**其他语言：** [English](../../en/architecture/documentation-system.md) | [简体中文](documentation-system.md)
+**其他语言：** [English](../../../en/repository/documentation/documentation-system.md) | [简体中文](documentation-system.md)
 
-Grow 的文档为什么这样分。每一页必须遵守的规则见
-[`../guides/documentation.md`](../guides/documentation.md)。
+Grow 的文档为什么这样分。每一页必须遵守的规则见 [`conventions.md`](conventions.md)。
 
 ## 两层
 
@@ -21,9 +20,16 @@ Grow 同时是「库」和「代码库」，两者的读者不同。文档就按
 
 所以：某个机制的内部实现**永不**写进包文档，安装步骤**永不**写进仓库文档。
 
-## 四个分区
+## 两个主题
 
-仓库文档按「读者想做什么」组织，而不是按「代码在哪」：
+仓库文档这一层内部，最上面按**主题**分：框架本身，与这个仓库。两者不是一回事——「测试怎么跑」说明不了「内核怎么设计」——混在一起只会让两边都更难找。
+
+| 主题 | 目录 | 覆盖 |
+| --- | --- | --- |
+| 框架 | `framework/` | Grow 是什么、怎么设计、用了哪些术语 |
+| 本仓库 | `repository/` | 文档怎么运作，以及如何构建与检查代码 |
+
+主题内部，再按**读者想做什么**分，而不是按「代码在哪」：
 
 | 分区 | 读者的需求 | 示例问题 |
 | --- | --- | --- |
@@ -32,7 +38,9 @@ Grow 同时是「库」和「代码库」，两者的读者不同。文档就按
 | `guides/` | 把事做成 | 测试怎么跑？ |
 | `reference/` | 查一个词 | 这里的「能力」指什么？ |
 
-这就是 [Diátaxis](https://diataxis.fr/) 的分法，要点在于这四种需求彼此不同：想**动手**的读者，讲道理的文章帮不上忙，反之亦然。因此一页只服务其中一种需求。
+后一层分法就是 [Diátaxis](https://diataxis.fr/) 的分法，要点在于这些需求彼此不同：想**动手**的读者，讲道理的文章帮不上忙，反之亦然。因此一页只服务其中一种需求。
+
+**不是每个主题都需要每个分区。** `repository/` 没有 `architecture/`，因为它没有可解释的架构；它有的是 `documentation/`，因为它要解释的正是文档本身。
 
 `design/` 只收**已定稿**的设计。设计还在变动时属于草稿，留在仓库之外，免得半成品被当成结论。
 
@@ -45,7 +53,7 @@ Grow 同时是「库」和「代码库」，两者的读者不同。文档就按
 译文会记下自己译自哪份英文，以及那份英文的内容哈希：
 
 ```text
-<!-- source: docs/en/architecture/documentation-system.md @ blob:<sha> -->
+<!-- source: docs/en/repository/documentation/documentation-system.md @ blob:<sha> -->
 ```
 
 哈希让「配对」变得可校验：英文改了而标记没跟着更新，译文就**确定**过期了——不需要猜。所以这行标记放在每篇译文的第一行；也所以「翻译」是编辑一页的一部分，而不是可以往后拖的记账。
@@ -69,5 +77,5 @@ Grow 同时是「库」和「代码库」，两者的读者不同。文档就按
 
 ## 另见
 
-- [`../guides/documentation.md`](../guides/documentation.md)——每一页必须遵守的规则。
-- [`../reference/glossary.md`](../reference/glossary.md)——这些页面里用到的术语。
+- [`conventions.md`](conventions.md)——每一页必须遵守的规则。
+- [`../../framework/reference/glossary.md`](../../framework/reference/glossary.md)——这些页面里用到的术语。

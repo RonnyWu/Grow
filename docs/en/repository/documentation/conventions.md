@@ -1,33 +1,25 @@
 # Documentation conventions
 
-**Read this in other languages:** [English](documentation.md) | [简体中文](../../zh-CN/guides/documentation.md)
+**Read this in other languages:** [English](conventions.md) | [简体中文](../../../zh-CN/repository/documentation/conventions.md)
 
-How documentation is organised, written and checked in this repository.
+The rules every page in `docs/` follows. For why the documentation is arranged this way, see
+[`documentation-system.md`](documentation-system.md).
 
-## Two layers
+## Where a page goes
 
-| Layer | Location | Audience | Tracks |
-| --- | --- | --- | --- |
-| Package docs | `Packages/com.ronny.grow/Documentation~/` | People who use the package | The package version |
-| Repository docs | `docs/` | People who build the framework | `main` |
-
-Explain how to *use* the package in the package docs; explain how it is *built*, or *why* it is
-the way it is, in the repository docs.
-
-## Sections
-
-Repository docs follow the four [Diátaxis](https://diataxis.fr/) needs:
-
-| Folder | Need | Question it answers |
+| Subject | Section | A page belongs here when it |
 | --- | --- | --- |
-| `architecture/` | Explanation | What is it, and why is it shaped this way? |
-| `design/` | Design record | What did we decide to build, and what did we weigh? |
-| `guides/` | How-to | How do I do X? |
-| `reference/` | Reference | What exactly is X? |
+| `framework/` | `architecture/` | explains what the framework is and why it is shaped that way |
+| `framework/` | `design/` | records a settled, per-topic design |
+| `framework/` | `reference/` | is looked up rather than read — terms, tables, invariants |
+| `repository/` | `documentation/` | explains or rules on this documentation itself |
+| `repository/` | `guides/` | tells a contributor how to do a task |
+
+Use `framework/` or `repository/` for the code and its process, and
+`Packages/com.ronny.grow/Documentation~/` for anything a package user needs. Never explain how to
+*use* the package in `docs/`.
 
 One topic per page. Do not mix explanation, how-to and reference in a single page.
-
-Decision records are **not published** in this repository; they are tracked separately.
 
 ## Page anatomy
 
@@ -40,7 +32,7 @@ Every page has this shape:
 
 ## File names
 
-- Lower-case `kebab-case` with a `.md` extension — for example `documentation.md`,
+- Lower-case `kebab-case` with a `.md` extension — for example `documentation-system.md`,
   `log-chunking.md`.
 - A file name is unique **within its locale tree**.
 - `README.md` is the landing page of a folder and is the only exception to the rule above.
@@ -52,7 +44,7 @@ Every page has this shape:
 - A translation starts with a marker naming the English source and its content hash:
 
   ```text
-  <!-- source: docs/en/guides/documentation.md @ blob:<sha> -->
+  <!-- source: docs/en/repository/documentation/conventions.md @ blob:<sha> -->
   ```
 
   where `<sha>` is `git hash-object` of the English file. Update the marker in the same commit
@@ -72,7 +64,8 @@ Every page has this shape:
 - Describe the link target in the link text; never write "click here" or a bare URL.
 - Link with repository-relative paths, so links work on GitHub and in the package documentation
   viewer.
-- Use a term consistently, and define it in [`../reference/glossary.md`](../reference/glossary.md).
+- Use a term consistently, and define it in
+  [`../../framework/reference/glossary.md`](../../framework/reference/glossary.md).
 
 ## Maintenance
 

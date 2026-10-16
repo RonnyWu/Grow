@@ -1,6 +1,6 @@
 # Reference
 
-**Read this in other languages:** [English](README.md) | [简体中文](../../zh-CN/reference/README.md)
+**Read this in other languages:** [English](README.md) | [简体中文](../../../zh-CN/framework/reference/README.md)
 
 *Reference* — facts to look up, not to read end to end.
 

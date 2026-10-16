@@ -1,9 +1,9 @@
 # Documentation system
 
-**Read this in other languages:** [English](documentation-system.md) | [简体中文](../../zh-CN/architecture/documentation-system.md)
+**Read this in other languages:** [English](documentation-system.md) | [简体中文](../../../zh-CN/repository/documentation/documentation-system.md)
 
 Why Grow's documentation is split the way it is. The rules a page must follow are in
-[`../guides/documentation.md`](../guides/documentation.md).
+[`conventions.md`](conventions.md).
 
 ## Two layers
 
@@ -22,10 +22,19 @@ would only add weight to a package someone installed in order to *use* it.
 So a mechanism's internals are never explained in the package docs, and installing the package is
 never explained in the repository docs.
 
-## Four sections
+## Two subjects
 
-The repository layer is organised by what a reader is trying to do, not by where they are in the
-codebase:
+Inside the repository layer the top split is by **subject**: the framework itself, and this
+repository. They are not the same thing — how to run the tests says nothing about how the kernel
+is designed — and mixing them makes both harder to find.
+
+| Subject | Folder | Covers |
+| --- | --- | --- |
+| The framework | `framework/` | What Grow is, how it is designed, and the terms it uses |
+| This repository | `repository/` | How the documentation works, and how to build and check the code |
+
+Within a subject, the split is by **what the reader is trying to do**, not by where they are in
+the codebase:
 
 | Section | Reader's need | Example question |
 | --- | --- | --- |
@@ -34,9 +43,13 @@ codebase:
 | `guides/` | Get something done | How do I run the tests? |
 | `reference/` | Look something up | What does *capability* mean here? |
 
-That is the [Diátaxis](https://diataxis.fr/) split, and its point is that these needs differ: a
-reader who wants to *do* something is not helped by a page that explains, and the reverse also
+That second split is [Diátaxis](https://diataxis.fr/), and its point is that these needs differ:
+a reader who wants to *do* something is not helped by a page that explains, and the reverse also
 holds. A page therefore serves exactly one of them.
+
+Every subject does not need every section. `repository/` has no `architecture/`, because there is
+no architecture to explain; it has `documentation/` instead, because that is what it needs to
+explain.
 
 `design/` holds a design once it has settled. While a design is still moving it is a draft and
 stays outside the repository, so that no half-formed proposal is mistaken for a decision.
@@ -53,7 +66,7 @@ be compared file by file.
 A translation records the English text it came from, by content hash:
 
 ```text
-<!-- source: docs/en/architecture/documentation-system.md @ blob:<sha> -->
+<!-- source: docs/en/repository/documentation/documentation-system.md @ blob:<sha> -->
 ```
 
 The hash is what makes the pairing checkable. When the English text changes and the marker is not
@@ -84,5 +97,6 @@ in step, and the only way to know they have is to compare hashes.
 
 ## See also
 
-- [`../guides/documentation.md`](../guides/documentation.md) — the rules a page must follow.
-- [`../reference/glossary.md`](../reference/glossary.md) — the terms used across these pages.
+- [`conventions.md`](conventions.md) — the rules a page must follow.
+- [`../../framework/reference/glossary.md`](../../framework/reference/glossary.md) — the terms
+  used across these pages.

@@ -1,35 +1,26 @@
-<!-- source: docs/en/guides/documentation.md @ blob:46e098a0ae4756d2e2b349ffe2e1274d892beb30 -->
-<!-- 中文译文；以英文 docs/en/guides/documentation.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/guides/documentation.md 核验。 -->
+<!-- source: docs/en/repository/documentation/conventions.md @ blob:e2903332b0873139d1c32eba30164c38f2f2df91 -->
+<!-- 中文译文；以英文 docs/en/repository/documentation/conventions.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/repository/documentation/conventions.md 核验。 -->
 
 # 文档约定
 
-**其他语言：** [English](../../en/guides/documentation.md) | [简体中文](documentation.md)
+**其他语言：** [English](../../../en/repository/documentation/conventions.md) | [简体中文](conventions.md)
 
-本仓文档如何组织、书写与校验。
+`docs/` 下每一页都要遵守的规则。为什么这样组织，见
+[`documentation-system.md`](documentation-system.md)。
 
-## 两层
+## 一页该放哪
 
-| 层 | 位置 | 受众 | 跟随 |
-| --- | --- | --- | --- |
-| 包文档 | `Packages/com.ronny.grow/Documentation~/` | 使用包的人 | 包版本 |
-| 仓库文档 | `docs/` | 构建框架的人 | `main` |
-
-「怎么**用**这个包」写进包文档；「怎么**造**它」「**为什么**是这样」写进仓库文档。
-
-## 分区
-
-仓库文档按 [Diátaxis](https://diataxis.fr/) 的四种需求分区：
-
-| 目录 | 需求 | 回答的问题 |
+| 主题 | 分区 | 满足这个条件就放这里 |
 | --- | --- | --- |
-| `architecture/` | 解释 | 它是什么？为什么这样设计？ |
-| `design/` | 设计记录 | 我们决定造什么？权衡了什么？ |
-| `guides/` | 操作 | 我要做 X，怎么做？ |
-| `reference/` | 参考 | X 到底是什么？ |
+| `framework/` | `architecture/` | 解释框架是什么、为什么这样设计 |
+| `framework/` | `design/` | 记录一项已定稿的逐主题设计 |
+| `framework/` | `reference/` | 是查的而不是读的——术语、表格、不变式 |
+| `repository/` | `documentation/` | 解释或规定这套文档本身 |
+| `repository/` | `guides/` | 告诉贡献者怎么完成一项任务 |
+
+代码及其流程写进 `framework/` 或 `repository/`，**使用者**需要的一切写进 `Packages/com.ronny.grow/Documentation~/`。**不要**在 `docs/` 里讲怎么**使用**这个包。
 
 一个主题一页；解释、操作、参考**不混写在同一页**。
-
-决策记录**不在本仓公开**，另行记录。
 
 ## 单页骨架
 
@@ -42,7 +33,7 @@
 
 ## 文件命名
 
-- 小写 `kebab-case` + `.md`，例如 `documentation.md`、`log-chunking.md`。
+- 小写 `kebab-case` + `.md`，例如 `documentation-system.md`、`log-chunking.md`。
 - 文件名在**同一语言树内唯一**。
 - `README.md` 是目录的落地页，是上面规则的**唯一例外**。
 
@@ -53,7 +44,7 @@
 - 译文开头带一条源标记，写明英文源与内容哈希：
 
   ```text
-  <!-- source: docs/en/guides/documentation.md @ blob:<sha> -->
+  <!-- source: docs/en/repository/documentation/conventions.md @ blob:<sha> -->
   ```
 
   其中 `<sha>` 是英文文件的 `git hash-object`。**改动英文正文时，必须在同一次提交里更新它。**
@@ -70,7 +61,8 @@
 - 标题用 sentence case（只首词大写）。
 - 链接文本要描述目标；**禁用** "click here" 与裸 URL。
 - 用仓库相对路径链接，兼顾 GitHub 与包文档查看器。
-- 同一概念只用同一个词，并在 [`../reference/glossary.md`](../reference/glossary.md) 里定义。
+- 同一概念只用同一个词，并在
+  [`../../framework/reference/glossary.md`](../../framework/reference/glossary.md) 里定义。
 
 ## 维护
 
