@@ -1,7 +1,9 @@
 {
-    "name": "Grow",
+    "name": "Grow.Kernel",
     "rootNamespace": "Grow",
-    "references": [],
+    "references": [
+        "Grow.Core"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

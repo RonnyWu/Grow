@@ -5,13 +5,14 @@
 # enforces is exactly these two commands:
 #
 #   dotnet format whitespace ci/format/Grow.Format.csproj --verify-no-changes
-#   dotnet format style ci/format/Grow.Format.csproj --diagnostics IDE1006 --severity info --verify-no-changes
+#   dotnet format style ci/format/Grow.Format.csproj --diagnostics IDE0073 IDE1006 --severity info --verify-no-changes
 #
-# `--severity info` matters: the rules below are declared `suggestion`. Anything
-# not listed here is applied by the IDE alone.
+# `--severity info` matters: the rules below are declared `suggestion` — including the
+# file-header rule, which `dotnet format whitespace` cannot add. Anything not listed
+# here is applied by the IDE alone.
 #
-# Style: K&R braces, four-space indent, 100-column margin, and the naming
-# convention below.
+# Style: K&R braces, four-space indent, 100-column margin, a one-line SPDX header,
+# and the naming convention below.
 
 root = true
 
@@ -162,10 +163,15 @@ dotnet_naming_symbols.grow_locals.applicable_accessibilities = *
 # keeping this file small.
 
 # --- File headers -------------------------------------------------------------
-# Deliberately no `file_header_template`. A per-file notice has to name a copyright
-# holder, and a contributor's file is theirs — so requiring one here would both
-# misattribute and pin a year. The MIT notice lives in LICENSE, which is where the
-# license asks for it; the existing headers stay as they are and new files need none.
+# One line, and nothing but the license identifier: `// SPDX-License-Identifier: MIT`.
+# A notice that named a copyright holder would misattribute a contributor's file and
+# pin a year; an identifier does neither, and it stays machine-readable. The full MIT
+# text lives in LICENSE, which is where the license asks for the notice to be kept.
+#
+# This is IDE0073's template; Roslyn supplies the `//` for C#, so the value below is
+# the comment text alone. Checked in CI (see the commands at the top of this file).
+file_header_template = SPDX-License-Identifier: MIT
+dotnet_diagnostic.IDE0073.severity = suggestion
 
 # Assembly definitions are hand-maintained JSON, indented with four spaces.
 [*.asmdef]
