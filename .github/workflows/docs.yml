@@ -1,0 +1,36 @@
+name: Docs
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    name: Check documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v24
+        with:
+          globs: |
+            docs/**/*.md
+            i18n/**/*.md
+            Packages/**/Documentation~/**/*.md
+            Packages/**/CHANGELOG.md
+            README.md
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --config .lychee.toml --no-progress
+            './docs/**/*.md' './i18n/**/*.md' './Packages/**/Documentation~/**/*.md'
+            './README.md'
+
+      - name: Check structure
+        run: node ci/docs/check-docs.mjs

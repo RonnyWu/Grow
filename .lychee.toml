@@ -1,0 +1,12 @@
+# Link checking for the documentation.
+# https://lychee.cli.rs/configuration/
+
+max_concurrency = 4
+timeout = 20
+accept = [200, 206, 429]
+# GitHub generates heading anchors; do not check fragments.
+include_fragments = false
+exclude = [
+  # Unity's documentation host is slow and occasionally blocks CI runners.
+  "https://docs\\.unity3d\\.com/.*",
+]
