@@ -417,6 +417,11 @@ InitTestScene*.unity*
 # Local drafts (plans, specs), intentionally not tracked
 /.drafts/
 
+# `Documentation~` is the Unity package documentation folder (Unity ignores any
+# path ending in `~`, so it needs no .meta files). The `*~` rule in the Linux
+# block above would ignore it as well -- re-include the package's docs.
+!Packages/com.ronny.grow/Documentation~/
+
 # Secrets - never commit credentials
 .env
 .env.*
