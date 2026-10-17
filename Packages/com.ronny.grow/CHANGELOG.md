@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   host and `PlayerLoopProfile` (five frame phases), built on the internal
   `PlayerLoopGraph` and `PlayerLoopManager` for copy-on-write insert/remove,
   idempotent install, targeted removal and snapshot restore.
+- `Grow.Kernel.Lifecycle` — public `ILifecycle`, the facet interfaces in
+  `ILifecycleFacets.cs`, `UpdateFlag`, `ILifecycleManager` and `MonoManager`. The
+  `UpdaterBinding` is internal. `AttachApp` / `DetachApp` are all-or-nothing and
+  retryable; the manager owns the subscriptions and de-duplicates by target.
 - EditMode tests for both assemblies.
 
 ### Changed
