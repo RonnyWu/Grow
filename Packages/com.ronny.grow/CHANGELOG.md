@@ -53,7 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   skip the affected modules and their transitive dependents, while hook failures are
   isolated and recorded. The context shares the IOC root table, drives managed services
   at phase boundaries and exposes one registry-wide `LifecycleScope`.
-- EditMode tests for both assemblies.
+- `Grow.Kernel.Entry.GrowApp` — the composition root. It initializes at `BeforeSceneLoad`
+  unless `AutoInitialize` is disabled, wires boot state, loop, lifecycle manager and
+  modules in a fixed order, and shuts them down in reverse ownership order.
+  Initialize / shutdown are idempotent; a failed initialization performs best-effort
+  cleanup and rethrows.
+- EditMode tests for both assemblies and PlayMode coverage for automatic startup and a
+  same-frame restart.
 
 ### Changed
 
@@ -66,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `GrowEvent<StateChange>` instead of a C# `event Action<GrowState, GrowState>`. Subscribe
   with `GrowBoot.StateChanged.Subscribe(change => ...)` and dispose the returned token;
   the payload exposes `Previous` / `Next`.
+- **Breaking (boot ownership):** `GrowBoot.Reset` / `Install` / `Boot` / `Shutdown` are
+  internal. `GrowApp` is the only boot-state writer; call `GrowApp.Initialize` /
+  `Shutdown` instead of driving the state machine directly. `MonoManager.Bind` / `Unbind`
+  were internal from their introduction and are not part of this change.
 
 ## [3.0.0-exp.1] - 2026-10-11
 
