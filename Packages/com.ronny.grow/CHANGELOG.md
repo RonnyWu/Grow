@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ILifecycleFacets.cs`, `UpdateFlag`, `ILifecycleManager` and `MonoManager`. The
   `UpdaterBinding` is internal. `AttachApp` / `DetachApp` are all-or-nothing and
   retryable; the manager owns the subscriptions and de-duplicates by target.
+- `Grow.Kernel.Lifecycle.LifecycleScope` — attaches plain objects to the lifecycle
+  manager, supports retryable attach/detach, `AttachApp` / `DetachApp` and releases
+  entries in reverse order.
 - EditMode tests for both assemblies.
 
 ### Changed
