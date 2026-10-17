@@ -1,0 +1,18 @@
+# Dependabot watches the only dependency surface this repository has: the actions used by CI.
+#
+# Unity packages (Packages/manifest.json) are not a supported ecosystem, so they are not listed
+# here and no alerts are expected for them. Each future package that pulls a third-party library
+# should add its own ecosystem below rather than widen this one.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: chore(ci)

@@ -31,6 +31,7 @@ jobs:
             i18n/**/*.md
             Packages/**/Documentation~/**/*.md
             Packages/**/CHANGELOG.md
+            .github/*.md
             README.md
 
       - name: Check repository-relative links
@@ -40,7 +41,7 @@ jobs:
           args: >-
             --config .lychee.toml --offline --no-progress
             './docs/**/*.md' './i18n/**/*.md' './Packages/**/Documentation~/**/*.md'
-            './Packages/**/CHANGELOG.md' './README.md'
+            './Packages/**/CHANGELOG.md' './.github/*.md' './README.md'
 
   links:
     # Only the external URLs need the network, so this job stays advisory: an
@@ -58,4 +59,4 @@ jobs:
           args: >-
             --config .lychee.toml --no-progress
             './docs/**/*.md' './i18n/**/*.md' './Packages/**/Documentation~/**/*.md'
-            './Packages/**/CHANGELOG.md' './README.md'
+            './Packages/**/CHANGELOG.md' './.github/*.md' './README.md'
