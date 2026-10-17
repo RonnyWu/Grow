@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Grow.Kernel.Lifecycle.LifecycleScope` — attaches plain objects to the lifecycle
   manager, supports retryable attach/detach, `AttachApp` / `DetachApp` and releases
   entries in reverse order.
+- `Grow.Kernel.Lifecycle.UnifiedClass`, `Grow.Kernel.Lifecycle.UnifiedClassSingleton<T>`
+  and `Grow.Kernel.Lifecycle.UnifiedClassService<T>` — self-managed plain objects and
+  services with ordered initialize / contracts / start / update / teardown / reset stages,
+  failure isolation and a main-thread `PostToMain` queue.
 - EditMode tests for both assemblies.
 
 ### Changed
