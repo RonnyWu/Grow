@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Grow.Core` assembly — passive primitives, starting with `Grow.Core.Log`: the
   `GrowLog` facade, the `ILogSink` extension point, the `UnityLogSink` default
   sink, and the `LogEntry` / `LogLevel` value types.
+- `Grow.Core.Events` — a single-thread, steady-state zero-allocation event primitive.
+  `GrowEvent` / `GrowEvent<T>` are the subscription surfaces; the nested owner-only
+  `GrowEvent.Publisher` / `GrowEvent<T>.Publisher` are created with `new ...Publisher()`.
+  `Publish` is synchronous and registration-ordered; nesting is capped at 64; Core has no
+  queue, `Post` / `Drain` or cross-frame delivery. Subscriptions are token-based
+  (`GrowSubscription`), each `Subscribe` is independent, changes made during a dispatch
+  apply after the pass, and listener faults go to an optional sink or are rethrown by the
+  outermost publish after every listener has run. `SubscribeOnce` consumes its slot before
+  the call; `SubscriptionBag` disposes a group of tokens LIFO. A `Publisher.Dispose` called
+  during a dispatch is deferred until the current pass ends.
 - `Grow.Kernel` assembly — mechanisms, starting with `Grow.Kernel.Entry`: the
   `GrowRuntime` state machine (manual `Reset` / `Install` / `Boot` / `Shutdown`
   entry points, with `Ready` reached by `Boot`), the `GrowBoot` thin facade, and
