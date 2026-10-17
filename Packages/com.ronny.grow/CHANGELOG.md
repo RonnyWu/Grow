@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `GrowRuntime` state machine (manual `Reset` / `Install` / `Boot` / `Shutdown`
   entry points, with `Ready` reached by `Boot`), the `GrowBoot` thin facade, and
   `GrowState`.
+- `Grow.Kernel.Loop` — `GrowLoop` plus the internal `IMonoExecutor` / `MonoExecutor`
+  host and `PlayerLoopProfile` (five frame phases), built on the internal
+  `PlayerLoopGraph` and `PlayerLoopManager` for copy-on-write insert/remove,
+  idempotent install, targeted removal and snapshot restore.
 - EditMode tests for both assemblies.
 
 ### Changed
