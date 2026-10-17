@@ -47,6 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `GetService` returns `null` when absent, `GetRequiredService` throws
   `ServiceNotFoundException`, and the root is cleared in place at
   `SubsystemRegistration`.
+- `Grow.Kernel.Modules` — public `IModule`, `IModuleContext`, `ModulePhase`,
+  `ModuleFailure` and `GrowModules`; `ModuleRegistry` is internal. Modules are ordered by
+  dependency topology and same-layer priority; missing, ambiguous and cyclic dependencies
+  skip the affected modules and their transitive dependents, while hook failures are
+  isolated and recorded. The context shares the IOC root table, drives managed services
+  at phase boundaries and exposes one registry-wide `LifecycleScope`.
 - EditMode tests for both assemblies.
 
 ### Changed
