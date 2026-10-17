@@ -35,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   code that referenced it — or the `Grow.*` runtime namespaces — must move to
   `Grow.Core.*` / `Grow.Kernel.*`. The baseline `Grow` assembly shipped no types,
   so no consumer code could have depended on it.
+- **Breaking (boot event):** `GrowBoot.StateChanged` is now a
+  `GrowEvent<StateChange>` instead of a C# `event Action<GrowState, GrowState>`. Subscribe
+  with `GrowBoot.StateChanged.Subscribe(change => ...)` and dispose the returned token;
+  the payload exposes `Previous` / `Next`.
 
 ## [3.0.0-exp.1] - 2026-10-11
 

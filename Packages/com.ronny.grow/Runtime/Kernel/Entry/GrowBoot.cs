@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: MIT
 
-using System;
+using Grow.Core.Events;
 
 namespace Grow.Kernel.Entry {
     /// <summary>
-    /// The public face of the kernel lifecycle.
+    /// Public facade for the kernel lifecycle state machine.
     /// </summary>
     /// <remarks>
-    /// It forwards to the state machine behind it, which is internal on purpose: this facade is the
-    /// only way in, and the seam where automatic entry and the <c>IGrowBootstrapper</c> overload will
-    /// land later.
+    /// It forwards to the internal state machine; callers drive it through the four write entries.
     /// </remarks>
     public static class GrowBoot {
         /// <summary>Current lifecycle state.</summary>
@@ -22,43 +20,28 @@ namespace Grow.Kernel.Entry {
         /// Raised after every state change, with the previous and the new state.
         /// </summary>
         /// <remarks>
-        /// Handlers must not throw and must not re-enter the lifecycle. A handler that throws is
-        /// skipped and reported; it never changes what the machine did.
+        /// Subscribers receive a <see cref="GrowSubscription"/>; dispose it to unsubscribe. Handlers
+        /// must not throw and must not re-enter the lifecycle. A handler that throws is reported by the
+        /// kernel sink and does not stop the other handlers.
         /// </remarks>
-        public static event Action<GrowState, GrowState> StateChanged {
-            add => GrowRuntime.StateChanged += value;
-            remove => GrowRuntime.StateChanged -= value;
-        }
+        public static GrowEvent<StateChange> StateChanged => GrowRuntime.StateChanged;
 
-        /// <summary>
-        /// Starts a cycle: from <see cref="GrowState.None"/> or <see cref="GrowState.Shutdown"/> it
-        /// moves to <see cref="GrowState.Reset"/>. From any later state it does nothing, so it never
-        /// moves the runtime backwards.
-        /// </summary>
+        /// <summary>Starts a cycle from None/Shutdown.</summary>
         public static void Reset() {
             GrowRuntime.Reset();
         }
 
-        /// <summary>
-        /// Installs kernel modules. Requires <see cref="Reset"/> first and fails fast otherwise;
-        /// repeating it does nothing.
-        /// </summary>
+        /// <summary>Installs kernel modules.</summary>
         public static void Install() {
             GrowRuntime.Install();
         }
 
-        /// <summary>
-        /// Boots the kernel. Requires <see cref="Install"/> first and fails fast otherwise; repeating
-        /// it does nothing. <see cref="IsReady"/> becomes true when this completes.
-        /// </summary>
+        /// <summary>Boots the kernel.</summary>
         public static void Boot() {
             GrowRuntime.Boot();
         }
 
-        /// <summary>
-        /// Ends the cycle. Does nothing before <see cref="Reset"/>, and is safe to repeat; call
-        /// <see cref="Reset"/> afterwards to start a new cycle.
-        /// </summary>
+        /// <summary>Shuts the kernel down.</summary>
         public static void Shutdown() {
             GrowRuntime.Shutdown();
         }

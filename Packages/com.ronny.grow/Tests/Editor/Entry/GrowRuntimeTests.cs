@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Grow.Core.Events;
 using Grow.Core.Log;
 using Grow.Kernel.Entry;
 using NUnit.Framework;
@@ -15,6 +16,7 @@ namespace Grow.Tests.Editor.Entry {
     // the version Unity 2022.3 ships.)
     public class GrowRuntimeTests {
         private string _transitions = string.Empty;
+        private GrowSubscription _subscription;
 
         [SetUp]
         public void SetUp() {
@@ -25,18 +27,19 @@ namespace Grow.Tests.Editor.Entry {
             GrowRuntime.Reset();
 
             _transitions = string.Empty;
-            GrowRuntime.StateChanged += OnStateChanged;
+            _subscription = GrowRuntime.StateChanged.Subscribe(OnStateChanged);
         }
 
         [TearDown]
         public void TearDown() {
+            _subscription.Dispose();
             // Leave the machine neutral: the state is process-wide, so a test must not decide where
             // the next one starts.
             GrowRuntime.ResetStaticState();
         }
 
-        private void OnStateChanged(GrowState from, GrowState to) {
-            _transitions += $"{from}>{to};";
+        private void OnStateChanged(StateChange change) {
+            _transitions += $"{change.Previous}>{change.Next};";
         }
 
         [Test]
@@ -204,13 +207,14 @@ namespace Grow.Tests.Editor.Entry {
             var staleHandlerCalls = 0;
             GrowRuntime.Install();
             GrowRuntime.Boot();
-            GrowRuntime.StateChanged += (_, __) => staleHandlerCalls++;
+            var stale = GrowRuntime.StateChanged.Subscribe(_ => staleHandlerCalls++);
 
             // What the engine's SubsystemRegistration hook does at the start of the next session.
             GrowRuntime.ResetStaticState();
 
             Assert.AreEqual(GrowState.None, GrowRuntime.State, "a new session must not inherit Ready");
             Assert.IsFalse(GrowRuntime.IsReady);
+            Assert.IsFalse(stale.IsActive, "handlers from the previous session must be gone");
 
             GrowRuntime.Reset();
             GrowRuntime.Install();
@@ -221,8 +225,8 @@ namespace Grow.Tests.Editor.Entry {
         [Test]
         public void ThrowingHandlerIsIsolatedAndReported() {
             var laterHandlerRan = false;
-            GrowRuntime.StateChanged += (_, __) => throw new InvalidOperationException("handler boom");
-            GrowRuntime.StateChanged += (_, __) => laterHandlerRan = true;
+            GrowRuntime.StateChanged.Subscribe(_ => throw new InvalidOperationException("handler boom"));
+            GrowRuntime.StateChanged.Subscribe(_ => laterHandlerRan = true);
 
             LogAssert.Expect(LogType.Error, new Regex("handler boom"));
 
@@ -248,13 +252,12 @@ namespace Grow.Tests.Editor.Entry {
         [Test]
         public void GrowBoot_ForwardsStateChanged() {
             var seen = new List<string>();
-            Action<GrowState, GrowState> handler = (from, to) => seen.Add($"{from}>{to}");
+            var subscription = GrowBoot.StateChanged.Subscribe(change => seen.Add(change.ToString()));
 
-            GrowBoot.StateChanged += handler;
             try {
                 GrowBoot.Install();
             } finally {
-                GrowBoot.StateChanged -= handler;
+                subscription.Dispose();
             }
 
             CollectionAssert.AreEqual(new[] { "Reset>Installed" }, seen);

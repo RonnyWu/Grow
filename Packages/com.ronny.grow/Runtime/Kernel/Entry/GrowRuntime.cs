@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 using System;
+using Grow.Core.Events;
 using Grow.Core.Log;
 using UnityEngine;
 
@@ -41,9 +42,14 @@ namespace Grow.Kernel.Entry {
 
         /// <summary>
         /// Raised after every state change, with the previous and the new state. Handlers must not
-        /// throw and must not re-enter the machine; one that throws is skipped and reported.
+        /// throw and must not re-enter the machine; the publisher's sink reports one that throws and
+        /// keeps the other handlers running.
         /// </summary>
-        internal static event Action<GrowState, GrowState> StateChanged;
+        internal static GrowEvent<StateChange> StateChanged => StateChangedPublisher.Event;
+
+        private static readonly GrowEvent<StateChange>.Publisher StateChangedPublisher =
+            new GrowEvent<StateChange>.Publisher(
+                exception => GrowLog.Error($"A StateChanged handler threw: {exception}", "Kernel"));
 
         /// <summary>
         /// Starts a cycle: <see cref="GrowState.None"/> and <see cref="GrowState.Shutdown"/> move to
@@ -146,7 +152,7 @@ namespace Grow.Kernel.Entry {
         /// </remarks>
         internal static void ResetStaticState() {
             _state = GrowState.None;
-            StateChanged = null;
+            StateChangedPublisher.Clear();
 
             // Subscribe once per session; the removal keeps a domain reload from doubling up.
             Application.quitting -= OnApplicationQuitting;
@@ -172,24 +178,7 @@ namespace Grow.Kernel.Entry {
             if (GrowLog.IsEnabled(LogLevel.Info))
                 GrowLog.Info($"{previous} -> {next}", "Kernel");
 
-            NotifyStateChanged(previous, next);
-        }
-
-        /// <summary>
-        /// Runs every handler in isolation: an observer that throws must not change what the machine
-        /// did, nor stop the observers after it.
-        /// </summary>
-        private static void NotifyStateChanged(GrowState previous, GrowState next) {
-            var handlers = StateChanged;
-            if (handlers == null) return;
-
-            foreach (var handler in handlers.GetInvocationList()) {
-                try {
-                    ((Action<GrowState, GrowState>)handler)(previous, next);
-                } catch (Exception exception) {
-                    GrowLog.Error($"A StateChanged handler threw: {exception}", "Kernel");
-                }
-            }
+            StateChangedPublisher.Publish(new StateChange(previous, next));
         }
 
         private static InvalidOperationException UnhandledState() {
