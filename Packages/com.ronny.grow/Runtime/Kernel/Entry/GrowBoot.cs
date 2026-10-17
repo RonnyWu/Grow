@@ -4,10 +4,12 @@ using Grow.Core.Events;
 
 namespace Grow.Kernel.Entry {
     /// <summary>
-    /// Public facade for the kernel lifecycle state machine.
+    /// Read-only observation surface of the kernel lifecycle.
     /// </summary>
     /// <remarks>
-    /// It forwards to the internal state machine; callers drive it through the four write entries.
+    /// <see cref="GrowApp"/> is the composition root and the only lifecycle writer. It forwards to the
+    /// state machine behind it; the write entries are internal so a second caller cannot start or
+    /// stop the kernel behind the composition root's back.
     /// </remarks>
     public static class GrowBoot {
         /// <summary>Current lifecycle state.</summary>
@@ -26,23 +28,23 @@ namespace Grow.Kernel.Entry {
         /// </remarks>
         public static GrowEvent<StateChange> StateChanged => GrowRuntime.StateChanged;
 
-        /// <summary>Starts a cycle from None/Shutdown.</summary>
-        public static void Reset() {
+        /// <summary>Starts a cycle from None/Shutdown; internal composition-root entry.</summary>
+        internal static void Reset() {
             GrowRuntime.Reset();
         }
 
-        /// <summary>Installs kernel modules.</summary>
-        public static void Install() {
+        /// <summary>Installs kernel modules; internal composition-root entry.</summary>
+        internal static void Install() {
             GrowRuntime.Install();
         }
 
-        /// <summary>Boots the kernel.</summary>
-        public static void Boot() {
+        /// <summary>Boots the kernel; internal composition-root entry.</summary>
+        internal static void Boot() {
             GrowRuntime.Boot();
         }
 
-        /// <summary>Shuts the kernel down.</summary>
-        public static void Shutdown() {
+        /// <summary>Shuts the kernel down; internal composition-root entry.</summary>
+        internal static void Shutdown() {
             GrowRuntime.Shutdown();
         }
     }
