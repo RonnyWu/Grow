@@ -41,6 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `Grow.Kernel.Lifecycle.UnifiedClassService<T>` — self-managed plain objects and
   services with ordered initialize / contracts / start / update / teardown / reset stages,
   failure isolation and a main-thread `PostToMain` queue.
+- `Grow.Kernel.Ioc` — `IOC.Root` plus `ServiceCollection` with parent scopes, exact
+  `(service type, key)` identities and transient/singleton lifetimes. `AddUnique` /
+  `InjectUnique` are keyed-singleton aliases; factories use `IServiceFactory<T>`.
+  `GetService` returns `null` when absent, `GetRequiredService` throws
+  `ServiceNotFoundException`, and the root is cleared in place at
+  `SubsystemRegistration`.
 - EditMode tests for both assemblies.
 
 ### Changed
