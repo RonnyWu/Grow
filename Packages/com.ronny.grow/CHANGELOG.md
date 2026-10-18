@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outermost publish after every listener has run. `SubscribeOnce` consumes its slot before
   the call; `SubscriptionBag` disposes a group of tokens LIFO. A `Publisher.Dispose` called
   during a dispatch is deferred until the current pass ends.
+- `Grow.Core.Collections` — passive collection primitives: `BinaryHeap<T>` (min-heap),
+  `RingBuffer<T>` (fixed-capacity ring), `SlotMap<T>` + `SlotHandle` (dense generational slots)
+  and `SortedBag<T>` (stable ordered multiset implementing `IReadOnlyList<T>`).
 - `Grow.Kernel` assembly — mechanisms, starting with `Grow.Kernel.Entry`: the
   `GrowRuntime` state machine (manual `Reset` / `Install` / `Boot` / `Shutdown`
   entry points, with `Ready` reached by `Boot`), the `GrowBoot` thin facade, and
