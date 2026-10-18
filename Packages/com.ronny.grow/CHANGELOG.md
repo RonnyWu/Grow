@@ -12,25 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Grow.Core` assembly — passive primitives, starting with `Grow.Core.Log`: the
   `GrowLog` facade, the `ILogSink` extension point, the `UnityLogSink` default
   sink, and the `LogEntry` / `LogLevel` value types.
-- `Grow.Core.Collections` — `BinaryHeap<T>`, a binary min-heap with an optional
-  `IComparer<T>` (so it can act as a max-heap or order a type that is not comparable) and
-  `TryPeek` / `TryDequeue`; and `SortedBag<T>`, an array-backed ordered multiset that allows
-  duplicates, keeps insertion order among equal items and implements `IReadOnlyList<T>`.
-  Both are passive and depend only on `System`. `BinaryHeap<T>` is deliberately not named
-  `PriorityQueue` because the .NET 6 base class library uses that name.
-- `Grow.Core.Collections.RingBuffer<T>` — a fixed-capacity circular buffer: the array is
-  allocated once, `Push` / `Pop` / `Peek` are O(1), the indexer is oldest-first, `Push`
-  overwrites the oldest item when full and `TryPush` reports `false` instead.
-- `Grow.Core.Collections.SlotMap<T>` and `SlotHandle` — generational handles with O(1)
-  add/remove/get and dense `Values` / `Handles` spans. Removing a value bumps the slot's
-  generation, so an old handle can never reach a newer value that reuses the slot.
-- `Grow.Core.Pool` — `ConcurrentObjectPool<T>`, a thread-safe pool that also implements
-  `UnityEngine.Pool.IObjectPool<T>`, and `StringBuilderPool` with its `Pooled` token.
-  Single-threaded pooling is left to `UnityEngine.Pool.ObjectPool<T>` (and `LinkedPool<T>`),
-  which the engine already ships; the framework does not duplicate that contract. Pooled
-  objects are tracked by identity, so a duplicate or unknown release is ignored; the
-  capacity bounds idle objects only. `StringBuilderPool` resets its slots at
-  `SubsystemRegistration`.
 - `Grow.Core.Events` — a single-thread, steady-state zero-allocation event primitive.
   `GrowEvent` / `GrowEvent<T>` are the subscription surfaces; the nested owner-only
   `GrowEvent.Publisher` / `GrowEvent<T>.Publisher` are created with `new ...Publisher()`.
@@ -41,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   outermost publish after every listener has run. `SubscribeOnce` consumes its slot before
   the call; `SubscriptionBag` disposes a group of tokens LIFO. A `Publisher.Dispose` called
   during a dispatch is deferred until the current pass ends.
+- `Grow.Core.Collections` — passive collection primitives: `BinaryHeap<T>` (min-heap),
+  `RingBuffer<T>` (fixed-capacity ring), `SlotMap<T>` + `SlotHandle` (dense generational slots)
+  and `SortedBag<T>` (stable ordered multiset implementing `IReadOnlyList<T>`).
+- `Grow.Core.Pool` — a thread-safe `ConcurrentObjectPool<T>` with lifecycle callbacks, and
+  `StringBuilderPool` / `StringBuilderPool.Pooled` for string-builder rentals through a
+  single-use token.
 - `Grow.Kernel` assembly — mechanisms, starting with `Grow.Kernel.Entry`: the
   `GrowRuntime` state machine (manual `Reset` / `Install` / `Boot` / `Shutdown`
   entry points, with `Ready` reached by `Boot`), the `GrowBoot` thin facade, and
@@ -102,34 +89,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `GrowApp.Initialize` now publishes `GrowState.Installed` after `GrowModules.Bootstrap()`.
   Module hooks therefore observe `GrowState.Reset`, and a `StateChanged` handler for
   `Installed` observes a fully composed kernel.
-- **Breaking (pool token):** `StringBuilderPool.Pooled` is now a class token instead of a
-  `ref struct`. Copies share a single-use flag, so disposing twice returns the builder once.
-  Renting still reuses the builder but costs one small token allocation.
-- **Breaking (handle API):** `SlotHandle.IsValid` became `IsDefault`, because a removed handle
-  keeps its generation and cannot be judged without the map. `SlotMap` now wraps a slot's
-  generation back to 1 instead of producing a zero/negative generation, and documents that a
-  foreign handle is not detected.
 - `GrowModules.Reset()` is now a public explicit reset: it shuts down started modules before
   replacing the registry, and a failed initialization also resets the registry.
 
 ### Fixed
 
 - `PlayerLoopProfile.Install` now removes partially inserted systems when an install throws,
-  and `Uninstall` still cleans up when the owner was never recorded, so a failed install
-  cannot leave Grow systems in the player loop. `PlayerLoopManager` records a system before
-  applying it, so cleanup can find it even when `SetPlayerLoop` throws.
+  and `Uninstall` still cleans up when the owner was never recorded. `PlayerLoopManager`
+  records a system before applying it, so cleanup can find it even when `SetPlayerLoop`
+  throws.
 - `OnFixedUpdate` is inserted inside Unity's `FixedUpdate` group instead of as a top-level
   sibling, so it runs once per fixed step rather than once per frame.
 - `MonoManager.Bind` replays application subscriptions and enabled updater bindings, so a
   `UnifiedClass` created before the host is bound attaches once the host exists.
   `MonoManager.Unbind` clears those bindings and no longer queues bound targets for replay.
-- `ConcurrentObjectPool.Clear` drains idle objects before destroying them, so a throwing
-  `destroy` callback cannot leave the idle count negative. A throwing `deactivate` now
-  destroys the instance instead of returning a half-deactivated object to idle.
-- `SortedBag.EnqueueRange(..., fullSort: true)` now sorts the incoming batch stably and
-  merges it, preserving insertion order among equal items.
-- `StringBuilderPool.Pooled` now guarantees that copying the token and disposing both
-  copies returns the builder once.
 - The `IModuleContext` remarks now say it shares the IOC root table instead of claiming a
   separate locator.
 
