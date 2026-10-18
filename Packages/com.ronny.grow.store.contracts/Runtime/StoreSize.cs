@@ -8,7 +8,7 @@ namespace Grow.Store.Contracts {
     /// This is a logical size, not the size on disk.
     /// </remarks>
     public readonly struct StoreSize {
-        /// <summary>Creates a logical size.</summary>
+        /// <summary>Creates a logical size; negative values are treated as zero.</summary>
         public StoreSize(long dataBytes, long blobBytes) {
             DataBytes = dataBytes < 0 ? 0 : dataBytes;
             BlobBytes = blobBytes < 0 ? 0 : blobBytes;

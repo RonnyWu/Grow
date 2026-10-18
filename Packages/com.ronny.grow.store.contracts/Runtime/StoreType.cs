@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
 
 namespace Grow.Store.Contracts {
-    /// <summary>Where a store lives. The implementation owns the actual paths.</summary>
+    /// <summary>Where a store lives. The default file paths are listed on each member.</summary>
     /// <remarks>
     /// All implementations keep their data out of the Windows registry: <c>EditorPrefs</c> and
-    /// <c>PlayerPrefs</c> write there, and repeated projects pollute the same keys. A store is a file
-    /// (or an equivalent platform file API), never a registry value.
+    /// <c>PlayerPrefs</c> use registry-backed persistence on Windows, and repeated projects pollute
+    /// the same keys. Store data is file-based, never a registry value.
+    /// <para>
+    /// <c>default(StoreType)</c> is <see cref="Editor"/>; pass a type explicitly when the default may
+    /// be a player build.
+    /// </para>
     /// </remarks>
     public enum StoreType {
         /// <summary>
@@ -15,8 +19,8 @@ namespace Grow.Store.Contracts {
         Editor,
 
         /// <summary>
-        /// Runtime data. In the editor it lives under <c>UserSettings/Grow/Runtime</c>; in a player
-        /// under <c>Application.persistentDataPath/Grow/Runtime</c>.
+        /// Runtime data. By default the editor uses <c>UserSettings/Grow/Runtime</c>; a player uses
+        /// <c>Application.persistentDataPath/Grow/Runtime</c>.
         /// </summary>
         Runtime,
 
