@@ -111,6 +111,9 @@ namespace Grow.Core.Pool {
                 item = idle;
             } else {
                 item = _create();
+                if (ReferenceEquals(item, null)) {
+                    throw new InvalidOperationException("The pool factory returned null.");
+                }
             }
 
             if (!_leased.TryAdd(item, 0)) {
@@ -137,12 +140,17 @@ namespace Grow.Core.Pool {
 
         /// <summary>
         /// Returns an object. Releasing an object the pool did not lease, or releasing the same
-        /// object twice, is ignored. If <c>deactivate</c> throws, the object is destroyed instead of
-        /// returned to idle and the exception propagates.
+        /// object twice while it is still leased, is ignored. If <c>deactivate</c> throws, the
+        /// object is destroyed instead of returned to idle and the exception propagates.
         /// </summary>
+        /// <remarks>
+        /// A release is identified by object identity, not by a lease token. If the object is
+        /// acquired again after a release, a late second release of the old lease looks like a
+        /// release of the new lease; callers must release each lease exactly once.
+        /// </remarks>
         /// <param name="item">Object to return; <c>null</c> is ignored.</param>
         public void Release(T item) {
-            if (item == null) {
+            if (ReferenceEquals(item, null)) {
                 return;
             }
 
@@ -174,7 +182,7 @@ namespace Grow.Core.Pool {
                 drained.Add(item);
             }
 
-            Interlocked.Exchange(ref _idleCount, 0);
+            Interlocked.Add(ref _idleCount, -drained.Count);
 
             Exception first = null;
             for (var i = 0; i < drained.Count; i++) {
