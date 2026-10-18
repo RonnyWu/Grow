@@ -429,6 +429,3 @@ InitTestScene*.unity*
 !.env.example
 *.snk
 *.pfx
-
-# Grow store quarantine files (an unreadable .kv is moved aside, not deleted)
-*.corrupt-*

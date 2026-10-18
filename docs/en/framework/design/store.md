@@ -13,7 +13,7 @@ code and use `byte[]` when they need to store encoded data.
 - Store primitive values and `byte[]` without a database or a third-party backend.
 - Keep every store readable as ordinary files, with one visible bucket in the common case.
 - Share one directory per `StoreType`, not one directory per store.
-- Split large stores into buckets at startup, not during play.
+- Split large stores into buckets on first access, never during a save.
 - Keep `Save` explicit and flush on commit; never run an automatic save timer.
 - Treat only physical disk and IO failures as hard failures.
 - Never use `EditorPrefs`, `PlayerPrefs`, `Microsoft.Win32` or the registry.
@@ -88,7 +88,7 @@ store audio bucketCount=1
   bucket 0 version=2 bytes=4210
 ```
 
-`bucketCount` is a power of two. `bytes` is the logical bucket size and a hint for startup splitting.
+`bucketCount` is a power of two. `bytes` is the logical bucket size and a hint for bucket splitting.
 `bodyCrc32` covers the lines after the header. `manifests.bak` holds the previous complete index.
 
 ### Bucket files
@@ -113,11 +113,11 @@ value, and uses `long`.
 
 ## Save and commit
 
-`Save` commits the current cache and flushes it. A clean store performs no IO.
+`Save` commits the current cache and flushes it. A clean, already loaded store performs no write.
 
 1. Group changed keys by bucket.
-2. For each affected bucket, write `<store>.<bucket>.<next>.kv.tmp`, flush it, verify it and rename
-   it to the final versioned name.
+2. For each affected bucket, write `<store>.<bucket>.<next>.kv.tmp`, flush it and rename it to the
+   final versioned name.
 3. Update the `manifests` entry with the new bucket versions.
 4. Replace `manifests` safely.
 5. Drop bucket versions that are no longer referenced.
@@ -127,7 +127,7 @@ leaves the old manifest readable and at most orphan bucket versions. A crash aft
 the new versions. A failed manifest write keeps the old index.
 
 `TrySaveAll` writes every healthy dirty store first and then replaces the manifest once. A corrupted
-store is skipped and reported as a failure. A bucket write failure prevents the manifest commit;
+dirty store is skipped and reported as a failure. A bucket write failure prevents the manifest commit;
 already written versions are orphans and every healthy store stays dirty.
 
 ### Safe manifest replacement
@@ -135,8 +135,7 @@ already written versions are orphans and every healthy store stays dirty.
 The primary path writes and verifies `manifests.tmp`, then calls
 `File.Replace(manifests.tmp, manifests, manifests.bak)`. The backup is produced by the replace
 itself. When `File.Replace` is unavailable, the fallback makes a verified `.bak` durable, then
-deletes and moves the temporary manifest; the `.bak` covers the crash window. Both paths are tested
-on every supported platform.
+deletes and moves the temporary manifest; the `.bak` covers the crash window.
 
 ## Recovery
 
@@ -145,8 +144,8 @@ On open:
 1. Read and verify `manifests`.
 2. Fall back to `manifests.bak`.
 3. If both are invalid, scan bucket headers and rebuild the manifest.
-4. Run startup bucket splitting and garbage collection.
-5. Load buckets lazily as they are accessed.
+4. Split and garbage-collect a store the first time it is loaded.
+5. Load the store's buckets when the store is first accessed.
 
 A bucket with a bad header or CRC is moved to `quarantine/` and the store becomes `Corrupted`.
 Reads return only data that can be validated; writes throw `InvalidOperationException`; `TrySave`
@@ -167,8 +166,8 @@ The bucket is `hash & (bucketCount - 1)`. Startup splitting is:
 - switch the manifest only after every new bucket verifies;
 - stop at `BucketCountLimit` (default 4096) and log once if a single key still exceeds the target.
 
-Runtime saves never split. A long session can grow a bucket beyond the target; the next startup
-converges it, or an explicit `IStoreDiagnostics.TrySplit` does so at a safe point.
+Runtime saves never split. A long session can grow a bucket beyond the target; the next first
+access converges it, or an explicit `IStoreDiagnostics.TrySplit` does so at a safe point.
 
 ## Blobs
 
@@ -224,8 +223,9 @@ public interface IStoreProvider : IDisposable
 }
 ```
 
-`IStore` is not `IDisposable`; the provider owns store lifetime. One provider owns one scope. A second
-provider opening the same scope fails at startup instead of overwriting the shared manifest.
+`IStore` is not `IDisposable`; the provider owns store lifetime. One provider serves all scopes, and
+each scope has exactly one writer. A second provider opening an already-held scope fails on that first
+open instead of overwriting the shared manifest.
 
 `Close` saves a dirty, healthy store and releases it on success. A failed save keeps the store open
 and dirty. A corrupted store is released without a write. `DeleteStore` removes the manifest record,

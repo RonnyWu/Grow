@@ -11,9 +11,9 @@ namespace Grow.Store {
     /// <summary>Integrates the store capability with the kernel.</summary>
     /// <remarks>
     /// The module owns an <see cref="IStoreProvider"/>, registers it and a default
-    /// <see cref="IStore"/>, and saves within the lifecycle budget on stop. It also exposes the
+    /// <see cref="IStore"/>, and saves every healthy dirty store on stop. It also exposes the
     /// optional <see cref="IStoreDiagnostics"/> surface. A second provider for the same scope is
-    /// rejected when the module starts.
+    /// rejected when it first opens that scope.
     /// </remarks>
     public sealed class StoreModule : IModule {
         /// <summary>Default name of the store registered as <see cref="IStore"/>.</summary>
@@ -106,14 +106,6 @@ namespace Grow.Store {
 
         /// <inheritdoc />
         public void OnStop() {
-            if (_provider is StoreProvider fileProvider) {
-                if (!fileProvider.TrySaveAllWithinBudget()) {
-                    GrowLog.Error("[Store] Shutdown budget could not save every store.", LogCategory);
-                }
-
-                return;
-            }
-
             if (!_provider.TrySaveAll(out var error)) {
                 GrowLog.Error($"[Store] Shutdown could not save every store: {error}", LogCategory);
             }

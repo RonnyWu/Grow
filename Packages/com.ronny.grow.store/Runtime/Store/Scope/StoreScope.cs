@@ -172,6 +172,12 @@ namespace Grow.Store.Scope {
                 }
 
                 if (selected.Count == 0) {
+                    if (HasDirtyStores()) {
+                        GrowLog.Warning(
+                            "[Store] Lifecycle budget skipped every dirty store; data remains in memory.",
+                            LogCategory);
+                    }
+
                     return true;
                 }
 
@@ -237,6 +243,11 @@ namespace Grow.Store.Scope {
                     return false;
                 }
 
+                if (store.IsCorrupted) {
+                    error = "store is corrupted; reset it first";
+                    return false;
+                }
+
                 try {
                     SplitStoreLocked(store, true);
                     error = null;
@@ -258,6 +269,11 @@ namespace Grow.Store.Scope {
 
                 if (store.IsDirty) {
                     error = "store has uncommitted changes";
+                    return false;
+                }
+
+                if (store.IsCorrupted) {
+                    error = "store is corrupted; reset it first";
                     return false;
                 }
 
@@ -566,11 +582,19 @@ namespace Grow.Store.Scope {
 
         private bool HasVersionedBuckets(string name) {
             try {
-                return Directory.GetFiles(_root, name + ".*.*.kv", SearchOption.TopDirectoryOnly)
-                    .Length > 0;
+                var files = Directory.GetFiles(_root, "*.kv", SearchOption.TopDirectoryOnly);
+                for (var i = 0; i < files.Length; i++) {
+                    if (StoreManifest.TryParseFileName(
+                            Path.GetFileName(files[i]), out var parsed, out _, out _) &&
+                        string.Equals(parsed, name, StringComparison.Ordinal)) {
+                        return true;
+                    }
+                }
             } catch {
-                return false;
+                // A failed probe is treated as "no versioned buckets".
             }
+
+            return false;
         }
 
         private void CommitLocked(IReadOnlyList<StoreFile> stores, bool flush) {
@@ -860,10 +884,20 @@ namespace Grow.Store.Scope {
             }
 
             var used = new HashSet<string>(StringComparer.Ordinal);
-            CollectBlobIds(store, _manifest.GetStore(store), used);
+            if (!CollectBlobIds(store, _manifest.GetStore(store), used)) {
+                GrowLog.Warning(
+                    $"[Store] Skipping blob GC for '{store}': a referenced bucket could not be read.",
+                    LogCategory);
+                return;
+            }
+
             var backupPath = Path.Combine(_root, ManifestName + ".bak");
-            if (StoreManifest.TryLoad(backupPath, out var backup, out _)) {
-                CollectBlobIds(store, backup.GetStore(store), used);
+            if (StoreManifest.TryLoad(backupPath, out var backup, out _) &&
+                !CollectBlobIds(store, backup.GetStore(store), used)) {
+                GrowLog.Warning(
+                    $"[Store] Skipping blob GC for '{store}': a backup bucket could not be read.",
+                    LogCategory);
+                return;
             }
 
             string[] files;
@@ -890,16 +924,16 @@ namespace Grow.Store.Scope {
             }
         }
 
-        private void CollectBlobIds(string store, StoreManifest.StoreRecord record,
+        private bool CollectBlobIds(string store, StoreManifest.StoreRecord record,
             HashSet<string> used) {
             if (record == null) {
-                return;
+                return true;
             }
 
             foreach (var pair in record.Buckets) {
                 var path = Path.Combine(_root, BucketFileName(store, pair.Key, pair.Value.Version));
                 if (!StoreBucketFile.TryRead(path, out var data, out _)) {
-                    continue;
+                    return false;
                 }
 
                 foreach (var entry in data.Entries.Values) {
@@ -908,6 +942,8 @@ namespace Grow.Store.Scope {
                     }
                 }
             }
+
+            return true;
         }
 
         private void DeleteStoreFiles(string store) {
@@ -918,27 +954,45 @@ namespace Grow.Store.Scope {
             TryDeleteDirectory(Path.Combine(_root, store + ".blobs"));
             string[] files;
             try {
-                files = Directory.GetFiles(_root, store + ".*", SearchOption.TopDirectoryOnly);
+                files = Directory.GetFiles(_root, "*.kv", SearchOption.TopDirectoryOnly);
             } catch {
                 return;
             }
 
             for (var i = 0; i < files.Length; i++) {
-                TryDelete(files[i]);
+                if (StoreManifest.TryParseFileName(
+                        Path.GetFileName(files[i]), out var parsed, out _, out _) &&
+                    string.Equals(parsed, store, StringComparison.Ordinal)) {
+                    TryDelete(files[i]);
+                }
             }
 
             var quarantine = Path.Combine(_root, "quarantine");
             if (Directory.Exists(quarantine)) {
                 try {
                     var stale = Directory.GetFiles(
-                        quarantine, store + ".*", SearchOption.TopDirectoryOnly);
+                        quarantine, "*", SearchOption.TopDirectoryOnly);
                     for (var i = 0; i < stale.Length; i++) {
-                        TryDelete(stale[i]);
+                        if (QuarantineBelongsTo(Path.GetFileName(stale[i]), store)) {
+                            TryDelete(stale[i]);
+                        }
                     }
                 } catch {
                     // Best effort.
                 }
             }
+        }
+
+        private static bool QuarantineBelongsTo(string fileName, string store) {
+            var marker = fileName.IndexOf(".kv.", StringComparison.Ordinal);
+            if (marker < 0) {
+                return false;
+            }
+
+            var original = fileName.Substring(0, marker + 3);
+            return StoreManifest.TryParseFileName(original, out var parsed, out _, out _) &&
+                   string.Equals(parsed, store, StringComparison.Ordinal);
+        }
         }
 
         private void Quarantine(string path) {
@@ -980,8 +1034,18 @@ namespace Grow.Store.Scope {
             }
 
             if (quit != null) {
-                _quitSubscription = quit.Subscribe(() => TrySaveAllWithinBudget());
+                _quitSubscription = quit.Subscribe(() => TrySaveAll(out _));
             }
+        }
+
+        private bool HasDirtyStores() {
+            foreach (var store in _stores.Values) {
+                if (store.IsDirty) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static void AddVersions(StoreManifest.StoreRecord record, HashSet<string> versions) {

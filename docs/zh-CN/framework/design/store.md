@@ -1,4 +1,4 @@
-<!-- source: docs/en/framework/design/store.md @ blob:d5799e0563cfa02f071e7c3255491f512847cb42 -->
+<!-- source: docs/en/framework/design/store.md @ blob:8859c7e44b58e338c08f9d0213d03858f865eddb -->
 <!-- 中文译文；以英文 docs/en/framework/design/store.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/framework/design/store.md 核验。 -->
 
 # Store
@@ -14,7 +14,7 @@ Store 为 Grow 提供一个小型、基于文件的键值存储，用来保存�
 - 不依赖数据库或第三方后端，存储基础类型和 `byte[]`。
 - 每个 store 都能以普通文件读取，常见情况下只有一个可见 bucket。
 - 每个 `StoreType` 共享一个目录，而不是每个 store 一个目录。
-- 大型 store 在启动时拆分为 bucket，而不是在游戏运行中拆分。
+- 大型 store 在首次访问时拆分为 bucket，而不是在保存过程中拆分。
 - `Save` 显式提交并 flush；从不运行自动保存定时器。
 - 只有物理磁盘和 IO 失败才是硬失败。
 - 从不使用 `EditorPrefs`、`PlayerPrefs`、`Microsoft.Win32` 或注册表。
@@ -86,7 +86,7 @@ store audio bucketCount=1
   bucket 0 version=2 bytes=4210
 ```
 
-`bucketCount` 是 2 的幂。`bytes` 是逻辑 bucket 大小，也是启动拆分的提示。`bodyCrc32` 覆盖 header 之后的所有行。`manifests.bak` 保存上一份完整索引。
+`bucketCount` 是 2 的幂。`bytes` 是逻辑 bucket 大小，也是 bucket 拆分的提示。`bodyCrc32` 覆盖 header 之后的所有行。`manifests.bak` 保存上一份完整索引。
 
 ### Bucket 文件
 
@@ -112,7 +112,7 @@ avatar<TAB>blob<TAB>7f3a1c2d9e8b4a6c8d0e1f2a3b4c5d6e:1048576:9f3a1c2d
 `Save` 提交当前缓存并 flush。干净的 store 不产生 IO。
 
 1. 按 bucket 分组变化的 key。
-2. 对每个受影响的 bucket，写 `<store>.<bucket>.<next>.kv.tmp`，flush、校验，然后重命名为最终版本名。
+2. 对每个受影响的 bucket，写 `<store>.<bucket>.<next>.kv.tmp`，flush，然后重命名为最终版本名。
 3. 用新的 bucket version 更新 `manifests` 中的记录。
 4. 安全替换 `manifests`。
 5. 删除不再被引用的 bucket 版本。
@@ -123,7 +123,7 @@ avatar<TAB>blob<TAB>7f3a1c2d9e8b4a6c8d0e1f2a3b4c5d6e:1048576:9f3a1c2d
 
 ### 安全的 manifest 替换
 
-主路径写入并校验 `manifests.tmp`，然后调用 `File.Replace(manifests.tmp, manifests, manifests.bak)`。备份由 replace 自身生成。`File.Replace` 不可用时，fallback 先让经过校验的 `.bak` 持久化，再删除并移动临时 manifest；`.bak` 覆盖崩溃窗口。两条路径都要在每个支持的平台上测试。
+主路径写入并校验 `manifests.tmp`，然后调用 `File.Replace(manifests.tmp, manifests, manifests.bak)`。备份由 replace 自身生成。`File.Replace` 不可用时，fallback 先让经过校验的 `.bak` 持久化，再删除并移动临时 manifest；`.bak` 覆盖崩溃窗口。回退路径用于 `File.Replace` 不可用时。
 
 ## 恢复
 
@@ -132,7 +132,7 @@ avatar<TAB>blob<TAB>7f3a1c2d9e8b4a6c8d0e1f2a3b4c5d6e:1048576:9f3a1c2d
 1. 读取并校验 `manifests`。
 2. 回退到 `manifests.bak`。
 3. 两者都无效时，扫描 bucket header 并重建 manifest。
-4. 执行启动 bucket 拆分和垃圾回收。
+4. 在首次加载 store 时拆分并垃圾回收。
 5. 按访问懒加载 bucket。
 
 header 或 CRC 错误的 bucket 会被移动到 `quarantine/`，store 变为 `Corrupted`。读取只返回可校验的数据；写入抛 `InvalidOperationException`；`TrySave` 返回 `false`。`Reset` 清空并重建 store。已提交的 blob 指针如果文件缺失或长度/CRC 校验失败，就是损坏，不是 miss。
@@ -149,7 +149,7 @@ bucket 为 `hash & (bucketCount - 1)`。启动拆分为：
 - 只有所有新 bucket 校验通过后才切换 manifest；
 - 达到 `BucketCountLimit`（默认 4096）时停止；如果单个 key 仍超过目标，记录一次日志。
 
-运行期保存从不拆分。长会话可能让 bucket 超过目标；下次启动会收敛，或在安全点显式调用 `IStoreDiagnostics.TrySplit`。
+运行期保存从不拆分。长会话可能让 bucket 超过目标；下次访问会收敛，或在安全点显式调用 `IStoreDiagnostics.TrySplit`。
 
 ## Blob
 
@@ -161,9 +161,9 @@ Blob GC 只扫描拥有 `.blobs/` 目录的 store。它从当前 manifest 和 `m
 
 | 设置 | 默认 | 行为 |
 | --- | --- | --- |
-| `TargetBucketBytes` | 2 MiB | 启动拆分目标；从不是硬限制 |
+| `TargetBucketBytes` | 2 MiB | 首次访问拆分目标；从不是硬限制 |
 | `BlobWarningBytes` | 64 MiB | 软日志阈值；从不是硬限制 |
-| `BucketCountLimit` | 4096 | 启动拆分上限 |
+| `BucketCountLimit` | 4096 | 拆分上限 |
 
 没有单值、key 数、store 或作用域限制。逻辑大小阈值只记录日志。物理磁盘和 IO 失败通过 `IOException` 或 `TrySave` 报告。没有 `StoreCapacityException`，也没有 `SplitRecommended` 属性。
 
@@ -199,7 +199,7 @@ public interface IStoreProvider : IDisposable
 }
 ```
 
-`IStore` 不实现 `IDisposable`；store 的生命周期由 provider 独占。一个 provider 拥有一个作用域。第二个 provider 打开同一作用域时会在启动阶段失败，而不是覆盖共享 manifest。
+`IStore` 不实现 `IDisposable`；store 的生命周期由 provider 独占。一个 provider 服务所有作用域，每个作用域只有一个 writer。第二个 provider 首次打开已被占用的作用域时会失败，而不是覆盖共享 manifest。
 
 `Close` 保存健康且 dirty 的 store，并在成功时释放。保存失败时 store 保持打开且 dirty。损坏的 store 不写入，直接释放。`DeleteStore` 先删除 manifest 记录，再删除 store 文件；两步之间崩溃会留下孤儿文件，由 GC 清理。`Reset` 重建空 store，并尽力删除其 blob 目录。
 
@@ -215,7 +215,7 @@ public interface IStoreProvider : IDisposable
 
 - 单 bucket store 在每次保存时仍会写 manifest。为了一条代码路径、一种文件格式和一套恢复模型，接受这次小写入。
 - manifest 是作用域全局的，因此其大小随 store 数量增长。等到真实工作负载需要时再考虑 per-store manifest。
-- 启动拆分和 blob GC 可能阻塞加载。运行期拆分不会自动进行。
+- 首次访问的拆分和 blob GC 可能阻塞加载。运行期拆分不会自动进行。
 - store 是单进程、主线程的。此能力不计划后台写入、加密、压缩或云同步。
 
 ## 另见

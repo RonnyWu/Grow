@@ -358,9 +358,9 @@ namespace Grow.Store.Format {
         }
 
         public static long EstimateBytes(string key, StoreEntry entry) {
-            var value = entry.Data != null ? entry.Data.Length : (entry.Text ?? string.Empty).Length;
-            return Encoding.UTF8.GetByteCount(key) + Encoding.UTF8.GetByteCount(
-                entry.Text ?? string.Empty) + 16 + value;
+            var textBytes = Encoding.UTF8.GetByteCount(entry.Text ?? string.Empty);
+            var dataBytes = entry.Data == null ? 0 : entry.Data.Length;
+            return Encoding.UTF8.GetByteCount(key) + textBytes + 16 + dataBytes;
         }
 
         public static bool TryGetPointer(StoreEntry entry, out string blobId, out long length,

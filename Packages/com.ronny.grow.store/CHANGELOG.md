@@ -29,7 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A failed manifest commit leaves the previous manifest readable; new bucket versions are
   orphans and are collected later.
 - Corrupted bucket and blob files are never silently overwritten.
-- Lifecycle saves use a budget over pending bytes, store count and fsync count.
+- Pause/focus saves use a budget over pending bytes, store count and fsync count; shutdown saves
+  every healthy dirty store.
 
 ## [3.0.0-exp.1] - 2026-10-17
 

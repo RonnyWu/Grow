@@ -220,6 +220,20 @@ namespace Grow.Store.Tests.Editor {
         }
 
         [Test]
+        public void DeleteStore_DoesNotDeleteAPrefixedSibling() {
+            var target = NewStore("save");
+            var sibling = NewStore("save.slot");
+            target.Set("a", 1).Save();
+            sibling.Set("b", 2).Save();
+
+            Assert.IsTrue(_provider.DeleteStore("save", StoreType.User));
+
+            Assert.IsFalse(File.Exists(BucketPath("save", 0, 1)));
+            Assert.IsTrue(File.Exists(BucketPath("save.slot", 0, 1)));
+            Assert.AreEqual(2, NewStore("save.slot").Get("b", -1));
+        }
+
+        [Test]
         public void StoreNames_AreNormalizedAndValidated() {
             var upper = _provider.GetStore("Settings", StoreType.User);
             var lower = _provider.GetStore("settings", StoreType.User);

@@ -34,7 +34,7 @@ internal bookkeeping.
 
 `Save` writes new files first and switches the index last:
 
-1. Each changed bucket is written to a temporary file, flushed and verified.
+1. Each changed bucket is written to a temporary file and flushed.
 2. The temporary bucket is renamed to a new version.
 3. The index is replaced safely with the new bucket version.
 4. Old versions are removed after the index no longer references them.
@@ -60,9 +60,9 @@ behaviour.
 ## Growth and cleanup
 
 - A store starts with one bucket.
-- At startup, a bucket larger than `TargetBucketBytes` is split into more buckets.
+- When a store is first accessed, a bucket larger than `TargetBucketBytes` is split into more buckets.
 - Splitting rewrites the store once and then switches the index.
-- Running saves never split. A long session can grow a bucket past the target; the next startup
+- Running saves never split. A long session can grow a bucket past the target; the next access
   converges it.
 - `TargetBucketBytes` is a target, not a hard limit. `BlobWarningBytes` only logs.
 - Blob files are reclaimed when no current or previous bucket version references them.
