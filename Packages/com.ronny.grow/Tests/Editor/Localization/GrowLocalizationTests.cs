@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Grow.Editor.Localization;
 using NUnit.Framework;
 using UnityEngine;
@@ -65,10 +66,25 @@ namespace Grow.Tests.Editor.Localization {
         }
 
         [Test]
-        public void ResolveSystemLanguage_MapsSimplifiedChinese() {
+        public void ResolveSystemLanguage_MapsUnOfficialLanguages() {
+            Assert.AreEqual("ar", GrowLocalization.ResolveSystemLanguage(SystemLanguage.Arabic));
             Assert.AreEqual("zh-Hans",
                 GrowLocalization.ResolveSystemLanguage(SystemLanguage.ChineseSimplified));
             Assert.AreEqual("en", GrowLocalization.ResolveSystemLanguage(SystemLanguage.English));
+            Assert.AreEqual("fr", GrowLocalization.ResolveSystemLanguage(SystemLanguage.French));
+            Assert.AreEqual("ru", GrowLocalization.ResolveSystemLanguage(SystemLanguage.Russian));
+            Assert.AreEqual("es", GrowLocalization.ResolveSystemLanguage(SystemLanguage.Spanish));
+        }
+
+        [Test]
+        public void PackageLocaleFiles_CoverTheSixUnOfficialLanguages() {
+            var languages = GrowLocalization.Languages;
+
+            foreach (var code in new[] { "ar", "en", "es", "fr", "ru", "zh-Hans" }) {
+                Assert.IsTrue(
+                    languages.Any(language => language.Code == code),
+                    $"Missing locale '{code}'.");
+            }
         }
     }
 }

@@ -1,0 +1,31 @@
+{
+    "schemaVersion": 1,
+    "language": "fr",
+    "languageName": "Français",
+    "entries": [
+        { "key": "grow.settings.project.general.title", "value": "Général" },
+        { "key": "grow.settings.project.general.help", "value": "Cette page présente le paquet installé. Les paramètres de projet ne sont ajoutés que lorsqu’une fonctionnalité les utilise." },
+        { "key": "grow.settings.project.package", "value": "Paquet" },
+        { "key": "grow.settings.project.displayName", "value": "Nom d’affichage" },
+        { "key": "grow.settings.project.version", "value": "Version" },
+        { "key": "grow.settings.project.documentation", "value": "Documentation" },
+        { "key": "grow.settings.project.revealDocumentation", "value": "Afficher la documentation" },
+        { "key": "grow.settings.project.openDocumentation", "value": "Ouvrir la documentation" },
+        { "key": "grow.settings.project.description", "value": "Description" },
+        { "key": "grow.settings.project.unresolved", "value": "Impossible de résoudre les informations du paquet com.ronny.grow." },
+        { "key": "grow.settings.preferences.general.title", "value": "Général" },
+        { "key": "grow.settings.preferences.general.help", "value": "La langue suit cet utilisateur d’un projet à l’autre. Le niveau de journalisation ne s’applique qu’à la session de l’éditeur." },
+        { "key": "grow.settings.preferences.language", "value": "Langue" },
+        { "key": "grow.settings.preferences.language.system", "value": "Système" },
+        { "key": "grow.settings.preferences.session", "value": "Session" },
+        { "key": "grow.settings.preferences.minimumLogLevel", "value": "Niveau de journalisation minimal" },
+        { "key": "grow.settings.preferences.minimumLogLevel.tooltip", "value": "S’applique uniquement à cette session de l’éditeur. Le mode Play le réinitialise à Info." },
+        { "key": "grow.settings.preferences.logSink", "value": "Sortie de journalisation" },
+        { "key": "grow.settings.preferences.resetToInfo", "value": "Réinitialiser à Info" },
+        { "key": "grow.settings.preferences.sessionNote", "value": "GrowLog revient à Info au début de chaque session Play." },
+        { "key": "grow.settings.preferences.corrupted", "value": "Le fichier de préférences Grow est endommagé. Les valeurs par défaut sont utilisées jusqu’à sa réinitialisation." },
+        { "key": "grow.settings.preferences.newerSchema", "value": "Le fichier de préférences Grow a été écrit par une version plus récente. Il est en lecture seule." },
+        { "key": "grow.settings.preferences.reset", "value": "Réinitialiser les préférences" }
+    ],
+    "keywords": [ "grow", "paramètres", "langue", "journal" ]
+}

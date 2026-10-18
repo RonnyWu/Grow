@@ -260,7 +260,12 @@ namespace Grow.Editor.Localization {
 
         internal static string ResolveSystemLanguage(SystemLanguage language) {
             return language switch {
+                SystemLanguage.Arabic => "ar",
                 SystemLanguage.ChineseSimplified => "zh-Hans",
+                SystemLanguage.ChineseTraditional => "zh-Hans",
+                SystemLanguage.French => "fr",
+                SystemLanguage.Russian => "ru",
+                SystemLanguage.Spanish => "es",
                 _ => "en"
             };
         }
