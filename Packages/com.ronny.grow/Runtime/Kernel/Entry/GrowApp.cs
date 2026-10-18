@@ -66,14 +66,19 @@ namespace Grow.Kernel.Entry {
 
         /// <summary>Registers a module; must happen before <see cref="Initialize()"/>.</summary>
         public static void RegisterModule(IModule module) {
-            if (module == null) throw new ArgumentNullException(nameof(module));
+            if (module == null) {
+                throw new ArgumentNullException(nameof(module));
+            }
+
             GrowModules.Register(module);
         }
 
         /// <summary>Registers modules and then initializes the composition root.</summary>
         public static void Initialize(IEnumerable<IModule> modules) {
             if (modules != null) {
-                foreach (var module in modules) RegisterModule(module);
+                foreach (var module in modules) {
+                    RegisterModule(module);
+                }
             }
 
             Initialize();
@@ -206,7 +211,9 @@ namespace Grow.Kernel.Entry {
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeOnLoad() {
-            if (AutoInitialize) Initialize();
+            if (AutoInitialize) {
+                Initialize();
+            }
         }
 
 #if UNITY_EDITOR

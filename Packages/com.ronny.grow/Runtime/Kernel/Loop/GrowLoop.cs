@@ -41,17 +41,26 @@ namespace Grow.Kernel.Loop {
         /// <summary>Creates the host and installs the five frame phases.</summary>
         /// <exception cref="InvalidOperationException">A phase anchor is missing; the host was cleaned up.</exception>
         public static void Install() {
-            if (IsInstalled) return;
-            if (_executor != null) Uninstall();
+            if (IsInstalled) {
+                return;
+            }
+
+            if (_executor != null) {
+                Uninstall();
+            }
 
             var root = new GameObject("Grow");
-            if (Application.isPlaying) UnityEngine.Object.DontDestroyOnLoad(root);
+            if (Application.isPlaying) {
+                UnityEngine.Object.DontDestroyOnLoad(root);
+            }
 
             var executor = root.AddComponent<MonoExecutor>();
             _root = root;
             _executor = executor;
 
-            if (PlayerLoopProfile.Install(executor)) return;
+            if (PlayerLoopProfile.Install(executor)) {
+                return;
+            }
 
             Uninstall();
             throw new InvalidOperationException(
@@ -64,8 +73,11 @@ namespace Grow.Kernel.Loop {
             PlayerLoopProfile.Uninstall(executor);
 
             if (_root != null) {
-                if (Application.isPlaying) UnityEngine.Object.Destroy(_root);
-                else UnityEngine.Object.DestroyImmediate(_root);
+                if (Application.isPlaying) {
+                    UnityEngine.Object.Destroy(_root);
+                } else {
+                    UnityEngine.Object.DestroyImmediate(_root);
+                }
             }
 
             _root = null;
@@ -82,15 +94,19 @@ namespace Grow.Kernel.Loop {
         /// <summary>Starts a coroutine on the host.</summary>
         /// <exception cref="InvalidOperationException">The loop is not installed.</exception>
         public static Coroutine StartCoroutine(IEnumerator routine) {
-            if (_executor == null || !_executor.Valid)
+            if (_executor == null || !_executor.Valid) {
                 throw new InvalidOperationException("GrowLoop is not installed; call Install() first.");
+            }
 
             return _executor.StartCoroutine(routine);
         }
 
         /// <summary>Stops a coroutine started by <see cref="StartCoroutine"/>.</summary>
         public static void StopCoroutine(Coroutine coroutine) {
-            if (_executor == null || !_executor.Valid) return;
+            if (_executor == null || !_executor.Valid) {
+                return;
+            }
+
             _executor.StopCoroutine(coroutine);
         }
 
@@ -102,8 +118,11 @@ namespace Grow.Kernel.Loop {
             QuitCommitted = null;
 
             if (_root != null) {
-                if (Application.isPlaying) UnityEngine.Object.Destroy(_root);
-                else UnityEngine.Object.DestroyImmediate(_root);
+                if (Application.isPlaying) {
+                    UnityEngine.Object.Destroy(_root);
+                } else {
+                    UnityEngine.Object.DestroyImmediate(_root);
+                }
             }
 
             _root = null;

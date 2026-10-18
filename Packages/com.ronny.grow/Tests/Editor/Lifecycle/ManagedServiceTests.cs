@@ -23,8 +23,14 @@ namespace Grow.Tests.Editor.Lifecycle {
 
         [TearDown]
         public void TearDown() {
-            if (CountingService.HasInstance) CountingService.Instance.Dispose();
-            if (RetryService.HasInstance) RetryService.Instance.Dispose();
+            if (CountingService.HasInstance) {
+                CountingService.Instance.Dispose();
+            }
+
+            if (RetryService.HasInstance) {
+                RetryService.Instance.Dispose();
+            }
+
             CountingService.ResetStaticState();
             RetryService.ResetStaticState();
             MonoManager.ResetStaticState();
@@ -282,7 +288,10 @@ namespace Grow.Tests.Editor.Lifecycle {
             }
 
             protected override void OnServiceInitialize() {
-                if (ThrowInitialize) throw new System.InvalidOperationException("initialize");
+                if (ThrowInitialize) {
+                    throw new System.InvalidOperationException("initialize");
+                }
+
                 InitializeCount++;
             }
 
@@ -291,12 +300,18 @@ namespace Grow.Tests.Editor.Lifecycle {
             }
 
             protected override void OnServiceStart() {
-                if (ThrowStart) throw new System.InvalidOperationException("start");
+                if (ThrowStart) {
+                    throw new System.InvalidOperationException("start");
+                }
+
                 StartCount++;
             }
 
             protected override void OnServiceTeardown() {
-                if (ThrowTeardown) throw new System.InvalidOperationException("teardown");
+                if (ThrowTeardown) {
+                    throw new System.InvalidOperationException("teardown");
+                }
+
                 TeardownCount++;
             }
 

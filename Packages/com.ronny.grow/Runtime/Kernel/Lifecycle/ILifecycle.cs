@@ -80,13 +80,17 @@ namespace Grow.Kernel.Lifecycle {
         /// </remarks>
         void AttachApp() {
             var manager = LifecycleManager;
-            if (manager != null) manager.AttachApp(this);
+            if (manager != null) {
+                manager.AttachApp(this);
+            }
         }
 
         /// <summary>Releases the application callbacks; safe to call more than once.</summary>
         void DetachApp() {
             var manager = LifecycleManager;
-            if (manager != null) manager.DetachApp(this);
+            if (manager != null) {
+                manager.DetachApp(this);
+            }
         }
     }
 }

@@ -70,7 +70,9 @@ namespace Grow.Kernel.Lifecycle {
         /// queued for the next <see cref="OnUpdate"/>.
         /// </summary>
         protected void PostToMain(Action action) {
-            if (action == null) return;
+            if (action == null) {
+                return;
+            }
 
             if (IsMainThread) {
                 action();
@@ -91,7 +93,9 @@ namespace Grow.Kernel.Lifecycle {
         private ConcurrentQueue<Action> MainThreadQueue {
             get {
                 var queue = _mainThreadQueue;
-                if (queue != null) return queue;
+                if (queue != null) {
+                    return queue;
+                }
 
                 var created = new ConcurrentQueue<Action>();
                 return Interlocked.CompareExchange(ref _mainThreadQueue, created, null) ?? created;
@@ -135,7 +139,9 @@ namespace Grow.Kernel.Lifecycle {
         }
 
         private void StartService() {
-            if (_serviceStarted || !_serviceInitialized) return;
+            if (_serviceStarted || !_serviceInitialized) {
+                return;
+            }
 
             try {
                 OnServiceStart();

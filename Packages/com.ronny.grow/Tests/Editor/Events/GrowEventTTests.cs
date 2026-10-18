@@ -79,7 +79,10 @@ namespace Grow.Tests.Editor.Events {
             var onceCalls = 0;
             var subscribed = false;
             Action<int> first = value => {
-                if (subscribed) return;
+                if (subscribed) {
+                    return;
+                }
+
                 subscribed = true;
                 _ = _event.SubscribeOnce(_ => onceCalls++);
             };
@@ -123,7 +126,9 @@ namespace Grow.Tests.Editor.Events {
             var received = new List<int>();
             Action<int> handler = value => {
                 received.Add(value);
-                if (value == 1) _publisher.Publish(2);
+                if (value == 1) {
+                    _publisher.Publish(2);
+                }
             };
             _ = _event.Subscribe(handler);
 

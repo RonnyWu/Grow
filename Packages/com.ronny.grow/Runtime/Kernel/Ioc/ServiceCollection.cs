@@ -40,7 +40,10 @@ namespace Grow.Kernel.Ioc {
 
         /// <inheritdoc />
         public T GetRequiredService<T>(string key = "") where T : class {
-            if (TryResolve(typeof(T), key, out var instance) && instance != null) return (T)instance;
+            if (TryResolve(typeof(T), key, out var instance) && instance != null) {
+                return (T)instance;
+            }
+
             throw new ServiceNotFoundException(typeof(T), key);
         }
 
@@ -48,7 +51,9 @@ namespace Grow.Kernel.Ioc {
         public bool Contains<T>(string key = "") where T : class {
             var serviceKey = new ServiceKey(typeof(T), key);
             lock (_sync) {
-                if (_descriptors.ContainsKey(serviceKey)) return true;
+                if (_descriptors.ContainsKey(serviceKey)) {
+                    return true;
+                }
             }
 
             return _parent != null && _parent.Contains<T>(key);
@@ -70,7 +75,10 @@ namespace Grow.Kernel.Ioc {
 
         /// <inheritdoc />
         public void AddSingleton<T>(T instance) where T : class {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance == null) {
+                throw new ArgumentNullException(nameof(instance));
+            }
+
             Register(new SingletonServiceDescriptor(
                 new ServiceKey(typeof(T), string.Empty),
                 instance));
@@ -78,7 +86,10 @@ namespace Grow.Kernel.Ioc {
 
         /// <summary>Registers a keyless singleton factory.</summary>
         public void AddSingleton<T>(Func<T> factory) where T : class {
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            if (factory == null) {
+                throw new ArgumentNullException(nameof(factory));
+            }
+
             Register(new SingletonServiceDescriptor(
                 new ServiceKey(typeof(T), string.Empty),
                 _ => factory()));
@@ -93,7 +104,9 @@ namespace Grow.Kernel.Ioc {
 
         /// <inheritdoc />
         public void AddUnique<T>(T instance, string key = "") where T : class {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance == null) {
+                throw new ArgumentNullException(nameof(instance));
+            }
             // Keyed registration is a keyed singleton; "unique" is the historical API name.
             Register(new SingletonServiceDescriptor(
                 new ServiceKey(typeof(T), key),
@@ -153,7 +166,10 @@ namespace Grow.Kernel.Ioc {
             }
 
             if (descriptor == null) {
-                if (_parent != null) return _parent.TryResolve(type, key, out instance);
+                if (_parent != null) {
+                    return _parent.TryResolve(type, key, out instance);
+                }
+
                 instance = null;
                 return false;
             }

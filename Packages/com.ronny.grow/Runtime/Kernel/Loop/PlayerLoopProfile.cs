@@ -93,7 +93,9 @@ namespace Grow.Kernel.Loop {
                 return false;
             }
 
-            if (ReferenceEquals(_owner, executor) && Installed) return true;
+            if (ReferenceEquals(_owner, executor) && Installed) {
+                return true;
+            }
 
             var rebind = _owner != null;
             var installed = true;
@@ -129,8 +131,13 @@ namespace Grow.Kernel.Loop {
         /// profile that already belongs to its replacement.
         /// </summary>
         internal static void Uninstall(MonoExecutor expectedOwner = null) {
-            if (_owner == null) return;
-            if (!ReferenceEquals(expectedOwner, null) && !ReferenceEquals(_owner, expectedOwner)) return;
+            if (_owner == null) {
+                return;
+            }
+
+            if (!ReferenceEquals(expectedOwner, null) && !ReferenceEquals(_owner, expectedOwner)) {
+                return;
+            }
 
             PlayerLoopManager.RemoveInstalled();
             _owner = null;
@@ -144,7 +151,9 @@ namespace Grow.Kernel.Loop {
 
         private static UpdateFunction CreateCallback(MonoExecutor executor, Phase phase) {
             return () => {
-                if (executor == null || !executor.Valid) return;
+                if (executor == null || !executor.Valid) {
+                    return;
+                }
 
                 switch (phase) {
                     case Phase.PreUpdate:

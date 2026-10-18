@@ -57,12 +57,17 @@ namespace Grow.Kernel.Lifecycle {
         /// <exception cref="ArgumentNullException"><paramref name="target"/> is <c>null</c>.</exception>
         /// <exception cref="ObjectDisposedException">The scope has been disposed.</exception>
         public bool Attach(object target) {
-            if (target == null) throw new ArgumentNullException(nameof(target));
+            if (target == null) {
+                throw new ArgumentNullException(nameof(target));
+            }
+
             ThrowIfDisposed(nameof(Attach));
 
             var entry = GetOrCreateEntry(target);
             EnsureHostEpoch(entry);
-            if (entry.Attached) return true;
+            if (entry.Attached) {
+                return true;
+            }
 
             entry.Touched = true;
 
@@ -105,15 +110,23 @@ namespace Grow.Kernel.Lifecycle {
                 return false;
             }
 
-            if (!entry.Updater.Attached) return false;
+            if (!entry.Updater.Attached) {
+                return false;
+            }
+
             entry.Attached = true;
             return true;
         }
 
         /// <summary>Releases the target's update subscriptions and calls deinitialize once.</summary>
         public void Detach(object target) {
-            if (target == null) return;
-            if (!_entries.TryGetValue(target, out var entry)) return;
+            if (target == null) {
+                return;
+            }
+
+            if (!_entries.TryGetValue(target, out var entry)) {
+                return;
+            }
 
             DetachEntry(entry);
             TryRemoveEntry(entry);
@@ -127,13 +140,20 @@ namespace Grow.Kernel.Lifecycle {
         /// <exception cref="ArgumentNullException"><paramref name="target"/> is <c>null</c>.</exception>
         /// <exception cref="ObjectDisposedException">The scope has been disposed.</exception>
         public bool AttachApp(object target) {
-            if (target == null) throw new ArgumentNullException(nameof(target));
+            if (target == null) {
+                throw new ArgumentNullException(nameof(target));
+            }
+
             ThrowIfDisposed(nameof(AttachApp));
-            if (!(target is IAppEventAware aware)) return true;
+            if (!(target is IAppEventAware aware)) {
+                return true;
+            }
 
             var entry = GetOrCreateEntry(target);
             EnsureHostEpoch(entry);
-            if (entry.AppAttached) return true;
+            if (entry.AppAttached) {
+                return true;
+            }
 
             entry.AppTouched = true;
 
@@ -167,8 +187,13 @@ namespace Grow.Kernel.Lifecycle {
 
         /// <summary>Releases the target's app-event subscriptions.</summary>
         public void DetachApp(object target) {
-            if (target == null) return;
-            if (!_entries.TryGetValue(target, out var entry)) return;
+            if (target == null) {
+                return;
+            }
+
+            if (!_entries.TryGetValue(target, out var entry)) {
+                return;
+            }
 
             DetachAppEntry(entry);
             TryRemoveEntry(entry);
@@ -176,7 +201,10 @@ namespace Grow.Kernel.Lifecycle {
 
         /// <summary>Releases every target in reverse attach order; safe to call more than once.</summary>
         public void Dispose() {
-            if (_disposed) return;
+            if (_disposed) {
+                return;
+            }
+
             _disposed = true;
 
             for (var i = _order.Count - 1; i >= 0; i--) {
@@ -198,14 +226,19 @@ namespace Grow.Kernel.Lifecycle {
         }
 
         private void ThrowIfDisposed(string api) {
-            if (!_disposed) return;
+            if (!_disposed) {
+                return;
+            }
+
             throw new ObjectDisposedException(
                 nameof(LifecycleScope),
                 $"The scope has been disposed; {api} is not allowed. Create a new scope.");
         }
 
         private Entry GetOrCreateEntry(object target) {
-            if (_entries.TryGetValue(target, out var entry)) return entry;
+            if (_entries.TryGetValue(target, out var entry)) {
+                return entry;
+            }
 
             entry = new Entry(target, _manager);
             _entries.Add(target, entry);
@@ -215,7 +248,9 @@ namespace Grow.Kernel.Lifecycle {
 
         private void EnsureHostEpoch(Entry entry) {
             var epoch = _manager.HostEpoch;
-            if (entry.Epoch == epoch) return;
+            if (entry.Epoch == epoch) {
+                return;
+            }
 
             try {
                 entry.Updater.Detach();
@@ -264,9 +299,14 @@ namespace Grow.Kernel.Lifecycle {
             entry.Started = false;
             entry.Attached = false;
 
-            if (!entry.Touched) return;
+            if (!entry.Touched) {
+                return;
+            }
+
             entry.Touched = false;
-            if (!shouldDeinitialize) return;
+            if (!shouldDeinitialize) {
+                return;
+            }
 
             if (entry.Target is IDeinitializable deinitializable) {
                 try {
@@ -301,13 +341,19 @@ namespace Grow.Kernel.Lifecycle {
         }
 
         private void TryRemoveEntry(Entry entry) {
-            if (entry.Touched || entry.AppTouched) return;
+            if (entry.Touched || entry.AppTouched) {
+                return;
+            }
+
             _entries.Remove(entry.Target);
             _order.Remove(entry);
         }
 
         private void WarnUnavailable() {
-            if (_unavailableWarned) return;
+            if (_unavailableWarned) {
+                return;
+            }
+
             _unavailableWarned = true;
             GrowLog.Warning(
                 "[LifecycleScope] The lifecycle manager is unavailable; the target was not fully " +
@@ -316,17 +362,35 @@ namespace Grow.Kernel.Lifecycle {
         }
 
         private static void GrowLogDebug(Exception exception) {
-            if (!GrowLog.IsEnabled(LogLevel.Debug)) return;
+            if (!GrowLog.IsEnabled(LogLevel.Debug)) {
+                return;
+            }
+
             GrowLog.Debug(exception.ToString(), LogCategory);
         }
 
         private static UpdateFlag GetFlag(object target) {
             var flag = UpdateFlag.None;
-            if (target is IFixedUpdatable) flag |= UpdateFlag.FixedUpdate;
-            if (target is IPreUpdatable) flag |= UpdateFlag.PreUpdate;
-            if (target is IUpdatable) flag |= UpdateFlag.Update;
-            if (target is ILateUpdatable) flag |= UpdateFlag.LateUpdate;
-            if (target is IPostUpdatable) flag |= UpdateFlag.PostUpdate;
+            if (target is IFixedUpdatable) {
+                flag |= UpdateFlag.FixedUpdate;
+            }
+
+            if (target is IPreUpdatable) {
+                flag |= UpdateFlag.PreUpdate;
+            }
+
+            if (target is IUpdatable) {
+                flag |= UpdateFlag.Update;
+            }
+
+            if (target is ILateUpdatable) {
+                flag |= UpdateFlag.LateUpdate;
+            }
+
+            if (target is IPostUpdatable) {
+                flag |= UpdateFlag.PostUpdate;
+            }
+
             return flag;
         }
 

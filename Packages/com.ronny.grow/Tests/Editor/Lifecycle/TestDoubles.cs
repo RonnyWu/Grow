@@ -62,7 +62,10 @@ namespace Grow.Tests.Editor.Lifecycle {
         public void PublishAppPause(bool isPaused) => _appPause.Publish(isPaused);
 
         public void Dispose() {
-            if (_disposed) return;
+            if (_disposed) {
+                return;
+            }
+
             _disposed = true;
             Valid = false;
 

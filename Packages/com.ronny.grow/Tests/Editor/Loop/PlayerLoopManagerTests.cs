@@ -152,11 +152,16 @@ namespace Grow.Tests.Editor.Loop {
         }
 
         private static int Count(PlayerLoopSystem[] systems, Type type) {
-            if (systems == null) return 0;
+            if (systems == null) {
+                return 0;
+            }
 
             var count = 0;
             foreach (var system in systems) {
-                if (system.type == type) count++;
+                if (system.type == type) {
+                    count++;
+                }
+
                 count += Count(system.subSystemList, type);
             }
 
@@ -166,9 +171,14 @@ namespace Grow.Tests.Editor.Loop {
         private static List<Type> TopLevelTypes() {
             var loop = PlayerLoop.GetCurrentPlayerLoop();
             var types = new List<Type>();
-            if (loop.subSystemList == null) return types;
+            if (loop.subSystemList == null) {
+                return types;
+            }
 
-            foreach (var system in loop.subSystemList) types.Add(system.type);
+            foreach (var system in loop.subSystemList) {
+                types.Add(system.type);
+            }
+
             return types;
         }
 
@@ -188,8 +198,13 @@ namespace Grow.Tests.Editor.Loop {
             var current = PlayerLoop.GetCurrentPlayerLoop();
             var systems = PlayerLoopGraph.CloneArray(current.subSystemList);
             var changed = false;
-            while (PlayerLoopGraph.TryRemove(ref systems, type)) changed = true;
-            if (!changed) return;
+            while (PlayerLoopGraph.TryRemove(ref systems, type)) {
+                changed = true;
+            }
+
+            if (!changed) {
+                return;
+            }
 
             current.subSystemList = systems;
             PlayerLoop.SetPlayerLoop(current);

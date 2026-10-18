@@ -150,7 +150,9 @@ namespace Grow.Tests.Editor.Loop {
         public void Types_AreStableInOrder() {
             var systems = CreateTree();
             var types = new List<Type>();
-            foreach (var system in systems) types.Add(system.type);
+            foreach (var system in systems) {
+                types.Add(system.type);
+            }
 
             CollectionAssert.AreEqual(new[] { typeof(RootA), typeof(RootB) }, types);
         }

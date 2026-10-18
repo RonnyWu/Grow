@@ -81,7 +81,9 @@ namespace Grow.Tests.Editor.Events {
             var publisher = new GrowEvent.Publisher();
             _ = publisher.Event.Subscribe(() => {
                 calls++;
-                if (nested) throw new InvalidOperationException("nested");
+                if (nested) {
+                    throw new InvalidOperationException("nested");
+                }
 
                 nested = true;
                 publisher.Publish();

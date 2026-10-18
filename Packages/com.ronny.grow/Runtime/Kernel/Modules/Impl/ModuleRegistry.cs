@@ -55,27 +55,47 @@ namespace Grow.Kernel.Modules.Impl {
 
         /// <summary>True after <see cref="Bootstrap"/> completed.</summary>
         public bool IsReady {
-            get { lock (_gate) return _ready; }
+            get {
+                lock (_gate) {
+                    return _ready;
+                }
+            }
         }
 
         /// <summary>Current phase.</summary>
         public ModulePhase Phase {
-            get { lock (_gate) return _context.Phase; }
+            get {
+                lock (_gate) {
+                    return _context.Phase;
+                }
+            }
         }
 
         /// <summary>Failed module names, deduplicated and in discovery order.</summary>
         public IReadOnlyList<string> FailedModules {
-            get { lock (_gate) return _failed.ToArray(); }
+            get {
+                lock (_gate) {
+                    return _failed.ToArray();
+                }
+            }
         }
 
         /// <summary>True when the latest bootstrap/shutdown recorded no failure.</summary>
         public bool Healthy {
-            get { lock (_gate) return _failed.Count == 0; }
+            get {
+                lock (_gate) {
+                    return _failed.Count == 0;
+                }
+            }
         }
 
         /// <summary>Structured failures from the latest bootstrap/shutdown.</summary>
         public IReadOnlyList<ModuleFailure> Failures {
-            get { lock (_gate) return _failures.ToArray(); }
+            get {
+                lock (_gate) {
+                    return _failures.ToArray();
+                }
+            }
         }
 
         /// <summary>Returns a single consistent assembly report.</summary>
@@ -89,14 +109,19 @@ namespace Grow.Kernel.Modules.Impl {
                     .Append(", started=").Append(_started.Count)
                     .Append(", failures=").Append(_failures.Count);
 
-                for (var i = 0; i < _failures.Count; i++) builder.Append("\n  - ").Append(_failures[i]);
+                for (var i = 0; i < _failures.Count; i++) {
+                    builder.Append("\n  - ").Append(_failures[i]);
+                }
+
                 return builder.ToString();
             }
         }
 
         /// <summary>Registers a module; duplicate names and late registration fail fast.</summary>
         public void Register(IModule module) {
-            if (module == null) throw new ArgumentNullException(nameof(module));
+            if (module == null) {
+                throw new ArgumentNullException(nameof(module));
+            }
 
             lock (_gate) {
                 if (_context.Phase != ModulePhase.None) {
@@ -108,8 +133,14 @@ namespace Grow.Kernel.Modules.Impl {
 
                 var name = module.Name;
                 for (var i = 0; i < _modules.Count; i++) {
-                    if (!string.Equals(_modules[i].Name, name, StringComparison.Ordinal)) continue;
-                    if (ReferenceEquals(_modules[i], module)) return;
+                    if (!string.Equals(_modules[i].Name, name, StringComparison.Ordinal)) {
+                        continue;
+                    }
+
+                    if (ReferenceEquals(_modules[i], module)) {
+                        return;
+                    }
+
                     throw new InvalidOperationException($"[Modules] Duplicate module name: {name}");
                 }
 
@@ -120,7 +151,9 @@ namespace Grow.Kernel.Modules.Impl {
         /// <summary>Boots all modules in dependency order; idempotent.</summary>
         public void Bootstrap() {
             lock (_gate) {
-                if (_ready || _bootstrapping) return;
+                if (_ready || _bootstrapping) {
+                    return;
+                }
 
                 _bootstrapping = true;
                 try {
@@ -130,18 +163,25 @@ namespace Grow.Kernel.Modules.Impl {
                     var order = BuildStartupOrder();
 
                     _initializeFailed.Clear();
-                    for (var i = 0; i < order.Count; i++) InvokeRegister(order[i]);
+                    for (var i = 0; i < order.Count; i++) {
+                        InvokeRegister(order[i]);
+                    }
 
                     DriveManaged(_context.DriveManagedInitialize());
 
                     _context.Phase = ModulePhase.Initialize;
                     for (var i = 0; i < order.Count; i++) {
-                        if (!InvokeInitialize(order[i])) _initializeFailed.Add(order[i]);
+                        if (!InvokeInitialize(order[i])) {
+                            _initializeFailed.Add(order[i]);
+                        }
                     }
 
                     _context.Phase = ModulePhase.Start;
                     for (var i = 0; i < order.Count; i++) {
-                        if (_initializeFailed.Contains(order[i])) continue;
+                        if (_initializeFailed.Contains(order[i])) {
+                            continue;
+                        }
+
                         InvokeStart(order[i]);
                     }
 
@@ -161,18 +201,27 @@ namespace Grow.Kernel.Modules.Impl {
         /// <summary>Stops and disposes started modules in reverse order; idempotent.</summary>
         public void Shutdown() {
             lock (_gate) {
-                if (_shuttingDown) return;
-                if (!_ready && _context.Phase == ModulePhase.None) return;
+                if (_shuttingDown) {
+                    return;
+                }
+
+                if (!_ready && _context.Phase == ModulePhase.None) {
+                    return;
+                }
 
                 _shuttingDown = true;
                 try {
                     ClearFailures();
 
                     _context.Phase = ModulePhase.Stop;
-                    for (var i = _started.Count - 1; i >= 0; i--) InvokeStop(_started[i]);
+                    for (var i = _started.Count - 1; i >= 0; i--) {
+                        InvokeStop(_started[i]);
+                    }
 
                     _context.Phase = ModulePhase.Dispose;
-                    for (var i = _started.Count - 1; i >= 0; i--) InvokeDispose(_started[i]);
+                    for (var i = _started.Count - 1; i >= 0; i--) {
+                        InvokeDispose(_started[i]);
+                    }
 
                     DriveManaged(_context.DriveManagedDeinitialize());
 
@@ -215,13 +264,21 @@ namespace Grow.Kernel.Modules.Impl {
         }
 
         private void RecordFailure(string name, ModuleFailureKind kind, string reason) {
-            if (string.IsNullOrEmpty(name)) return;
-            if (_failedSet.Add(name)) _failed.Add(name);
+            if (string.IsNullOrEmpty(name)) {
+                return;
+            }
+
+            if (_failedSet.Add(name)) {
+                _failed.Add(name);
+            }
+
             _failures.Add(new ModuleFailure(name, kind, _context.Phase, reason));
         }
 
         private void DriveManaged(IReadOnlyList<object> failedInstances) {
-            if (failedInstances == null) return;
+            if (failedInstances == null) {
+                return;
+            }
 
             for (var i = 0; i < failedInstances.Count; i++) {
                 RecordFailure(
@@ -234,7 +291,9 @@ namespace Grow.Kernel.Modules.Impl {
         private List<IModule> BuildStartupOrder() {
             var count = _modules.Count;
             var result = new List<IModule>(count);
-            if (count == 0) return result;
+            if (count == 0) {
+                return result;
+            }
 
             var deps = new List<int>[count];
             var invalid = new bool[count];
@@ -242,20 +301,35 @@ namespace Grow.Kernel.Modules.Impl {
             for (var i = 0; i < count; i++) {
                 deps[i] = new List<int>();
                 var declared = _modules[i].Dependencies;
-                if (declared == null) continue;
+                if (declared == null) {
+                    continue;
+                }
 
                 for (var d = 0; d < declared.Count; d++) {
                     var dependencyType = declared[d];
-                    if (dependencyType == null) continue;
+                    if (dependencyType == null) {
+                        continue;
+                    }
 
                     var found = -1;
                     List<string> matches = null;
                     for (var j = 0; j < count; j++) {
-                        if (j == i) continue;
-                        if (!dependencyType.IsInstanceOfType(_modules[j])) continue;
+                        if (j == i) {
+                            continue;
+                        }
 
-                        if (found < 0) found = j;
-                        if (matches == null) matches = new List<string>(2);
+                        if (!dependencyType.IsInstanceOfType(_modules[j])) {
+                            continue;
+                        }
+
+                        if (found < 0) {
+                            found = j;
+                        }
+
+                        if (matches == null) {
+                            matches = new List<string>(2);
+                        }
+
                         matches.Add(_modules[j].Name);
                     }
 
@@ -295,10 +369,14 @@ namespace Grow.Kernel.Modules.Impl {
             do {
                 changed = false;
                 for (var i = 0; i < count; i++) {
-                    if (invalid[i]) continue;
+                    if (invalid[i]) {
+                        continue;
+                    }
 
                     for (var k = 0; k < deps[i].Count; k++) {
-                        if (!invalid[deps[i][k]]) continue;
+                        if (!invalid[deps[i][k]]) {
+                            continue;
+                        }
 
                         invalid[i] = true;
                         GrowLog.Error(
@@ -317,9 +395,14 @@ namespace Grow.Kernel.Modules.Impl {
 
             var indegree = new int[count];
             for (var i = 0; i < count; i++) {
-                if (invalid[i]) continue;
+                if (invalid[i]) {
+                    continue;
+                }
+
                 for (var k = 0; k < deps[i].Count; k++) {
-                    if (!invalid[deps[i][k]]) indegree[i]++;
+                    if (!invalid[deps[i][k]]) {
+                        indegree[i]++;
+                    }
                 }
             }
 
@@ -327,23 +410,35 @@ namespace Grow.Kernel.Modules.Impl {
             while (true) {
                 var best = -1;
                 for (var i = 0; i < count; i++) {
-                    if (invalid[i] || placed[i] || indegree[i] != 0) continue;
+                    if (invalid[i] || placed[i] || indegree[i] != 0) {
+                        continue;
+                    }
+
                     if (best < 0) {
                         best = i;
                         continue;
                     }
 
-                    if (_modules[i].Priority > _modules[best].Priority) best = i;
+                    if (_modules[i].Priority > _modules[best].Priority) {
+                        best = i;
+                    }
                 }
 
-                if (best < 0) break;
+                if (best < 0) {
+                    break;
+                }
 
                 placed[best] = true;
                 result.Add(_modules[best]);
 
                 for (var i = 0; i < count; i++) {
-                    if (invalid[i] || placed[i]) continue;
-                    if (deps[i].Contains(best)) indegree[i]--;
+                    if (invalid[i] || placed[i]) {
+                        continue;
+                    }
+
+                    if (deps[i].Contains(best)) {
+                        indegree[i]--;
+                    }
                 }
             }
 
@@ -357,12 +452,17 @@ namespace Grow.Kernel.Modules.Impl {
             var stack = new List<int>(count);
 
             for (var i = 0; i < count; i++) {
-                if (invalid[i]) continue;
+                if (invalid[i]) {
+                    continue;
+                }
+
                 DetectCyclesVisit(i, deps, state, cyclic, stack);
             }
 
             for (var i = 0; i < count; i++) {
-                if (!cyclic[i] || invalid[i]) continue;
+                if (!cyclic[i] || invalid[i]) {
+                    continue;
+                }
 
                 invalid[i] = true;
                 GrowLog.Error(
@@ -391,7 +491,9 @@ namespace Grow.Kernel.Modules.Impl {
                     DetectCyclesVisit(next, deps, state, cyclic, stack);
                 } else if (state[next] == 1) {
                     var start = stack.IndexOf(next);
-                    for (var s = start; s < stack.Count; s++) cyclic[stack[s]] = true;
+                    for (var s = start; s < stack.Count; s++) {
+                        cyclic[stack[s]] = true;
+                    }
                 }
             }
 

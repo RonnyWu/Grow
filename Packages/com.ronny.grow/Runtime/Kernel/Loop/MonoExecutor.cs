@@ -57,12 +57,18 @@ namespace Grow.Kernel.Loop {
         }
 
         private void OnApplicationFocus(bool hasFocus) {
-            if (_quitting) return;
+            if (_quitting) {
+                return;
+            }
+
             _appFocus.Publish(hasFocus);
         }
 
         private void OnApplicationPause(bool pauseStatus) {
-            if (_quitting) return;
+            if (_quitting) {
+                return;
+            }
+
             _appPause.Publish(pauseStatus);
         }
 
@@ -76,7 +82,10 @@ namespace Grow.Kernel.Loop {
         /// Runs the application-quit cleanup once: app event, composition callback, loop, events.
         /// </summary>
         internal void QuitForPlayer() {
-            if (_quitting) return;
+            if (_quitting) {
+                return;
+            }
+
             _quitting = true;
 
             try {
