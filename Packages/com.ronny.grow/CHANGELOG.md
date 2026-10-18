@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Grow.Core.Collections` — passive collection primitives: `BinaryHeap<T>` (min-heap),
   `RingBuffer<T>` (fixed-capacity ring), `SlotMap<T>` + `SlotHandle` (dense generational slots)
   and `SortedBag<T>` (stable ordered multiset implementing `IReadOnlyList<T>`).
+- `Grow.Core.Pool` — `ConcurrentObjectPool<T>` for reusable instances and
+  `StringBuilderPool` / `StringBuilderPool.Pooled` for single-use string-builder rentals.
 - `Grow.Kernel` assembly — mechanisms, starting with `Grow.Kernel.Entry`: the
   `GrowRuntime` state machine (manual `Reset` / `Install` / `Boot` / `Shutdown`
   entry points, with `Ready` reached by `Boot`), the `GrowBoot` thin facade, and
