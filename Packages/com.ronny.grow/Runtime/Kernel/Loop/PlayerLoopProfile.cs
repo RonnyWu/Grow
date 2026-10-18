@@ -35,7 +35,8 @@ namespace Grow.Kernel.Loop {
             public readonly InsertLocation Location;
             public readonly Phase Phase;
 
-            public PhaseDescriptor(Type systemType, Type anchorType, InsertLocation location, Phase phase) {
+            public PhaseDescriptor(Type systemType, Type anchorType, InsertLocation location,
+                Phase phase) {
                 SystemType = systemType;
                 AnchorType = anchorType;
                 Location = location;
@@ -43,38 +44,45 @@ namespace Grow.Kernel.Loop {
             }
         }
 
-        private sealed class PreUpdateSystem { }
+        private sealed class PreUpdateSystem {
+        }
 
-        private sealed class FixedUpdateSystem { }
+        private sealed class FixedUpdateSystem {
+        }
 
-        private sealed class UpdateSystem { }
+        private sealed class UpdateSystem {
+        }
 
-        private sealed class PostUpdateSystem { }
+        private sealed class PostUpdateSystem {
+        }
 
-        private sealed class LateUpdateSystem { }
+        private sealed class LateUpdateSystem {
+        }
 
         private static readonly PhaseDescriptor[] Phases = {
-            new PhaseDescriptor(
+            new(
                 typeof(PreUpdateSystem),
                 typeof(UnityEngine.PlayerLoop.Update),
                 InsertLocation.Before,
                 Phase.PreUpdate),
-            new PhaseDescriptor(
+            new(
                 typeof(FixedUpdateSystem),
-                typeof(UnityEngine.PlayerLoop.FixedUpdate),
+                // The top-level FixedUpdate is a group, not a fixed-step callback: a sibling after it
+                // runs once per frame. Insert inside the group so Unity invokes it once per fixed step.
+                typeof(UnityEngine.PlayerLoop.FixedUpdate.ScriptRunBehaviourFixedUpdate),
                 InsertLocation.After,
                 Phase.FixedUpdate),
-            new PhaseDescriptor(
+            new(
                 typeof(UpdateSystem),
                 typeof(UnityEngine.PlayerLoop.Update.ScriptRunBehaviourUpdate),
                 InsertLocation.After,
                 Phase.Update),
-            new PhaseDescriptor(
+            new(
                 typeof(PostUpdateSystem),
                 typeof(UnityEngine.PlayerLoop.Update),
                 InsertLocation.After,
                 Phase.PostUpdate),
-            new PhaseDescriptor(
+            new(
                 typeof(LateUpdateSystem),
                 typeof(UnityEngine.PlayerLoop.PreLateUpdate.ScriptRunBehaviourLateUpdate),
                 InsertLocation.After,
@@ -98,22 +106,28 @@ namespace Grow.Kernel.Loop {
             }
 
             var rebind = _owner != null;
-            var installed = true;
-            foreach (var phase in Phases) {
-                installed &= PlayerLoopManager.Install(
-                    phase.SystemType,
-                    CreateCallback(executor, phase.Phase),
-                    phase.AnchorType,
-                    phase.Location);
-            }
+            try {
+                for (var i = 0; i < Phases.Length; i++) {
+                    var phase = Phases[i];
+                    if (PlayerLoopManager.Install(
+                            phase.SystemType,
+                            CreateCallback(executor, phase.Phase),
+                            phase.AnchorType,
+                            phase.Location)) {
+                        continue;
+                    }
 
-            if (!installed) {
-                PlayerLoopManager.RemoveInstalled();
+                    RemoveInstalledSafely();
+                    _owner = null;
+                    GrowLog.Error(
+                        "PlayerLoop profile install incomplete: an anchor is missing; managed systems were removed.",
+                        LogCategory);
+                    return false;
+                }
+            } catch {
+                RemoveInstalledSafely();
                 _owner = null;
-                GrowLog.Error(
-                    "PlayerLoop profile install incomplete: an anchor is missing; managed systems were removed.",
-                    LogCategory);
-                return false;
+                throw;
             }
 
             _owner = executor;
@@ -131,22 +145,38 @@ namespace Grow.Kernel.Loop {
         /// profile that already belongs to its replacement.
         /// </summary>
         internal static void Uninstall(MonoExecutor expectedOwner = null) {
-            if (_owner == null) {
+            if (!ReferenceEquals(expectedOwner, null) &&
+                _owner != null &&
+                !ReferenceEquals(_owner, expectedOwner)) {
                 return;
             }
 
-            if (!ReferenceEquals(expectedOwner, null) && !ReferenceEquals(_owner, expectedOwner)) {
-                return;
-            }
-
-            PlayerLoopManager.RemoveInstalled();
+            var wasOwner = _owner != null;
             _owner = null;
-            GrowLog.Info("PlayerLoop profile uninstalled.", LogCategory);
+            try {
+                // Remove even when _owner is null: a failed Install can leave nodes behind before the
+                // owner is recorded.
+                PlayerLoopManager.RemoveInstalled();
+            } finally {
+                if (wasOwner) {
+                    GrowLog.Info("PlayerLoop profile uninstalled.", LogCategory);
+                }
+            }
         }
 
         /// <summary>Drops the static owner without touching the loop (test/session reset helper).</summary>
         internal static void ResetStaticState() {
             _owner = null;
+        }
+
+        private static void RemoveInstalledSafely() {
+            try {
+                PlayerLoopManager.RemoveInstalled();
+            } catch (Exception exception) {
+                GrowLog.Error(
+                    $"[Loop] Failed to clean up a partial profile install: {exception}",
+                    LogCategory);
+            }
         }
 
         private static UpdateFunction CreateCallback(MonoExecutor executor, Phase phase) {

@@ -164,7 +164,7 @@ namespace Grow.Tests.Editor.Lifecycle {
 
         [Test]
         public void PostToMain_FromWorker_WithoutUpdateFlag_IsRejected() {
-            LifecycleSession.ResetForTests();
+            LifecycleSession.ResetForSession();
             var service = new NoUpdateService();
             var ran = false;
 
@@ -193,7 +193,7 @@ namespace Grow.Tests.Editor.Lifecycle {
         public void Singleton_NewSession_DropsInstance() {
             var first = CountingService.Instance;
 
-            LifecycleSession.ResetForTests();
+            LifecycleSession.ResetForSession();
 
             Assert.IsFalse(CountingService.HasInstance);
             Assert.AreNotSame(first, CountingService.Instance);
@@ -202,7 +202,7 @@ namespace Grow.Tests.Editor.Lifecycle {
         [Test]
         public void Singleton_StaleInstanceDispose_DoesNotClearTheNewInstance() {
             var stale = CountingService.Instance;
-            LifecycleSession.ResetForTests();
+            LifecycleSession.ResetForSession();
             var fresh = CountingService.Instance;
 
             stale.Dispose();

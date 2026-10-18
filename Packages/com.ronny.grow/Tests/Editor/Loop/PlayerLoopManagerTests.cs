@@ -73,6 +73,26 @@ namespace Grow.Tests.Editor.Loop {
         }
 
         [Test]
+        public void Install_UnderFixedUpdateScript_IsNestedInsideTheFixedUpdateGroup() {
+            Assert.IsTrue(PlayerLoopManager.Install<SystemA>(
+                () => { },
+                typeof(UnityEngine.PlayerLoop.FixedUpdate.ScriptRunBehaviourFixedUpdate),
+                InsertLocation.After));
+
+            var loop = PlayerLoop.GetCurrentPlayerLoop();
+            var group = Array.Find(
+                loop.subSystemList,
+                system => system.type == typeof(UnityEngine.PlayerLoop.FixedUpdate));
+
+            Assert.AreEqual(typeof(UnityEngine.PlayerLoop.FixedUpdate), group.type);
+            Assert.NotNull(group.subSystemList);
+            Assert.AreEqual(1, Count(group.subSystemList, typeof(SystemA)));
+            Assert.IsFalse(
+                Array.Exists(loop.subSystemList, system => system.type == typeof(SystemA)),
+                "a fixed-step system must not be a top-level sibling");
+        }
+
+        [Test]
         public void Remove_RemovesManagedNode() {
             Assert.IsTrue(PlayerLoopManager.Install<SystemA>(
                 () => { },

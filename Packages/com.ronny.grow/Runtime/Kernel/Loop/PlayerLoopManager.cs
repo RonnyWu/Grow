@@ -21,14 +21,14 @@ namespace Grow.Kernel.Loop {
     /// A missing anchor is a soft failure: it is logged and the current loop is not written. The
     /// editor hook restores the pre-install loop when Play Mode ends, which keeps a project that
     /// disables Domain Reload from carrying injected systems into the next session;
-    /// <see cref="ResetStaticState"/> repeats that cleanup at <c>SubsystemRegistration</c>.
+    /// <see cref="ResetStaticState"/> repeats that cleanup; <see cref="Entry.GrowSession"/> calls it
+    /// at <c>SubsystemRegistration</c>.
     /// </para>
     /// </remarks>
     internal static class PlayerLoopManager {
         private const string LogCategory = "Loop";
 
-        private static readonly Dictionary<Type, PlayerLoopSystem> Installed =
-            new Dictionary<Type, PlayerLoopSystem>();
+        private static readonly Dictionary<Type, PlayerLoopSystem> Installed = new();
 
         private static PlayerLoopSystem _original;
         private static bool _hasSnapshot;
@@ -38,7 +38,8 @@ namespace Grow.Kernel.Loop {
         internal static bool IsModified => _modified;
 
         /// <summary>Installs a system, using <typeparamref name="T"/> as its identity.</summary>
-        internal static bool Install<T>(UpdateFunction update, Type anchorType, InsertLocation location)
+        internal static bool Install<T>(UpdateFunction update, Type anchorType,
+            InsertLocation location)
             where T : class {
             return Install(typeof(T), update, anchorType, location);
         }
@@ -58,12 +59,14 @@ namespace Grow.Kernel.Loop {
             }
 
             if (update == null) {
-                GrowLog.Error($"Install<{systemType.Name}> failed: update delegate is null.", LogCategory);
+                GrowLog.Error($"Install<{systemType.Name}> failed: update delegate is null.",
+                    LogCategory);
                 return false;
             }
 
             if (anchorType == null) {
-                GrowLog.Error($"Install<{systemType.Name}> failed: anchor type is null.", LogCategory);
+                GrowLog.Error($"Install<{systemType.Name}> failed: anchor type is null.",
+                    LogCategory);
                 return false;
             }
 
@@ -91,9 +94,11 @@ namespace Grow.Kernel.Loop {
             }
 
             current.subSystemList = systems;
-            PlayerLoop.SetPlayerLoop(current);
+            // Record before applying: if SetPlayerLoop throws, RemoveInstalled still knows this type
+            // may have been inserted and can clean it up.
             Installed[systemType] = newSystem;
             _modified = true;
+            PlayerLoop.SetPlayerLoop(current);
             GrowLog.Info(
                 $"Inserted {systemType.Name} {(location == InsertLocation.Before ? "before" : "after")} " +
                 $"{anchorType.Name} in PlayerLoop.",
@@ -113,7 +118,8 @@ namespace Grow.Kernel.Loop {
             }
 
             if (!Installed.Remove(systemType)) {
-                GrowLog.Error($"Remove {systemType.Name} failed: system is not managed by Grow.", LogCategory);
+                GrowLog.Error($"Remove {systemType.Name} failed: system is not managed by Grow.",
+                    LogCategory);
                 return;
             }
 
@@ -123,7 +129,8 @@ namespace Grow.Kernel.Loop {
                 : PlayerLoopGraph.CloneArray(current.subSystemList);
 
             if (!PlayerLoopGraph.TryRemove(ref systems, systemType)) {
-                GrowLog.Error($"Remove {systemType.Name} failed: system not found in PlayerLoop.", LogCategory);
+                GrowLog.Error($"Remove {systemType.Name} failed: system not found in PlayerLoop.",
+                    LogCategory);
                 ReleaseSnapshotIfIdle();
                 return;
             }
@@ -212,14 +219,12 @@ namespace Grow.Kernel.Loop {
 
         private static void OnEditorPlayModeStateChanged(UnityEditor.PlayModeStateChange state) {
             if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode
-                || state == UnityEditor.PlayModeStateChange.ExitingEditMode) {
+                || state == UnityEditor.PlayModeStateChange.ExitingEditMode)
                 RestoreOriginal();
-            }
         }
 #endif
 
-        /// <summary>Clears the static state at the start of every play session.</summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        /// <summary>Clears the static state; called by <see cref="Entry.GrowSession"/>.</summary>
         internal static void ResetStaticState() {
             // A previous session may have left managed nodes behind when Domain Reload is disabled;
             // restoring the snapshot before forgetting the registry is the only way to find them.

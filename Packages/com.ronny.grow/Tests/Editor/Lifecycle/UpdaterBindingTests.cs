@@ -142,7 +142,8 @@ namespace Grow.Tests.Editor.Lifecycle {
             binding.Attach();
 
             Assert.IsTrue(binding.Attached);
-            Assert.AreEqual(1, _executor.FixedUpdate.Count, "the retry must not duplicate the fixed phase");
+            Assert.AreEqual(1, _executor.FixedUpdate.Count,
+                "the retry must not duplicate the fixed phase");
             Assert.AreEqual(1, _executor.Update.Count);
 
             _executor.PublishFixedUpdate();
@@ -184,7 +185,9 @@ namespace Grow.Tests.Editor.Lifecycle {
 
             var next = new FakeMonoExecutor();
             MonoManager.Instance.Bind(next);
-            Assert.IsFalse(binding.Attached, "a host rebind must invalidate the old subscription report");
+            Assert.IsTrue(binding.Attached,
+                "a host rebind reattaches to the new host");
+            Assert.AreEqual(1, next.Update.Count);
 
             binding.Attach();
             next.PublishUpdate();

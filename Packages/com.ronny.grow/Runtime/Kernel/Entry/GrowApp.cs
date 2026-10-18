@@ -15,10 +15,12 @@ namespace Grow.Kernel.Entry {
     /// The single composition root: boot state, loop host, lifecycle manager and modules.
     /// </summary>
     /// <remarks>
-    /// Initialization order is fixed: <see cref="GrowBoot.Reset"/> / <see cref="GrowBoot.Install"/>,
-    /// <see cref="GrowLoop.Install"/>, <see cref="MonoManager.Bind"/>, <see cref="GrowModules.Bootstrap"/>,
-    /// then <see cref="GrowBoot.Boot"/>. Shutdown reverses the ownership order: modules first (they may
-    /// use the loop), then the manager binding, the loop host and the boot state.
+    /// Initialization order is fixed: <see cref="GrowBoot.Reset"/>, <see cref="GrowLoop.Install"/>,
+    /// <see cref="MonoManager.Bind"/>, <see cref="GrowModules.Bootstrap"/>, <see cref="GrowBoot.Install"/>,
+    /// then <see cref="GrowBoot.Boot"/>. The Installed notification is published only after the
+    /// modules have started, so an observer never sees Installed while the module graph is still
+    /// coming up. Shutdown reverses the ownership order: modules first (they may use the loop), then
+    /// the manager binding, the loop host and the boot state.
     /// <para>
     /// Initialize and shutdown are idempotent and safe to repeat. A failed initialization performs
     /// best-effort cleanup in reverse order and rethrows. Modules must be registered before
@@ -30,8 +32,8 @@ namespace Grow.Kernel.Entry {
     /// <para>
     /// The root is installed automatically at <c>BeforeSceneLoad</c> unless
     /// <see cref="AutoInitialize"/> is turned off, and is torn down on <c>ExitingPlayMode</c>.
-    /// A <c>SubsystemRegistration</c> hook invalidates the composition flags so a session without
-    /// domain reload starts clean.
+    /// <see cref="GrowSession"/> invalidates the composition flags at <c>SubsystemRegistration</c>
+    /// so a session without domain reload starts clean.
     /// </para>
     /// </remarks>
     public static class GrowApp {
@@ -54,7 +56,8 @@ namespace Grow.Kernel.Entry {
         public static bool AutoInitialize { get; set; } = true;
 
         /// <summary>True after a successful <see cref="Initialize()"/>.</summary>
-        public static bool IsInitialized => Volatile.Read(ref _state) == (int)CompositionState.Ready;
+        public static bool IsInitialized =>
+            Volatile.Read(ref _state) == (int)CompositionState.Ready;
 
         /// <summary>The host object, or <c>null</c> when the loop is not installed.</summary>
         public static GameObject Root {
@@ -101,11 +104,11 @@ namespace Grow.Kernel.Entry {
 
             try {
                 GrowBoot.Reset();
-                GrowBoot.Install();
                 GrowLoop.Install();
                 MonoManager.Instance.Bind(GrowLoop.Executor);
                 GrowModules.Shutdown();
                 GrowModules.Bootstrap();
+                GrowBoot.Install();
 
                 GrowLoop.QuitCommitted = Shutdown;
 
@@ -114,14 +117,19 @@ namespace Grow.Kernel.Entry {
                 Interlocked.Exchange(ref _state, (int)CompositionState.Ready);
                 GrowBoot.Boot();
 
-                GrowLog.Info("[Grow] Initialized: loop, lifecycle manager, modules and boot state.", LogCategory);
+                GrowLog.Info("[Grow] Initialized: loop, lifecycle manager, modules and boot state.",
+                    LogCategory);
             } catch {
                 Rollback();
                 throw;
             }
         }
 
-        /// <summary>Shuts the composition down in reverse ownership order; idempotent.</summary>
+        /// <summary>
+        /// Shuts the composition down in reverse ownership order; idempotent. Registered modules are
+        /// kept so a later <see cref="Initialize()"/> can restart the same composition; the module
+        /// table is dropped by <see cref="SettleForSessionEnd"/>.
+        /// </summary>
         public static void Shutdown() {
             if (Interlocked.CompareExchange(
                     ref _state,
@@ -143,6 +151,8 @@ namespace Grow.Kernel.Entry {
                 Step("boot", GrowBoot.Shutdown);
             } finally {
                 GrowLoop.QuitCommitted = null;
+                // Keep the module table: Shutdown() is a same-session stop/start boundary. The
+                // registry is dropped by SettleForSessionEnd() (Play Mode exit) and Rollback().
                 Interlocked.Exchange(ref _state, (int)CompositionState.None);
                 GrowLog.Info("[Grow] Shutdown.", LogCategory);
             }
@@ -178,6 +188,7 @@ namespace Grow.Kernel.Entry {
             Step("manager", MonoManager.Instance.Unbind);
             Step("loop", GrowLoop.Uninstall);
             Step("boot", GrowBoot.Shutdown);
+            GrowModules.ResetStaticState();
             GrowLoop.QuitCommitted = null;
             Interlocked.Exchange(ref _state, (int)CompositionState.None);
         }
@@ -202,11 +213,6 @@ namespace Grow.Kernel.Entry {
         internal static void ResetStaticState() {
             Interlocked.Exchange(ref _state, (int)CompositionState.None);
             GrowLoop.QuitCommitted = null;
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStaticStateOnLoad() {
-            ResetStaticState();
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

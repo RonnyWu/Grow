@@ -100,13 +100,11 @@ namespace Grow.Core.Log {
         /// <remarks>
         /// Unity skips the domain reload when "Enter Play Mode Options" disables it, so statics
         /// otherwise survive <c>Play</c> → <c>Stop</c> → <c>Play</c>.
-        /// <c>SubsystemRegistration</c> still runs in that configuration, and runs before any
+        /// <c>SubsystemRegistration</c> still runs in that configuration through
+        /// <c>GrowSession</c>, and runs before any
         /// consumer code, which makes it the right place to invalidate. This resets state; it never
         /// installs or boots anything.
         /// </remarks>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStaticStateOnLoad() {
-            Reset();
-        }
+
     }
 }

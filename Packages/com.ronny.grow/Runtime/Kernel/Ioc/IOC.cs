@@ -13,7 +13,8 @@ namespace Grow.Kernel.Ioc {
     /// never writes back to them. Duplicate registration replaces the previous descriptor.
     /// <para>
     /// This container is a pure locator; it does not drive lifecycle. Managed services are driven by
-    /// the module container. The root is cleared in place at <c>SubsystemRegistration</c> so a Play
+    /// the module container. <see cref="Entry.GrowSession"/> clears the root in place at
+    /// <c>SubsystemRegistration</c> so a Play
     /// session with domain reload disabled starts clean without invalidating existing references.
     /// </para>
     /// </remarks>
@@ -89,9 +90,6 @@ namespace Grow.Kernel.Ioc {
             _service.Clear();
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStaticStateOnLoad() {
-            ResetStaticState();
-        }
+
     }
 }
