@@ -40,6 +40,7 @@
     "com.unity.modules.xr": "1.0.0"
   },
   "testables": [
-    "com.ronny.grow"
+    "com.ronny.grow",
+    "com.ronny.grow.store"
   ]
 }
