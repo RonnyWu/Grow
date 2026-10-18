@@ -22,9 +22,14 @@ namespace Grow.Core.Collections {
     /// not reorder.
     /// </para>
     /// <para>
-    /// There are no per-item allocations: the items live in one contiguous array. Use
-    /// <see cref="BinaryHeap{T}"/> when only the head matters and inserts dominate; use
-    /// <see cref="SortedSet{T}"/> when items must be unique.
+    /// <see cref="Enqueue"/> and <see cref="Dequeue"/> do not allocate per item: the items live in
+    /// one contiguous array. <see cref="EnqueueRange"/> with <c>fullSort: true</c> materialises the
+    /// batch and a merge buffer, so it is not allocation-free. Use <see cref="BinaryHeap{T}"/> when
+    /// only the head matters and inserts dominate; use <see cref="SortedSet{T}"/> when items must be
+    /// unique.
+    /// </para>
+    /// <para>
+    /// Implements <see cref="IReadOnlyList{T}"/>, so it can be passed to APIs that only read.
     /// </para>
     /// <para>Not thread-safe. It does not touch Unity.</para>
     /// </remarks>
@@ -53,11 +58,14 @@ namespace Grow.Core.Collections {
         /// <summary>True when the bag holds no items.</summary>
         public bool IsEmpty => _items.Count == 0;
 
-        /// <summary>Returns the item at <paramref name="index"/> in ascending order.</summary>
+        /// <summary>
+        /// Returns the item at <paramref name="index"/> in comparer order (ascending for the default
+        /// comparer).
+        /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">The index is outside the bag.</exception>
         public T this[int index] => _items[index];
 
-        /// <summary>Returns the head (smallest) item without removing it.</summary>
+        /// <summary>Returns the head item — the one the comparer ranks first — without removing it.</summary>
         /// <exception cref="InvalidOperationException">The bag is empty.</exception>
         public T Peek() {
             if (_items.Count == 0) {
@@ -83,6 +91,10 @@ namespace Grow.Core.Collections {
         public void EnqueueRange(IEnumerable<T> values, bool fullSort = false) {
             if (values == null) {
                 throw new ArgumentNullException(nameof(values));
+            }
+
+            if (ReferenceEquals(values, this)) {
+                values = new List<T>(values);
             }
 
             if (!fullSort) {
@@ -120,8 +132,13 @@ namespace Grow.Core.Collections {
         }
 
         /// <summary>
-        /// Returns the index of the first item equal to <paramref name="item"/>, or -1.
+        /// Returns the index of the first item that the comparer ranks equal to
+        /// <paramref name="item"/>, or -1.
         /// </summary>
+        /// <remarks>
+        /// Equality is the comparer's, not <see cref="object.Equals(object)"/>: with a comparer that
+        /// reads only a key, a partially filled probe object is enough to find an entry.
+        /// </remarks>
         public int IndexOf(T item) {
             var index = _items.BinarySearch(item, _comparer);
             if (index < 0) {
@@ -136,6 +153,11 @@ namespace Grow.Core.Collections {
         }
 
         /// <summary>Returns the first item matching <paramref name="match"/>, or <c>default</c>.</summary>
+        /// <remarks>
+        /// The result cannot distinguish "no match" from a match whose value is <c>default</c>; use
+        /// <see cref="TryFind"/> when that distinction matters.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException"><paramref name="match"/> is <c>null</c>.</exception>
         public T Find(Predicate<T> match) {
             if (match == null) {
                 throw new ArgumentNullException(nameof(match));
@@ -144,7 +166,26 @@ namespace Grow.Core.Collections {
             return _items.Find(match);
         }
 
-        /// <summary>Removes the first item equal to <paramref name="item"/>; false when absent.</summary>
+        /// <summary>Tries to find the first item matching <paramref name="match"/>.</summary>
+        /// <exception cref="ArgumentNullException"><paramref name="match"/> is <c>null</c>.</exception>
+        public bool TryFind(Predicate<T> match, out T item) {
+            if (match == null) {
+                throw new ArgumentNullException(nameof(match));
+            }
+
+            for (var i = 0; i < _items.Count; i++) {
+                if (match(_items[i])) {
+                    item = _items[i];
+                    return true;
+                }
+            }
+
+            item = default;
+            return false;
+        }
+
+        /// <summary>Removes the first item the comparer ranks equal to <paramref name="item"/>.</summary>
+        /// <returns>False when no such item exists.</returns>
         public bool Remove(T item) {
             var index = IndexOf(item);
             if (index < 0) {
@@ -161,14 +202,18 @@ namespace Grow.Core.Collections {
             _items.RemoveAt(index);
         }
 
-        /// <summary>Removes every item.</summary>
+        /// <summary>Removes every item. The backing array keeps its capacity.</summary>
         public void Clear() {
             _items.Clear();
         }
 
-        /// <summary>Enumerates the items in ascending order.</summary>
-        public IEnumerator<T> GetEnumerator() {
+        /// <summary>Enumerates the items in comparer order.</summary>
+        public List<T>.Enumerator GetEnumerator() {
             return _items.GetEnumerator();
+        }
+
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() {
+            return GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {

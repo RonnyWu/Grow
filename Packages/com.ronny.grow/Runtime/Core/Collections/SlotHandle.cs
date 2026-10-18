@@ -8,17 +8,18 @@ namespace Grow.Core.Collections {
     /// </summary>
     /// <remarks>
     /// The handle pairs a slot index with the generation the slot had when the value was added.
-    /// Removing the value bumps the generation, so an old handle can never reach a newer value that
-    /// reuses the same slot. The <c>default</c> handle has generation 0 and is always invalid.
+    /// Removing the value bumps the generation, so a stale handle cannot reach a newer value that
+    /// reuses the same slot until the 32-bit generation wraps. The <c>default</c> handle has
+    /// generation 0 and is always invalid.
     /// <para>
     /// A handle is only meaningful for the map that issued it: two maps can produce equal handles for
     /// different values. Keep handles next to the map they belong to, or wrap them in a type that
-    /// names the owner.
+    /// names the owner. Do not construct handles by hand.
     /// </para>
     /// </remarks>
     public readonly struct SlotHandle : IEquatable<SlotHandle> {
-        /// <summary>Creates a handle. Callers normally get one from <see cref="SlotMap{T}.Add"/>.</summary>
-        public SlotHandle(int index, int generation) {
+        /// <summary>Creates a handle. Callers get one from <see cref="SlotMap{T}.Add"/>.</summary>
+        internal SlotHandle(int index, int generation) {
             Index = index;
             Generation = generation;
         }
@@ -30,8 +31,9 @@ namespace Grow.Core.Collections {
         public int Generation { get; }
 
         /// <summary>
-        /// True only for the <c>default</c> handle. This cannot tell whether an issued handle is
-        /// still live: the map's <see cref="SlotMap{T}.TryGet"/> is the authority for staleness.
+        /// True when the handle was never issued (generation 0 or less). This cannot tell whether an
+        /// issued handle is still live: the map's <see cref="SlotMap{T}.TryGet"/> is the authority
+        /// for staleness.
         /// </summary>
         public bool IsDefault => Generation <= 0;
 

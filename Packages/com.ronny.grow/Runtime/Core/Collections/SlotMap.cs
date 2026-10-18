@@ -6,12 +6,12 @@ using System.Collections.Generic;
 namespace Grow.Core.Collections {
     /// <summary>
     /// A dense map keyed by generational handles: <see cref="Add"/> returns a
-    /// <see cref="SlotHandle"/>, <see cref="Remove"/> invalidates it, and a stale handle can never
-    /// reach a newer value that reuses the same slot.
+    /// <see cref="SlotHandle"/>, <see cref="Remove"/> invalidates it, and a stale handle cannot
+    /// reach a newer value that reuses the same slot until the generation wraps.
     /// </summary>
     /// <remarks>
     /// <see cref="Add"/> is O(1) amortised (the slot arrays double when full), <see cref="Remove"/>
-    /// is O(1) (a swap-remove keeps the values dense) and <see cref="TryGet"/> is O(1).
+    /// is O(1) amortised (a swap-remove keeps the values dense), and <see cref="TryGet"/> is O(1).
     /// <para>
     /// Values and their handles are stored in two dense arrays, so a loop over
     /// <see cref="Values"/> / <see cref="Handles"/> touches contiguous memory. The order is not
@@ -24,13 +24,13 @@ namespace Grow.Core.Collections {
     /// iterating the spans is not supported: collect the handles first, then remove.
     /// </para>
     /// <para>
-    /// <see cref="Clear"/> keeps the capacity but bumps every used slot's generation, so every
+    /// <see cref="Clear"/> keeps the capacity but bumps every allocated slot's generation, so every
     /// handle issued before the clear becomes invalid.
     /// </para>
     /// <para>
-    /// A slot's generation wraps back to 1 after roughly 2^31 removals. A handle issued more than
-    /// one full cycle ago can collide with a current one; no handle is ever produced with generation
-    /// 0 or a negative value. Not thread-safe. It does not touch Unity.
+    /// A slot's 32-bit generation eventually wraps; a handle issued before a full cycle can then
+    /// collide with a current one. No handle is ever produced with generation 0 or a negative value.
+    /// Not thread-safe. It does not touch Unity.
     /// </para>
     /// </remarks>
     /// <typeparam name="T">Stored value type.</typeparam>
@@ -76,7 +76,10 @@ namespace Grow.Core.Collections {
         /// <summary>True when the map holds no values.</summary>
         public bool IsEmpty => _count == 0;
 
-        /// <summary>Number of slot entries currently allocated; the map grows past it when needed.</summary>
+        /// <summary>
+        /// Number of slots currently allocated. <see cref="Count"/> never exceeds it; when every slot
+        /// is in use the next <see cref="Add"/> doubles it.
+        /// </summary>
         public int Capacity => _slotCapacity;
 
         /// <summary>
@@ -92,6 +95,7 @@ namespace Grow.Core.Collections {
 
         /// <summary>Stores a value and returns its handle.</summary>
         /// <param name="value">Value to store; <c>null</c> is allowed for reference types.</param>
+        /// <returns>The handle for the stored value.</returns>
         public SlotHandle Add(T value) {
             int slot;
             if (_freeCount > 0) {
@@ -226,6 +230,7 @@ namespace Grow.Core.Collections {
             Array.Resize(ref _values, newCapacity);
             Array.Resize(ref _handles, newCapacity);
             Array.Resize(ref _generations, newCapacity);
+            Array.Resize(ref _free, newCapacity);
 
             var oldSparseLength = _sparse.Length;
             Array.Resize(ref _sparse, newCapacity);

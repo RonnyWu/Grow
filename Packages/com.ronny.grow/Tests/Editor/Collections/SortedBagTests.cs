@@ -195,6 +195,19 @@ namespace Grow.Tests.Editor.Collections {
         }
 
         [Test]
+        public void TryFind_DistinguishesDefaultValueFromNoMatch() {
+            var bag = new SortedBag<int>();
+            bag.Enqueue(0);
+            bag.Enqueue(1);
+
+            Assert.IsTrue(bag.TryFind(value => value == 0, out var found));
+            Assert.AreEqual(0, found);
+            Assert.IsFalse(bag.TryFind(value => value == 42, out var missing));
+            Assert.AreEqual(0, missing);
+            Assert.Throws<ArgumentNullException>(() => bag.TryFind(null, out _));
+        }
+
+        [Test]
         public void Clear_RemovesEveryItem() {
             var bag = new SortedBag<int>();
             bag.Enqueue(1);
