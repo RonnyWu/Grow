@@ -23,6 +23,10 @@ namespace Grow.Editor.Settings {
 
         private bool _dirty;
 
+        private bool _conflict;
+
+        private bool _loaded;
+
         public GrowSettingsStore(string absolutePath, Func<T> createDefault) {
             _absolutePath = absolutePath;
             _createDefault = createDefault;
@@ -47,12 +51,16 @@ namespace Grow.Editor.Settings {
         public bool CanSave {
             get {
                 EnsureLoaded();
-                return _loadResult.CanSave;
+                return !_conflict && _loadResult.CanSave && _instance != null;
             }
         }
 
         public void MarkDirty() {
             EnsureLoaded();
+            if (_instance == null) {
+                return;
+            }
+
             _dirty = true;
             GrowSettingsSaveScheduler.MarkDirty(this);
         }
@@ -60,13 +68,30 @@ namespace Grow.Editor.Settings {
         public bool TrySave(out string error) {
             EnsureLoaded();
 
+            if (_instance == null) {
+                error = "The settings instance is unavailable.";
+                return false;
+            }
+
             if (!_dirty) {
                 error = null;
                 return true;
             }
 
+            if (_conflict) {
+                error = "The settings file changed on disk; reload it before saving.";
+                return false;
+            }
+
             if (!_loadResult.CanSave) {
                 error = _loadResult.Message ?? "The settings file is read-only.";
+                return false;
+            }
+
+            var currentStamp = GrowSettingsStamp.Read(_absolutePath);
+            if (currentStamp != _stamp) {
+                EnterConflict();
+                error = "The settings file changed on disk; reload it before saving.";
                 return false;
             }
 
@@ -94,8 +119,8 @@ namespace Grow.Editor.Settings {
         }
 
         /// <summary>
-        /// Reloads when the file changed externally and there are no unsaved edits. Dirty
-        /// settings are left alone and a warning is logged instead of being overwritten.
+        /// Reloads when the file changed externally. Unsaved edits enter a conflict state
+        /// instead of being overwritten.
         /// </summary>
         public bool ReloadIfChangedOnDisk() {
             EnsureLoaded();
@@ -106,38 +131,70 @@ namespace Grow.Editor.Settings {
             }
 
             if (_dirty) {
-                Debug.LogWarning(
-                    $"Grow settings file '{_absolutePath}' changed on disk but has unsaved edits.");
+                EnterConflict();
                 return false;
             }
 
+            return ReloadFromDisk();
+        }
+
+        /// <summary>Discards in-memory edits and reloads the file from disk.</summary>
+        public bool ReloadFromDisk() {
+            EnsureLoaded();
+
+            var oldInstance = _instance;
             _loadResult = GrowSettingsFile.Load(_absolutePath, _createDefault, out var settings);
+
+            if (oldInstance != null && oldInstance != settings) {
+                UnityEngine.Object.DestroyImmediate(oldInstance);
+            }
+
             _instance = settings;
+            _dirty = false;
+            _conflict = false;
+            _loaded = true;
             _stamp = GrowSettingsStamp.Read(_absolutePath);
             return true;
         }
 
-        /// <summary>Explicit recovery for a corrupt/read-only file.</summary>
+        /// <summary>Explicit recovery for a corrupt file; refuses to overwrite newer/migrated data.</summary>
         public void ResetToDefaults() {
             EnsureLoaded();
 
-            if (_loadResult.Status == GrowSettingsLoadStatus.NewerSchema) {
-                Debug.LogError(
-                    "Refusing to reset Grow settings written by a newer version.");
+            if (_instance == null ||
+                _loadResult.Status == GrowSettingsLoadStatus.NewerSchema ||
+                _loadResult.Status == GrowSettingsLoadStatus.MigrationFailed) {
+                Debug.LogWarning(
+                    "Refusing to reset Grow settings written by a newer version or with failed migration.");
                 return;
             }
 
             _instance.ResetToDefaults();
             _loadResult = new GrowSettingsLoadResult(GrowSettingsLoadStatus.Loaded);
+            _conflict = false;
             _dirty = true;
             GrowSettingsSaveScheduler.MarkDirty(this);
         }
 
-        private void EnsureLoaded() {
-            if (_instance != null) {
+        private void EnterConflict() {
+            if (_conflict) {
                 return;
             }
 
+            _conflict = true;
+            var conflictPath = GrowSettingsFile.CreateConflictCopy(_absolutePath);
+            _loadResult = new GrowSettingsLoadResult(
+                GrowSettingsLoadStatus.Conflict,
+                "The settings file changed on disk while there were unsaved edits.",
+                conflictPath);
+        }
+
+        private void EnsureLoaded() {
+            if (_loaded) {
+                return;
+            }
+
+            _loaded = true;
             _loadResult = GrowSettingsFile.Load(_absolutePath, _createDefault, out var settings);
             _instance = settings;
             _stamp = GrowSettingsStamp.Read(_absolutePath);
@@ -155,6 +212,8 @@ namespace Grow.Editor.Settings {
     [InitializeOnLoad]
     internal static class GrowSettingsSaveScheduler {
         private const double DebounceSeconds = 0.5;
+
+        private const double RetrySeconds = 2.0;
 
         private static readonly HashSet<IGrowSettingsStore> Dirty = new();
 
@@ -185,11 +244,19 @@ namespace Grow.Editor.Settings {
             Dirty.CopyTo(stores);
             Dirty.Clear();
 
+            var failed = false;
             foreach (var store in stores) {
-                if (!store.TrySave(out var error)) {
-                    Debug.LogError($"Grow settings save failed: {error}");
+                if (store.TrySave(out var error)) {
+                    continue;
                 }
+
+                failed = true;
+                Dirty.Add(store);
+                Debug.LogError($"Grow settings save failed: {error}");
             }
+
+            _nextFlush = EditorApplication.timeSinceStartup +
+                (failed ? RetrySeconds : DebounceSeconds);
         }
 
         private static void OnUpdate() {

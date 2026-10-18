@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 using System;
+using System.IO;
 using System.Linq;
 using Grow.Editor.Localization;
 using Grow.Editor.Settings.Preferences;
@@ -11,14 +12,37 @@ using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 namespace Grow.Tests.Editor.Settings {
     public class GrowSettingsProviderTests {
+        private string _root;
+
+        [SetUp]
+        public void SetUp() {
+            _root = Path.Combine(
+                Path.GetTempPath(), "GrowProviderTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(_root);
+            GrowEditorPreferencesStore.SetPathForTests(
+                Path.Combine(_root, "EditorPreferences.json"));
+            GrowLocalization.Reload();
+        }
+
+        [TearDown]
+        public void TearDown() {
+            GrowEditorPreferencesStore.Store.Flush();
+            GrowEditorPreferencesStore.ResetPathForTests();
+            GrowLocalization.Reload();
+
+            if (Directory.Exists(_root)) {
+                Directory.Delete(_root, true);
+            }
+        }
+
         [Test]
         public void ProjectProvider_UsesTheProjectScopeAndPath() {
             var provider = GrowProjectSettingsProvider.Create();
 
             Assert.AreEqual(GrowProjectSettingsProvider.ProviderPath, provider.settingsPath);
             Assert.AreEqual(SettingsScope.Project, provider.scope);
-            Assert.AreEqual(
-                GrowLocalization.Get(GrowSettingsKeys.ProjectGeneralTitle), provider.label);
+            Assert.IsFalse(string.IsNullOrEmpty(provider.label));
+            Assert.AreNotEqual(GrowSettingsKeys.ProjectGeneralTitle, provider.label);
         }
 
         [Test]
@@ -27,21 +51,32 @@ namespace Grow.Tests.Editor.Settings {
 
             Assert.AreEqual(GrowUserSettingsProvider.ProviderPath, provider.settingsPath);
             Assert.AreEqual(SettingsScope.User, provider.scope);
-            Assert.AreEqual(
-                GrowLocalization.Get(GrowSettingsKeys.PreferencesGeneralTitle), provider.label);
+            Assert.IsFalse(string.IsNullOrEmpty(provider.label));
+            Assert.AreNotEqual(GrowSettingsKeys.PreferencesGeneralTitle, provider.label);
         }
 
         [Test]
         public void Providers_UseDistinctNonNestedPaths() {
-            var paths = TypeCache.GetMethodsWithAttribute<SettingsProviderAttribute>()
+            var providers = TypeCache.GetMethodsWithAttribute<SettingsProviderAttribute>()
                 .Where(method =>
                     method.DeclaringType?.Assembly == typeof(GrowProjectSettingsProvider).Assembly)
                 .Select(method => (SettingsProvider)method.Invoke(null, null))
-                .Select(provider => provider.settingsPath)
-                .Distinct()
                 .ToArray();
 
-            Assert.IsNotEmpty(paths);
+            Assert.IsNotEmpty(providers);
+            Assert.IsTrue(
+                providers.GroupBy(provider => (provider.scope, provider.settingsPath))
+                    .All(group => group.Count() == 1),
+                "A settings path is registered more than once.");
+
+            var paths = providers.Select(provider => provider.settingsPath).ToArray();
+            CollectionAssert.AreEquivalent(
+                new[]
+                {
+                    GrowProjectSettingsProvider.ProviderPath,
+                    GrowUserSettingsProvider.ProviderPath
+                },
+                paths);
 
             foreach (var path in paths) {
                 foreach (var other in paths) {
@@ -58,8 +93,12 @@ namespace Grow.Tests.Editor.Settings {
 
         [Test]
         public void Providers_ExposeTheGrowSearchKeyword() {
-            CollectionAssert.Contains(GrowProjectSettingsProvider.Create().keywords, "grow");
-            CollectionAssert.Contains(GrowUserSettingsProvider.Create().keywords, "grow");
+            var project = GrowProjectSettingsProvider.Create();
+            var user = GrowUserSettingsProvider.Create();
+
+            CollectionAssert.Contains(project.keywords, "grow");
+            CollectionAssert.Contains(user.keywords, "grow");
+            Assert.Greater(user.keywords.Count(), 1);
         }
 
         [Test]

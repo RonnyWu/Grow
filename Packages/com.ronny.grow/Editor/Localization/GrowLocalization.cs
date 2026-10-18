@@ -69,11 +69,16 @@ namespace Grow.Editor.Localization {
 
         private readonly List<GrowLanguageInfo> _languages = new();
 
+        private readonly Dictionary<string, HashSet<string>> _keywords =
+            new(StringComparer.Ordinal);
+
         public GrowLocaleCatalog(string localeDirectory) {
             Load(localeDirectory);
         }
 
         public IReadOnlyList<GrowLanguageInfo> Languages => _languages;
+
+        public bool IsEmpty => _languages.Count == 0;
 
         public bool Supports(string language) {
             return !string.IsNullOrEmpty(language) && _translations.ContainsKey(language);
@@ -104,6 +109,10 @@ namespace Grow.Editor.Localization {
             var keywords = new HashSet<string>(StringComparer.Ordinal) { "grow" };
 
             foreach (var language in _translations.Keys) {
+                if (_keywords.TryGetValue(language, out var fileKeywords)) {
+                    keywords.UnionWith(fileKeywords);
+                }
+
                 foreach (var key in keys) {
                     if (TryGet(language, key, out var value) && !string.IsNullOrEmpty(value)) {
                         keywords.Add(value);
@@ -154,7 +163,24 @@ namespace Grow.Editor.Localization {
                         entries[entry.Key] = entry.Value;
                     }
 
+                    if (_translations.ContainsKey(file.Language)) {
+                        Debug.LogWarning(
+                            $"Duplicate Grow locale language '{file.Language}' in {path}.");
+                        _languages.RemoveAll(language => language.Code == file.Language);
+                    }
+
                     _translations[file.Language] = entries;
+
+                    var fileKeywords = new HashSet<string>(StringComparer.Ordinal);
+                    if (file.Keywords != null) {
+                        foreach (var keyword in file.Keywords) {
+                            if (!string.IsNullOrEmpty(keyword)) {
+                                fileKeywords.Add(keyword);
+                            }
+                        }
+                    }
+
+                    _keywords[file.Language] = fileKeywords;
                     _languages.Add(new GrowLanguageInfo(
                         file.Language,
                         string.IsNullOrEmpty(file.LanguageName)
@@ -178,6 +204,8 @@ namespace Grow.Editor.Localization {
 
         private static GrowLocaleCatalog _catalog;
 
+        private static bool _emptyCatalogWarning;
+
         private static readonly HashSet<string> MissingKeys = new(StringComparer.Ordinal);
 
         public static event Action LanguageChanged;
@@ -185,9 +213,18 @@ namespace Grow.Editor.Localization {
         public static IReadOnlyList<GrowLanguageInfo> Languages => Catalog.Languages;
 
         public static string LanguagePreference =>
-            GrowEditorPreferencesStore.Instance.Language ?? SystemLanguagePreference;
+            GrowEditorPreferencesStore.Instance?.Language ?? SystemLanguagePreference;
 
         public static string CurrentLanguage => ResolveLanguage(LanguagePreference);
+
+        internal static void NormalizeLanguagePreference() {
+            var preference = LanguagePreference;
+            if (preference == SystemLanguagePreference || Catalog.Supports(preference)) {
+                return;
+            }
+
+            SetLanguage(SystemLanguagePreference);
+        }
 
         public static string Get(string key) {
             if (string.IsNullOrEmpty(key)) {
@@ -246,6 +283,7 @@ namespace Grow.Editor.Localization {
 
         public static void Reload() {
             _catalog = null;
+            _emptyCatalogWarning = false;
             MissingKeys.Clear();
         }
 
@@ -260,6 +298,7 @@ namespace Grow.Editor.Localization {
 
         internal static string ResolveSystemLanguage(SystemLanguage language) {
             return language switch {
+                SystemLanguage.Chinese => "zh-Hans",
                 SystemLanguage.ChineseSimplified => "zh-Hans",
                 SystemLanguage.ChineseTraditional => "zh-Hans",
                 _ => "en"
@@ -278,7 +317,19 @@ namespace Grow.Editor.Localization {
                     ? null
                     : Path.Combine(package.resolvedPath, LocaleDirectory);
 
-                _catalog = new GrowLocaleCatalog(directory);
+                var catalog = new GrowLocaleCatalog(directory);
+                if (catalog.IsEmpty) {
+                    if (!_emptyCatalogWarning) {
+                        Debug.LogWarning(
+                            $"Grow localization could not load any locale files from " +
+                            $"'{directory}'.");
+                        _emptyCatalogWarning = true;
+                    }
+
+                    return catalog;
+                }
+
+                _catalog = catalog;
                 return _catalog;
             }
         }

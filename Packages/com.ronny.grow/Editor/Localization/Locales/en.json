@@ -19,13 +19,20 @@
         { "key": "grow.settings.preferences.language.system", "value": "System" },
         { "key": "grow.settings.preferences.session", "value": "Session" },
         { "key": "grow.settings.preferences.minimumLogLevel", "value": "Minimum log level" },
-        { "key": "grow.settings.preferences.minimumLogLevel.tooltip", "value": "Applies to this editor session only. Play Mode resets it to Info." },
+        { "key": "grow.settings.preferences.minimumLogLevel.tooltip", "value": "Applies to this editor session only. Domain reloads and Play Mode reset it to Info." },
         { "key": "grow.settings.preferences.logSink", "value": "Log sink" },
         { "key": "grow.settings.preferences.resetToInfo", "value": "Reset to Info" },
-        { "key": "grow.settings.preferences.sessionNote", "value": "GrowLog resets to Info at the start of each play session." },
+        { "key": "grow.settings.preferences.sessionNote", "value": "GrowLog resets to Info at the start of each domain reload and play session." },
         { "key": "grow.settings.preferences.corrupted", "value": "The Grow preferences file is damaged. Defaults are in use until it is reset." },
+        { "key": "grow.settings.preferences.migrationFailed", "value": "The Grow preferences file could not be migrated. It is read-only and has not been overwritten." },
         { "key": "grow.settings.preferences.newerSchema", "value": "The Grow preferences file was written by a newer version. It is read-only." },
-        { "key": "grow.settings.preferences.reset", "value": "Reset preferences" }
+        { "key": "grow.settings.preferences.conflict", "value": "The Grow preferences file changed on disk. Reload it before editing again." },
+        { "key": "grow.settings.preferences.reload", "value": "Reload from disk" },
+        { "key": "grow.settings.preferences.reset", "value": "Reset preferences" },
+        { "key": "grow.settings.preferences.resetTitle", "value": "Reset Grow preferences" },
+        { "key": "grow.settings.preferences.resetMessage", "value": "This overwrites the damaged preferences file. A copy is kept at: {0}" },
+        { "key": "grow.settings.preferences.resetConfirm", "value": "Reset" },
+        { "key": "grow.settings.preferences.cancel", "value": "Cancel" }
     ],
     "keywords": [ "grow", "settings", "language", "log" ]
 }

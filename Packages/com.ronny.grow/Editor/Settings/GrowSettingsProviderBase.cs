@@ -31,6 +31,7 @@ namespace Grow.Editor.Settings {
                     EditorGUILayout.HelpBox(
                         "The Grow settings page failed to draw. See the Console for details.",
                         MessageType.Error);
+                    GUIUtility.ExitGUI();
                 }
             }
         }

@@ -19,13 +19,20 @@
         { "key": "grow.settings.preferences.language.system", "value": "跟随系统" },
         { "key": "grow.settings.preferences.session", "value": "会话" },
         { "key": "grow.settings.preferences.minimumLogLevel", "value": "最低日志级别" },
-        { "key": "grow.settings.preferences.minimumLogLevel.tooltip", "value": "只对当前编辑器会话生效。进入 Play 模式后恢复为 Info。" },
+        { "key": "grow.settings.preferences.minimumLogLevel.tooltip", "value": "只对当前编辑器会话生效。域重载和进入 Play 模式后恢复为 Info。" },
         { "key": "grow.settings.preferences.logSink", "value": "日志输出" },
         { "key": "grow.settings.preferences.resetToInfo", "value": "恢复为 Info" },
-        { "key": "grow.settings.preferences.sessionNote", "value": "每次进入 Play 模式时，GrowLog 会恢复为 Info。" },
+        { "key": "grow.settings.preferences.sessionNote", "value": "每次域重载或进入 Play 模式时，GrowLog 会恢复为 Info。" },
         { "key": "grow.settings.preferences.corrupted", "value": "Grow 偏好文件已损坏。在重置前使用默认值。" },
+        { "key": "grow.settings.preferences.migrationFailed", "value": "Grow 偏好文件无法迁移。当前为只读，原文件未被覆盖。" },
         { "key": "grow.settings.preferences.newerSchema", "value": "Grow 偏好文件由更新版本写入，当前为只读。" },
-        { "key": "grow.settings.preferences.reset", "value": "重置偏好" }
+        { "key": "grow.settings.preferences.conflict", "value": "Grow 偏好文件已在磁盘上变更。请重新加载后再编辑。" },
+        { "key": "grow.settings.preferences.reload", "value": "从磁盘重新加载" },
+        { "key": "grow.settings.preferences.reset", "value": "重置偏好" },
+        { "key": "grow.settings.preferences.resetTitle", "value": "重置 Grow 偏好" },
+        { "key": "grow.settings.preferences.resetMessage", "value": "这会覆盖损坏的偏好文件。副本保留在：{0}" },
+        { "key": "grow.settings.preferences.resetConfirm", "value": "重置" },
+        { "key": "grow.settings.preferences.cancel", "value": "取消" }
     ],
     "keywords": [ "grow", "设置", "语言", "日志" ]
 }

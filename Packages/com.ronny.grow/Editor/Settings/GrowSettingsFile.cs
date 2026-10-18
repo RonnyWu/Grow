@@ -15,7 +15,7 @@ namespace Grow.Editor.Settings {
     /// The file format is a small JSON object with a fixed format marker and a schema version.
     /// Writes use a temporary file plus <see cref="File.Replace(string, string, string)"/> so a
     /// crash cannot leave a half-written main file, and the previous version is kept as
-    /// <c>.bak</c>. Loads never write defaults; a missing file is an in-memory default only.
+    /// <c>.bak</c>. Loads do not write default files; a missing file is an in-memory default only.
     /// </remarks>
     internal static class GrowSettingsFile {
         public const string FormatMarker = "com.ronny.grow.settings";
@@ -23,6 +23,8 @@ namespace Grow.Editor.Settings {
         private const string BackupSuffix = ".bak";
 
         private const string CorruptPrefix = ".corrupt-";
+
+        private const string ConflictPrefix = ".conflict-";
 
         [Serializable]
         private sealed class Header {
@@ -44,60 +46,86 @@ namespace Grow.Editor.Settings {
                 throw new ArgumentNullException(nameof(createDefault));
             }
 
-            settings = createDefault();
+            settings = null;
+
+            if (!TryCreateDefault(createDefault, out settings)) {
+                return new GrowSettingsLoadResult(
+                    GrowSettingsLoadStatus.MigrationFailed,
+                    "Could not create the default settings instance.");
+            }
 
             if (!File.Exists(absolutePath)) {
                 return new GrowSettingsLoadResult(GrowSettingsLoadStatus.Created);
             }
 
-            if (!TryRead(absolutePath, createDefault, out settings, out var version, out var error)) {
+            if (!TryRead(absolutePath, settings, out var version, out var error)) {
+                ResetQuietly(settings);
                 var quarantine = Quarantine(absolutePath);
-                var backupPath = absolutePath + BackupSuffix;
-
-                if (TryRead(backupPath, createDefault, out var backup, out _, out _)) {
-                    TryCopy(backupPath, absolutePath);
-                    settings = backup;
-                    var repaired = settings.Validate();
-                    settings.SchemaVersion = settings.CurrentSchema;
+                if (quarantine == null) {
                     return new GrowSettingsLoadResult(
-                        repaired ? GrowSettingsLoadStatus.Repaired :
-                        GrowSettingsLoadStatus.RestoredFromBackup,
-                        error, quarantine);
+                        GrowSettingsLoadStatus.Corrupted,
+                        $"{error} The file could not be quarantined; it was left untouched.");
                 }
 
-                settings = createDefault();
+                var backupPath = absolutePath + BackupSuffix;
+                if (TryRead(backupPath, settings, out var backupVersion, out _)) {
+                    var applied = Apply(settings, backupVersion);
+                    if (applied.Status == GrowSettingsLoadStatus.NewerSchema ||
+                        applied.Status == GrowSettingsLoadStatus.MigrationFailed) {
+                        ResetQuietly(settings);
+                        return new GrowSettingsLoadResult(
+                            applied.Status, applied.Message, quarantine);
+                    }
+
+                    if (applied.Status == GrowSettingsLoadStatus.Migrated ||
+                        applied.Status == GrowSettingsLoadStatus.Repaired) {
+                        try {
+                            Save(absolutePath, settings);
+                        } catch (IOException) {
+                            // Keep the recovered settings in memory; the store will retry saving.
+                        } catch (UnauthorizedAccessException) {
+                            // Same as above.
+                        }
+                    } else {
+                        TryCopy(backupPath, absolutePath);
+                    }
+
+                    return new GrowSettingsLoadResult(
+                        applied.Status == GrowSettingsLoadStatus.Loaded
+                            ? GrowSettingsLoadStatus.RestoredFromBackup
+                            : applied.Status,
+                        applied.Message, quarantine);
+                }
+
+                ResetQuietly(settings);
                 return new GrowSettingsLoadResult(
                     GrowSettingsLoadStatus.Corrupted, error, quarantine);
             }
 
-            if (version > settings.CurrentSchema) {
-                settings = createDefault();
-                return new GrowSettingsLoadResult(
-                    GrowSettingsLoadStatus.NewerSchema,
-                    $"Settings schema {version} is newer than supported schema " +
-                    $"{settings.CurrentSchema}.");
+            var result = Apply(settings, version);
+            if (result.Status == GrowSettingsLoadStatus.NewerSchema ||
+                result.Status == GrowSettingsLoadStatus.MigrationFailed) {
+                ResetQuietly(settings);
             }
 
+            return result;
+        }
+
+        /// <summary>Creates a copy of the current file for conflict resolution.</summary>
+        public static string CreateConflictCopy(string absolutePath) {
+            if (!File.Exists(absolutePath)) {
+                return null;
+            }
+
+            var conflictPath = absolutePath + ConflictPrefix + Timestamp();
             try {
-                if (version < settings.CurrentSchema) {
-                    settings.Migrate(version);
-                }
-            } catch (Exception exception) {
-                settings = createDefault();
-                return new GrowSettingsLoadResult(
-                    GrowSettingsLoadStatus.MigrationFailed, exception.Message);
+                File.Copy(absolutePath, conflictPath, false);
+                return conflictPath;
+            } catch (IOException) {
+                return null;
+            } catch (UnauthorizedAccessException) {
+                return null;
             }
-
-            var wasRepaired = settings.Validate();
-            settings.SchemaVersion = settings.CurrentSchema;
-
-            var status = version < settings.CurrentSchema
-                ? GrowSettingsLoadStatus.Migrated
-                : wasRepaired
-                    ? GrowSettingsLoadStatus.Repaired
-                    : GrowSettingsLoadStatus.Loaded;
-
-            return new GrowSettingsLoadResult(status);
         }
 
         /// <summary>Writes a settings file atomically, keeping the previous version as <c>.bak</c>.</summary>
@@ -114,23 +142,35 @@ namespace Grow.Editor.Settings {
                 Directory.CreateDirectory(directory);
             }
 
-            var json = JsonUtility.ToJson(settings, true);
             var temporaryPath = absolutePath + ".tmp";
 
-            File.WriteAllText(temporaryPath, json, new UTF8Encoding(false));
-
-            if (!File.Exists(absolutePath)) {
-                File.Move(temporaryPath, absolutePath);
-                return;
-            }
-
             try {
-                File.Replace(
-                    temporaryPath, absolutePath, absolutePath + BackupSuffix, true);
-            } catch (PlatformNotSupportedException) {
-                CopyReplace(temporaryPath, absolutePath);
-            } catch (IOException) {
-                CopyReplace(temporaryPath, absolutePath);
+                var json = JsonUtility.ToJson(settings, true);
+                File.WriteAllText(temporaryPath, json, new UTF8Encoding(false));
+
+                if (!File.Exists(absolutePath)) {
+                    File.Move(temporaryPath, absolutePath);
+                    return;
+                }
+
+                try {
+                    File.Replace(
+                        temporaryPath, absolutePath, absolutePath + BackupSuffix, true);
+                } catch (PlatformNotSupportedException) {
+                    CopyReplace(temporaryPath, absolutePath);
+                } catch (IOException) {
+                    CopyReplace(temporaryPath, absolutePath);
+                } catch (UnauthorizedAccessException) {
+                    CopyReplace(temporaryPath, absolutePath);
+                }
+            } finally {
+                if (File.Exists(temporaryPath)) {
+                    try {
+                        File.Delete(temporaryPath);
+                    } catch (IOException) {
+                        // A later save will overwrite the stale temporary file.
+                    }
+                }
             }
         }
 
@@ -141,7 +181,51 @@ namespace Grow.Editor.Settings {
 
         /// <summary>Resolves a path under Unity's per-user Preferences folder.</summary>
         public static string ToPreferencesPath(string relativePath) {
-            return CombineUnder(InternalEditorUtility.unityPreferencesFolder, relativePath);
+            var root = InternalEditorUtility.unityPreferencesFolder;
+            if (string.IsNullOrEmpty(root)) {
+                root = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "Unity", "Editor-5.x", "Preferences");
+            }
+
+            return CombineUnder(root, relativePath);
+        }
+
+        private static GrowSettingsLoadResult Apply<T>(T settings, int version)
+            where T : ScriptableObject, IGrowSettings {
+            if (version > settings.CurrentSchema) {
+                return new GrowSettingsLoadResult(
+                    GrowSettingsLoadStatus.NewerSchema,
+                    $"Settings schema {version} is newer than supported schema " +
+                    $"{settings.CurrentSchema}.");
+            }
+
+            try {
+                if (version < settings.CurrentSchema) {
+                    settings.Migrate(version);
+                }
+            } catch (Exception exception) {
+                return new GrowSettingsLoadResult(
+                    GrowSettingsLoadStatus.MigrationFailed, exception.Message);
+            }
+
+            bool repaired;
+            try {
+                repaired = settings.Validate();
+            } catch (Exception exception) {
+                return new GrowSettingsLoadResult(
+                    GrowSettingsLoadStatus.MigrationFailed, exception.Message);
+            }
+
+            settings.SchemaVersion = settings.CurrentSchema;
+
+            var status = version < settings.CurrentSchema
+                ? GrowSettingsLoadStatus.Migrated
+                : repaired
+                    ? GrowSettingsLoadStatus.Repaired
+                    : GrowSettingsLoadStatus.Loaded;
+
+            return new GrowSettingsLoadResult(status);
         }
 
         private static string GetProjectRoot() {
@@ -173,9 +257,19 @@ namespace Grow.Editor.Settings {
             return fullPath;
         }
 
-        private static bool TryRead<T>(string path, Func<T> createDefault, out T settings,
-            out int version, out string error) where T : ScriptableObject, IGrowSettings {
-            settings = null;
+        private static bool TryCreateDefault<T>(Func<T> createDefault, out T settings)
+            where T : ScriptableObject, IGrowSettings {
+            try {
+                settings = createDefault();
+                return settings != null;
+            } catch (Exception) {
+                settings = null;
+                return false;
+            }
+        }
+
+        private static bool TryRead<T>(string path, T settings, out int version, out string error)
+            where T : ScriptableObject, IGrowSettings {
             version = 0;
             error = null;
 
@@ -188,13 +282,11 @@ namespace Grow.Editor.Settings {
                 var json = File.ReadAllText(path);
                 var header = JsonUtility.FromJson<Header>(json);
 
-                if (header == null || header.Format != FormatMarker ||
-                    header.SchemaVersion <= 0) {
+                if (header == null || header.Format != FormatMarker || header.SchemaVersion <= 0) {
                     error = $"Settings file '{path}' has an invalid header.";
                     return false;
                 }
 
-                settings = createDefault();
                 JsonUtility.FromJsonOverwrite(json, settings);
                 version = header.SchemaVersion;
                 return true;
@@ -207,10 +299,8 @@ namespace Grow.Editor.Settings {
         private static string Quarantine(string path) {
             var directory = Path.GetDirectoryName(path);
             var name = Path.GetFileName(path);
-            var stamp = DateTime.UtcNow.ToString(
-                "yyyyMMdd-HHmmssfff", CultureInfo.InvariantCulture);
             var quarantinePath = Path.Combine(directory ?? string.Empty,
-                name + CorruptPrefix + stamp);
+                name + CorruptPrefix + Timestamp());
 
             try {
                 File.Move(path, quarantinePath);
@@ -222,6 +312,11 @@ namespace Grow.Editor.Settings {
             }
         }
 
+        private static string Timestamp() {
+            return DateTime.UtcNow.ToString(
+                "yyyyMMdd-HHmmssfff", CultureInfo.InvariantCulture);
+        }
+
         private static void CopyReplace(string temporaryPath, string targetPath) {
             var backupPath = targetPath + BackupSuffix;
 
@@ -230,7 +325,6 @@ namespace Grow.Editor.Settings {
             }
 
             File.Copy(temporaryPath, targetPath, true);
-            File.Delete(temporaryPath);
         }
 
         private static void TryCopy(string sourcePath, string targetPath) {
@@ -240,6 +334,15 @@ namespace Grow.Editor.Settings {
                 // Keep the loaded backup in memory; the main file will be rewritten on save.
             } catch (UnauthorizedAccessException) {
                 // Same as above.
+            }
+        }
+
+        private static void ResetQuietly<T>(T settings)
+            where T : ScriptableObject, IGrowSettings {
+            try {
+                settings.ResetToDefaults();
+            } catch (Exception) {
+                // A broken default is reported by the load status; never mask the original error.
             }
         }
     }

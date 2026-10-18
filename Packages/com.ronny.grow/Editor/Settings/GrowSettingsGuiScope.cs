@@ -12,6 +12,8 @@ namespace Grow.Editor.Settings {
     internal sealed class GrowSettingsGuiScope : IDisposable {
         private const float MarginLeft = 10f;
 
+        private const float MarginTop = 4f;
+
         private readonly float _previousLabelWidth;
 
         public GrowSettingsGuiScope() {
@@ -21,6 +23,7 @@ namespace Grow.Editor.Settings {
             GUILayout.BeginHorizontal();
             GUILayout.Space(MarginLeft);
             GUILayout.BeginVertical();
+            GUILayout.Space(MarginTop);
         }
 
         public void Dispose() {

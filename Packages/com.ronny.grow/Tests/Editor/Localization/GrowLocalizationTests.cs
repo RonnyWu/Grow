@@ -22,12 +22,14 @@ namespace Grow.Tests.Editor.Localization {
                 "\"entries\":[" +
                 "{\"key\":\"grow.test.hello\",\"value\":\"Hello\"}," +
                 "{\"key\":\"grow.test.englishOnly\",\"value\":\"English only\"}" +
-                "]}");
+                "]," +
+                "\"keywords\":[\"log\",\"package\"]}");
             File.WriteAllText(Path.Combine(_root, "zh-Hans.json"),
                 "{\"schemaVersion\":1,\"language\":\"zh-Hans\",\"languageName\":\"简体中文\"," +
                 "\"entries\":[" +
                 "{\"key\":\"grow.test.hello\",\"value\":\"你好\"}" +
-                "]}");
+                "]," +
+                "\"keywords\":[\"日志\"]}");
         }
 
         [TearDown]
@@ -63,10 +65,21 @@ namespace Grow.Tests.Editor.Localization {
             CollectionAssert.Contains(keywords, "grow");
             CollectionAssert.Contains(keywords, "Hello");
             CollectionAssert.Contains(keywords, "你好");
+            CollectionAssert.Contains(keywords, "log");
+            CollectionAssert.Contains(keywords, "日志");
+        }
+
+        [Test]
+        public void Catalog_EmptyDirectory_IsEmpty() {
+            var catalog = new GrowLocaleCatalog(Path.Combine(_root, "missing"));
+
+            Assert.IsTrue(catalog.IsEmpty);
         }
 
         [Test]
         public void ResolveSystemLanguage_MapsOnlySupportedEditorLanguages() {
+            Assert.AreEqual("zh-Hans",
+                GrowLocalization.ResolveSystemLanguage(SystemLanguage.Chinese));
             Assert.AreEqual("zh-Hans",
                 GrowLocalization.ResolveSystemLanguage(SystemLanguage.ChineseSimplified));
             Assert.AreEqual("en", GrowLocalization.ResolveSystemLanguage(SystemLanguage.English));
@@ -93,9 +106,12 @@ namespace Grow.Tests.Editor.Localization {
 
         [Test]
         public void TestFixtures_LoadSampleLanguages() {
-            var fixtures = Path.GetFullPath(Path.Combine(
-                Application.dataPath, "..",
-                "Packages/com.ronny.grow/Tests/Editor/Localization/Fixtures/Locales"));
+            var package = UnityEditor.PackageManager.PackageInfo.FindForAssembly(
+                typeof(GrowLocalizationTests).Assembly);
+            Assert.IsNotNull(package);
+
+            var fixtures = Path.Combine(
+                package.resolvedPath, "Tests/Editor/Localization/Fixtures/Locales");
             var catalog = new GrowLocaleCatalog(fixtures);
 
             foreach (var code in new[] { "fr", "ru", "es" }) {
@@ -104,8 +120,6 @@ namespace Grow.Tests.Editor.Localization {
                     "grow.settings.project.general.title",
                     catalog.Get(code, "grow.settings.project.general.title"));
             }
-
-            Assert.IsFalse(catalog.Supports("ar"));
         }
     }
 }

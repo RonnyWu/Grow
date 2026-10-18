@@ -90,6 +90,35 @@ namespace Grow.Tests.Editor.Settings {
         }
 
         [Test]
+        public void Load_BackupWithOlderSchema_MigratesAndRewritesMain() {
+            var path = Path.Combine(_root, "Settings.json");
+            File.WriteAllText(path + ".bak",
+                "{\"format\":\"" + GrowSettingsFile.FormatMarker +
+                "\",\"schemaVersion\":1,\"value\":\"old\"}");
+            File.WriteAllText(path, "{ broken");
+
+            var result = GrowSettingsFile.Load(
+                path, GrowSettingsFileTestSettings.CreateDefault, out var settings);
+
+            Assert.AreEqual(GrowSettingsLoadStatus.Migrated, result.Status);
+            Assert.AreEqual("migrated", settings.Value);
+            StringAssert.Contains("migrated", File.ReadAllText(path));
+        }
+
+        [Test]
+        public void Load_CorruptWithoutBackup_ReturnsCorrupted() {
+            var path = Path.Combine(_root, "Settings.json");
+            File.WriteAllText(path, "{ broken");
+
+            var result = GrowSettingsFile.Load(
+                path, GrowSettingsFileTestSettings.CreateDefault, out _);
+
+            Assert.AreEqual(GrowSettingsLoadStatus.Corrupted, result.Status);
+            Assert.IsFalse(result.CanSave);
+            Assert.IsTrue(Directory.GetFiles(_root, "*.corrupt-*").Length > 0);
+        }
+
+        [Test]
         public void Load_NewerSchema_IsReadOnlyAndDoesNotRewrite() {
             var path = Path.Combine(_root, "Settings.json");
             var future = "{\"format\":\"" + GrowSettingsFile.FormatMarker +
@@ -126,7 +155,8 @@ namespace Grow.Tests.Editor.Settings {
             Assert.Throws<ArgumentException>(
                 () => GrowSettingsFile.ToProjectPath("../outside.json"));
             Assert.Throws<ArgumentException>(
-                () => GrowSettingsFile.ToProjectPath("C:/outside.json"));
+                () => GrowSettingsFile.ToProjectPath(
+                    Path.GetFullPath(Path.Combine(_root, "outside.json"))));
         }
     }
 

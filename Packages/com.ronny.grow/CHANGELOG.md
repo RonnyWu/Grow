@@ -17,8 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   no project-level setting is persisted yet.
 - `Grow.Editor.Localization` — editor locale catalogs for the supported UI languages
   (English and Simplified Chinese), plus test-only French/Russian/Spanish fixtures used to
-  exercise multi-language layout without appearing in the language selector. The sample does
-  not include Arabic.
+  exercise multi-language layout without appearing in the language selector.
 - `Grow.Core` assembly — passive primitives, starting with `Grow.Core.Log`: the
   `GrowLog` facade, the `ILogSink` extension point, the `UnityLogSink` default
   sink, and the `LogEntry` / `LogLevel` value types.

@@ -29,7 +29,10 @@ namespace Grow.Editor.Settings {
         NewerSchema,
 
         /// <summary>Migration threw; the file is read-only.</summary>
-        MigrationFailed
+        MigrationFailed,
+
+        /// <summary>The file changed on disk while there were unsaved edits; saving is blocked.</summary>
+        Conflict
     }
 
     /// <summary>Load result shared by the settings file and store layers.</summary>
@@ -51,7 +54,8 @@ namespace Grow.Editor.Settings {
         public bool CanSave =>
             Status != GrowSettingsLoadStatus.Corrupted &&
             Status != GrowSettingsLoadStatus.NewerSchema &&
-            Status != GrowSettingsLoadStatus.MigrationFailed;
+            Status != GrowSettingsLoadStatus.MigrationFailed &&
+            Status != GrowSettingsLoadStatus.Conflict;
     }
 
     /// <summary>

@@ -36,6 +36,7 @@ namespace Grow.Editor.Settings.Preferences {
         /// <inheritdoc />
         public override void OnActivate(string searchContext, VisualElement rootElement) {
             GrowEditorPreferencesStore.Store.ReloadIfChangedOnDisk();
+            GrowLocalization.NormalizeLanguagePreference();
         }
 
         /// <inheritdoc />
@@ -52,14 +53,22 @@ namespace Grow.Editor.Settings.Preferences {
             EditorGUILayout.HelpBox(
                 GrowLocalization.Get(GrowSettingsKeys.PreferencesGeneralHelp), MessageType.Info);
 
-            if (loadResult.Status == GrowSettingsLoadStatus.Corrupted ||
-                loadResult.Status == GrowSettingsLoadStatus.MigrationFailed) {
+            if (loadResult.Status == GrowSettingsLoadStatus.Corrupted) {
                 EditorGUILayout.HelpBox(
                     GrowLocalization.Get(GrowSettingsKeys.PreferencesCorrupted),
+                    MessageType.Error);
+            } else if (loadResult.Status == GrowSettingsLoadStatus.MigrationFailed) {
+                EditorGUILayout.HelpBox(
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesMigrationFailed) +
+                    "\n" + loadResult.Message,
                     MessageType.Error);
             } else if (loadResult.Status == GrowSettingsLoadStatus.NewerSchema) {
                 EditorGUILayout.HelpBox(
                     GrowLocalization.Get(GrowSettingsKeys.PreferencesNewerSchema),
+                    MessageType.Warning);
+            } else if (loadResult.Status == GrowSettingsLoadStatus.Conflict) {
+                EditorGUILayout.HelpBox(
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesConflict),
                     MessageType.Warning);
             }
 
@@ -69,12 +78,14 @@ namespace Grow.Editor.Settings.Preferences {
                 DrawLanguage();
             }
 
-            if (loadResult.Status == GrowSettingsLoadStatus.Corrupted ||
-                loadResult.Status == GrowSettingsLoadStatus.MigrationFailed) {
-                if (GUILayout.Button(
-                    GrowLocalization.Get(GrowSettingsKeys.PreferencesReset))) {
-                    GrowEditorPreferencesStore.Store.ResetToDefaults();
-                }
+            if (loadResult.Status == GrowSettingsLoadStatus.Corrupted &&
+                GUILayout.Button(GrowLocalization.Get(GrowSettingsKeys.PreferencesReset))) {
+                ConfirmReset(loadResult);
+            }
+
+            if (loadResult.Status == GrowSettingsLoadStatus.Conflict &&
+                GUILayout.Button(GrowLocalization.Get(GrowSettingsKeys.PreferencesReload))) {
+                GrowEditorPreferencesStore.Store.ReloadFromDisk();
             }
 
             EditorGUILayout.Space(8);
@@ -140,6 +151,23 @@ namespace Grow.Editor.Settings.Preferences {
 
             GrowLocalization.SetLanguage(
                 next == 0 ? GrowLocalization.SystemLanguagePreference : languages[next - 1].Code);
+        }
+
+        private static void ConfirmReset(GrowSettingsLoadResult loadResult) {
+            var path = string.IsNullOrEmpty(loadResult.QuarantinePath)
+                ? "-"
+                : loadResult.QuarantinePath;
+
+            if (!EditorUtility.DisplayDialog(
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesResetTitle),
+                GrowLocalization.Format(
+                    GrowSettingsKeys.PreferencesResetMessage, path),
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesResetConfirm),
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesCancel))) {
+                return;
+            }
+
+            GrowEditorPreferencesStore.Store.ResetToDefaults();
         }
     }
 }

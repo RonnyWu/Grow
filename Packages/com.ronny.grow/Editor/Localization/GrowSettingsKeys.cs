@@ -28,7 +28,15 @@ namespace Grow.Editor.Localization {
         public const string PreferencesResetToInfo = "grow.settings.preferences.resetToInfo";
         public const string PreferencesSessionNote = "grow.settings.preferences.sessionNote";
         public const string PreferencesCorrupted = "grow.settings.preferences.corrupted";
+        public const string PreferencesMigrationFailed =
+            "grow.settings.preferences.migrationFailed";
         public const string PreferencesNewerSchema = "grow.settings.preferences.newerSchema";
+        public const string PreferencesConflict = "grow.settings.preferences.conflict";
+        public const string PreferencesReload = "grow.settings.preferences.reload";
         public const string PreferencesReset = "grow.settings.preferences.reset";
+        public const string PreferencesResetTitle = "grow.settings.preferences.resetTitle";
+        public const string PreferencesResetMessage = "grow.settings.preferences.resetMessage";
+        public const string PreferencesResetConfirm = "grow.settings.preferences.resetConfirm";
+        public const string PreferencesCancel = "grow.settings.preferences.cancel";
     }
 }

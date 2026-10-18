@@ -57,6 +57,11 @@ namespace Grow.Editor.Settings.Preferences {
         }
 
         public bool Validate() {
+            if (format != GrowSettingsFile.FormatMarker) {
+                format = GrowSettingsFile.FormatMarker;
+                return true;
+            }
+
             if (!string.IsNullOrEmpty(language)) {
                 return false;
             }
@@ -70,12 +75,26 @@ namespace Grow.Editor.Settings.Preferences {
     internal static class GrowEditorPreferencesStore {
         private const string RelativePath = "Grow/EditorPreferences.json";
 
-        private static readonly GrowSettingsStore<GrowEditorPreferences> SettingsStore =
-            new(GrowSettingsFile.ToPreferencesPath(RelativePath),
+        private static GrowSettingsStore<GrowEditorPreferences> _settingsStore;
+
+        private static string _pathOverride;
+
+        public static GrowSettingsStore<GrowEditorPreferences> Store =>
+            _settingsStore ??= new GrowSettingsStore<GrowEditorPreferences>(
+                _pathOverride ?? GrowSettingsFile.ToPreferencesPath(RelativePath),
                 GrowEditorPreferences.CreateDefault);
 
-        public static GrowSettingsStore<GrowEditorPreferences> Store => SettingsStore;
+        public static GrowEditorPreferences Instance => Store.Instance;
 
-        public static GrowEditorPreferences Instance => SettingsStore.Instance;
+        /// <summary>Redirects tests away from the real user preferences file.</summary>
+        internal static void SetPathForTests(string absolutePath) {
+            _pathOverride = absolutePath;
+            _settingsStore = null;
+        }
+
+        internal static void ResetPathForTests() {
+            _pathOverride = null;
+            _settingsStore = null;
+        }
     }
 }
