@@ -9,10 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `Grow.Editor.Settings` — internal editor settings plumbing: the settings-page margin and
-  label-width wrapper, plus a shared IMGUI value helper. Adds **Project Settings > Grow >
-  General** (package identity) and **Preferences > Grow > General** (session-only minimum log
-  level). No persisted setting or settings asset is exposed yet.
+- `Grow.Editor.Settings` — internal editor settings plumbing: JSON settings files with schema
+  versioning, atomic replacement, backup and corruption quarantine; the settings-page margin
+  and label-width wrapper; and a shared IMGUI value helper. Adds **Project Settings > Grow >
+  General** (package identity) and **Preferences > Grow > General** (language plus a
+  session-only minimum log level). Language is stored in the user-global editor preferences;
+  no project-level setting is persisted yet.
+- `Grow.Editor.Localization` — a lightweight `en` / `zh-Hans` editor locale catalog for Grow
+  settings pages, with exact-to-English fallback and searchable bilingual keywords.
 - `Grow.Core` assembly — passive primitives, starting with `Grow.Core.Log`: the
   `GrowLog` facade, the `ILogSink` extension point, the `UnityLogSink` default
   sink, and the `LogEntry` / `LogLevel` value types.

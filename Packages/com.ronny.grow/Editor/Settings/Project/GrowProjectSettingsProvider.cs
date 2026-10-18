@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using Grow.Editor.Localization;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -31,8 +32,8 @@ namespace Grow.Editor.Settings.Project {
         [SettingsProvider]
         public static SettingsProvider Create() {
             return new GrowProjectSettingsProvider(ProviderPath, SettingsScope.Project) {
-                label = "Grow",
-                keywords = new[] { "grow" }
+                label = GrowLocalization.Get(GrowSettingsKeys.ProjectGeneralTitle),
+                keywords = GrowLocalization.Keywords(GrowSettingsKeys.ProjectGeneralTitle)
             };
         }
 
@@ -46,28 +47,33 @@ namespace Grow.Editor.Settings.Project {
         protected override void DrawContent(string searchContext) {
             EditorGUILayout.LabelField("Grow", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "This page reports the installed package. Project-level settings are added only " +
-                "when a feature consumes them.", MessageType.Info);
+                GrowLocalization.Get(GrowSettingsKeys.ProjectGeneralHelp), MessageType.Info);
 
             EditorGUILayout.Space(8);
 
             if (_package == null) {
                 EditorGUILayout.HelpBox(
-                    "Could not resolve the com.ronny.grow package information.",
+                    GrowLocalization.Get(GrowSettingsKeys.ProjectUnresolved),
                     MessageType.Warning);
                 return;
             }
 
-            GrowSettingsUi.DrawValue("Package", _package.name);
-            GrowSettingsUi.DrawValue("Display name", _package.displayName);
-            GrowSettingsUi.DrawValue("Version", _package.version);
-            GrowSettingsUi.DrawValue("Documentation", _documentationPath);
+            GrowSettingsUi.DrawValue(
+                GrowLocalization.Get(GrowSettingsKeys.ProjectPackage), _package.name);
+            GrowSettingsUi.DrawValue(
+                GrowLocalization.Get(GrowSettingsKeys.ProjectDisplayName), _package.displayName);
+            GrowSettingsUi.DrawValue(
+                GrowLocalization.Get(GrowSettingsKeys.ProjectVersion), _package.version);
+            GrowSettingsUi.DrawValue(
+                GrowLocalization.Get(GrowSettingsKeys.ProjectDocumentation), _documentationPath);
 
             DrawDocumentationButton();
 
             if (!string.IsNullOrEmpty(_package.description)) {
                 EditorGUILayout.Space(8);
-                EditorGUILayout.LabelField("Description", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField(
+                    GrowLocalization.Get(GrowSettingsKeys.ProjectDescription),
+                    EditorStyles.boldLabel);
                 EditorGUILayout.LabelField(_package.description, EditorStyles.wordWrappedLabel);
             }
         }
@@ -100,7 +106,8 @@ namespace Grow.Editor.Settings.Project {
             }
 
             if (_documentationPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) {
-                if (GUILayout.Button("Open documentation")) {
+                if (GUILayout.Button(
+                    GrowLocalization.Get(GrowSettingsKeys.ProjectOpenDocumentation))) {
                     Help.BrowseURL(_documentationPath);
                 }
 
@@ -111,7 +118,8 @@ namespace Grow.Editor.Settings.Project {
                 return;
             }
 
-            if (GUILayout.Button("Reveal documentation")) {
+            if (GUILayout.Button(
+                GrowLocalization.Get(GrowSettingsKeys.ProjectRevealDocumentation))) {
                 EditorUtility.RevealInFinder(_documentationPath);
             }
         }

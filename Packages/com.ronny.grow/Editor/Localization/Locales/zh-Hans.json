@@ -1,0 +1,31 @@
+{
+    "schemaVersion": 1,
+    "language": "zh-Hans",
+    "languageName": "简体中文",
+    "entries": [
+        { "key": "grow.settings.project.general.title", "value": "常规" },
+        { "key": "grow.settings.project.general.help", "value": "此页显示已安装的包信息。只有功能真正使用某个项目级设置时，才会添加该设置。" },
+        { "key": "grow.settings.project.package", "value": "包" },
+        { "key": "grow.settings.project.displayName", "value": "显示名" },
+        { "key": "grow.settings.project.version", "value": "版本" },
+        { "key": "grow.settings.project.documentation", "value": "文档" },
+        { "key": "grow.settings.project.revealDocumentation", "value": "打开文档" },
+        { "key": "grow.settings.project.openDocumentation", "value": "打开在线文档" },
+        { "key": "grow.settings.project.description", "value": "描述" },
+        { "key": "grow.settings.project.unresolved", "value": "无法解析 com.ronny.grow 包信息。" },
+        { "key": "grow.settings.preferences.general.title", "value": "常规" },
+        { "key": "grow.settings.preferences.general.help", "value": "语言跟随当前用户，在不同工程间保持一致。日志级别只对当前编辑器会话生效。" },
+        { "key": "grow.settings.preferences.language", "value": "语言" },
+        { "key": "grow.settings.preferences.language.system", "value": "跟随系统" },
+        { "key": "grow.settings.preferences.session", "value": "会话" },
+        { "key": "grow.settings.preferences.minimumLogLevel", "value": "最低日志级别" },
+        { "key": "grow.settings.preferences.minimumLogLevel.tooltip", "value": "只对当前编辑器会话生效。进入 Play 模式后恢复为 Info。" },
+        { "key": "grow.settings.preferences.logSink", "value": "日志输出" },
+        { "key": "grow.settings.preferences.resetToInfo", "value": "恢复为 Info" },
+        { "key": "grow.settings.preferences.sessionNote", "value": "每次进入 Play 模式时，GrowLog 会恢复为 Info。" },
+        { "key": "grow.settings.preferences.corrupted", "value": "Grow 偏好文件已损坏。在重置前使用默认值。" },
+        { "key": "grow.settings.preferences.newerSchema", "value": "Grow 偏好文件由更新版本写入，当前为只读。" },
+        { "key": "grow.settings.preferences.reset", "value": "重置偏好" }
+    ],
+    "keywords": [ "grow", "设置", "语言", "日志" ]
+}

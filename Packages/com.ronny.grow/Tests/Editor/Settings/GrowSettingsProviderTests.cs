@@ -2,6 +2,7 @@
 
 using System;
 using System.Linq;
+using Grow.Editor.Localization;
 using Grow.Editor.Settings.Preferences;
 using Grow.Editor.Settings.Project;
 using NUnit.Framework;
@@ -16,7 +17,8 @@ namespace Grow.Tests.Editor.Settings {
 
             Assert.AreEqual(GrowProjectSettingsProvider.ProviderPath, provider.settingsPath);
             Assert.AreEqual(SettingsScope.Project, provider.scope);
-            Assert.AreEqual("Grow", provider.label);
+            Assert.AreEqual(
+                GrowLocalization.Get(GrowSettingsKeys.ProjectGeneralTitle), provider.label);
         }
 
         [Test]
@@ -25,7 +27,8 @@ namespace Grow.Tests.Editor.Settings {
 
             Assert.AreEqual(GrowUserSettingsProvider.ProviderPath, provider.settingsPath);
             Assert.AreEqual(SettingsScope.User, provider.scope);
-            Assert.AreEqual("Grow", provider.label);
+            Assert.AreEqual(
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesGeneralTitle), provider.label);
         }
 
         [Test]

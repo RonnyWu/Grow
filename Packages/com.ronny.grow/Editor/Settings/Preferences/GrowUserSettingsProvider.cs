@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: MIT
 
+using System.Collections.Generic;
 using Grow.Core.Log;
+using Grow.Editor.Localization;
+using Grow.Editor.Settings;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Grow.Editor.Settings.Preferences {
     /// <summary>
     /// <b>Preferences &gt; Grow &gt; General</b> page.
     /// </summary>
     /// <remarks>
-    /// The page exposes one real session setting: the minimum log level. It is not persisted;
-    /// <see cref="GrowLog.Reset"/> restores the default at the start of every play session.
-    /// Persisted user settings are added only when a feature consumes them.
+    /// The page owns two kinds of state: a persisted user-global language preference and a
+    /// session-only log level. The language file is only written after an explicit change.
     /// </remarks>
     internal sealed class GrowUserSettingsProvider : GrowSettingsProviderBase {
         internal const string ProviderPath = "Preferences/Grow/General";
@@ -23,42 +26,120 @@ namespace Grow.Editor.Settings.Preferences {
         [SettingsProvider]
         public static SettingsProvider Create() {
             return new GrowUserSettingsProvider(ProviderPath, SettingsScope.User) {
-                label = "Grow",
-                keywords = new[] { "grow", "log" }
+                label = GrowLocalization.Get(GrowSettingsKeys.PreferencesGeneralTitle),
+                keywords = GrowLocalization.Keywords(
+                    GrowSettingsKeys.PreferencesGeneralTitle,
+                    GrowSettingsKeys.PreferencesLanguage)
             };
         }
 
         /// <inheritdoc />
+        public override void OnActivate(string searchContext, VisualElement rootElement) {
+            GrowEditorPreferencesStore.Store.ReloadIfChangedOnDisk();
+        }
+
+        /// <inheritdoc />
+        public override void OnDeactivate() {
+            GrowEditorPreferencesStore.Store.Flush();
+            base.OnDeactivate();
+        }
+
+        /// <inheritdoc />
         protected override void DrawContent(string searchContext) {
+            var loadResult = GrowEditorPreferencesStore.Store.LoadResult;
+
             EditorGUILayout.LabelField("Grow", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "This page only contains session state. Persisted user settings are added only " +
-                "when a feature consumes them.", MessageType.Info);
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesGeneralHelp), MessageType.Info);
+
+            if (loadResult.Status == GrowSettingsLoadStatus.Corrupted ||
+                loadResult.Status == GrowSettingsLoadStatus.MigrationFailed) {
+                EditorGUILayout.HelpBox(
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesCorrupted),
+                    MessageType.Error);
+            } else if (loadResult.Status == GrowSettingsLoadStatus.NewerSchema) {
+                EditorGUILayout.HelpBox(
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesNewerSchema),
+                    MessageType.Warning);
+            }
 
             EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Session", EditorStyles.boldLabel);
+
+            using (new EditorGUI.DisabledScope(!loadResult.CanSave)) {
+                DrawLanguage();
+            }
+
+            if (loadResult.Status == GrowSettingsLoadStatus.Corrupted ||
+                loadResult.Status == GrowSettingsLoadStatus.MigrationFailed) {
+                if (GUILayout.Button(
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesReset))) {
+                    GrowEditorPreferencesStore.Store.ResetToDefaults();
+                }
+            }
+
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField(
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesSession),
+                EditorStyles.boldLabel);
 
             var current = GrowLog.MinimumLevel;
             var next = (LogLevel)EditorGUILayout.EnumPopup(
                 new GUIContent(
-                    "Minimum log level",
-                    "Applies to this editor session only. Play Mode resets it to Info."),
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesMinimumLogLevel),
+                    GrowLocalization.Get(
+                        GrowSettingsKeys.PreferencesMinimumLogLevelTooltip)),
                 current);
 
             if (next != current) {
                 GrowLog.MinimumLevel = next;
             }
 
-            GrowSettingsUi.DrawValue("Log sink", GrowLog.Sink.GetType().Name);
+            GrowSettingsUi.DrawValue(
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesLogSink),
+                GrowLog.Sink.GetType().Name);
 
-            if (GUILayout.Button("Reset to Info")) {
+            if (GUILayout.Button(
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesResetToInfo))) {
                 GrowLog.MinimumLevel = LogLevel.Info;
             }
 
             EditorGUILayout.Space(8);
             EditorGUILayout.HelpBox(
-                "GrowLog resets to Info at the start of each play session.",
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesSessionNote),
                 MessageType.None);
+        }
+
+        private static void DrawLanguage() {
+            var languages = GrowLocalization.Languages;
+            var options = new List<string>(languages.Count + 1) {
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesLanguageSystem)
+            };
+
+            for (var i = 0; i < languages.Count; i++) {
+                options.Add(languages[i].NativeName);
+            }
+
+            var preference = GrowLocalization.LanguagePreference;
+            var selected = 0;
+
+            for (var i = 0; i < languages.Count; i++) {
+                if (languages[i].Code == preference) {
+                    selected = i + 1;
+                    break;
+                }
+            }
+
+            var next = EditorGUILayout.Popup(
+                GrowLocalization.Get(GrowSettingsKeys.PreferencesLanguage),
+                selected,
+                options.ToArray());
+
+            if (next == selected) {
+                return;
+            }
+
+            GrowLocalization.SetLanguage(
+                next == 0 ? GrowLocalization.SystemLanguagePreference : languages[next - 1].Code);
         }
     }
 }

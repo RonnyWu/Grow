@@ -32,12 +32,13 @@ The package registers two pages:
 
 - **Edit > Project Settings... > Grow > General** shows the installed package identity and a
   shortcut to the package documentation.
-- **Edit > Preferences > Grow > General** sets the minimum log level for the current editor
-  session, with a button to reset it to `Info`.
+- **Edit > Preferences > Grow > General** lets you choose the editor UI language and set the
+  minimum log level for the current editor session.
 
-Both pages are intentionally minimal. Project-level settings are added only when a feature
-consumes them; user preferences are added only when a value needs to survive a restart. The
-log level is session state: `GrowLog` resets it to `Info` at the start of each play session.
+Language is a user-global preference and is stored under Unity's Preferences folder, so it
+follows you across projects. The log level is session state: `GrowLog` resets it to `Info` at
+the start of each play session. Project-level settings are added only when a feature consumes
+them.
 
 ## Requirements
 
