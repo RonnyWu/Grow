@@ -94,6 +94,37 @@ namespace Grow.Tests.Editor.Entry {
         }
 
         [Test]
+        public void Shutdown_ThenInitialize_ReusesRegisteredModules() {
+            var module = new GrowAppProbeModule();
+            GrowApp.Initialize(new IModule[] { module });
+
+            GrowApp.Shutdown();
+            GrowApp.Initialize();
+
+            Assert.AreEqual(2, module.RegisterCount);
+            Assert.AreEqual(2, module.InitializeCount);
+            Assert.AreEqual(2, module.StartCount);
+            Assert.AreEqual(1, module.StopCount);
+            Assert.AreEqual(1, module.DisposeCount);
+            Assert.IsTrue(GrowModules.IsReady);
+        }
+
+        [Test]
+        public void SettleForSessionEnd_ThenInitialize_WithTheSameModuleName_StartsAFreshRegistry() {
+            var first = new GrowAppProbeModule();
+            GrowApp.Initialize(new IModule[] { first });
+
+            GrowApp.SettleForSessionEnd();
+
+            var second = new GrowAppProbeModule();
+            Assert.DoesNotThrow(() => GrowApp.Initialize(new IModule[] { second }));
+            Assert.AreEqual(1, second.RegisterCount);
+            Assert.AreEqual(1, second.InitializeCount);
+            Assert.AreEqual(1, second.StartCount);
+            Assert.AreEqual(1, first.DisposeCount);
+        }
+
+        [Test]
         public void InitializeAndShutdown_AreIdempotent() {
             GrowApp.Initialize();
             var root = GrowApp.Root;
@@ -132,7 +163,8 @@ namespace Grow.Tests.Editor.Entry {
             var next = new GrowAppProbeModule();
             GrowApp.Initialize(new IModule[] { next });
 
-            Assert.AreEqual(1, _module.StartCount, "the old session's module must not be driven again");
+            Assert.AreEqual(1, _module.StartCount,
+                "the old session's module must not be driven again");
             Assert.AreEqual(1, next.StartCount);
             Assert.AreEqual(ModulePhase.Running, GrowModules.Phase);
         }
@@ -149,6 +181,23 @@ namespace Grow.Tests.Editor.Entry {
             GrowApp.Initialize();
 
             Assert.IsTrue(observed, "Ready handlers must see the composition as initialized");
+            token.Dispose();
+        }
+
+        [Test]
+        public void InstalledNotification_ObservesModulesStarted() {
+            _module = new GrowAppProbeModule();
+            var startedWhenInstalled = -1;
+            var token = GrowBoot.StateChanged.Subscribe(change => {
+                if (change.Next == GrowState.Installed) {
+                    startedWhenInstalled = _module.StartCount;
+                }
+            });
+
+            GrowApp.Initialize(new IModule[] { _module });
+
+            Assert.AreEqual(1, startedWhenInstalled,
+                "the Installed notification must run after the modules have started");
             token.Dispose();
         }
 
@@ -199,8 +248,8 @@ namespace Grow.Tests.Editor.Entry {
         public void RegisterModule_AfterInitialize_Throws() {
             GrowApp.Initialize();
 
-            Assert.Throws<InvalidOperationException>(
-                () => GrowApp.RegisterModule(new GrowAppProbeModule()));
+            Assert.Throws<InvalidOperationException>(() =>
+                GrowApp.RegisterModule(new GrowAppProbeModule()));
         }
 
         [Test]
@@ -244,11 +293,25 @@ namespace Grow.Tests.Editor.Entry {
             public int Priority => 0;
             public IReadOnlyList<Type> Dependencies => Array.Empty<Type>();
 
-            public void OnRegister(IModuleContext context) => RegisterCount++;
-            public void OnInitialize(IModuleContext context) => InitializeCount++;
-            public void OnStart(IModuleContext context) => StartCount++;
-            public void OnStop() => StopCount++;
-            public void OnDispose() => DisposeCount++;
+            public void OnRegister(IModuleContext context) {
+                RegisterCount++;
+            }
+
+            public void OnInitialize(IModuleContext context) {
+                InitializeCount++;
+            }
+
+            public void OnStart(IModuleContext context) {
+                StartCount++;
+            }
+
+            public void OnStop() {
+                StopCount++;
+            }
+
+            public void OnDispose() {
+                DisposeCount++;
+            }
         }
 
         private sealed class GrowAppNullLogSink : ILogSink {

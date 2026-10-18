@@ -52,7 +52,8 @@ namespace Grow.Kernel.Lifecycle.Impl {
         private bool _attached;
         private int _attachedEpoch = -1;
 
-        public UpdaterBinding(UpdateFlag flag, ILifecycleUpdateHooks hooks, ILifecycleManager manager) {
+        public UpdaterBinding(UpdateFlag flag, ILifecycleUpdateHooks hooks,
+            ILifecycleManager manager) {
             _flag = flag;
             _hooks = hooks;
             _manager = manager;
@@ -77,9 +78,13 @@ namespace Grow.Kernel.Lifecycle.Impl {
 
         /// <summary>Subscribes every declared phase that is not attached yet.</summary>
         public void Attach() {
+            if (_manager is MonoManager mono) {
+                mono.RegisterUpdater(this);
+            }
+
             var epoch = CurrentEpoch;
             if (_attachedEpoch != epoch) {
-                Detach();
+                DetachCore();
             }
 
             if (Attached) {
@@ -129,6 +134,13 @@ namespace Grow.Kernel.Lifecycle.Impl {
 
         /// <summary>Releases every declared phase; safe to call more than once.</summary>
         public void Detach() {
+            DetachCore();
+            if (_manager is MonoManager mono) {
+                mono.UnregisterUpdater(this);
+            }
+        }
+
+        private void DetachCore() {
             _attached = false;
             _attachedEpoch = -1;
 

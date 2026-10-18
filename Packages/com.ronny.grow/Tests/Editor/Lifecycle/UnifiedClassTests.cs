@@ -215,13 +215,31 @@ namespace Grow.Tests.Editor.Lifecycle {
             Assert.IsNotNull(_live);
         }
 
+        [Test]
+        public void LateBind_RepairsUpdaterAndAppAttachments() {
+            MonoManager.Instance.Unbind();
+
+            var probe = New(new UpdateProbe());
+            Assert.IsFalse(probe.AttachedUpdater);
+            Assert.IsFalse(probe.AttachedApp);
+            Assert.AreEqual(0, _executor.Update.Count);
+
+            MonoManager.Instance.Bind(_executor);
+
+            Assert.IsTrue(probe.AttachedUpdater);
+            Assert.IsTrue(probe.AttachedApp);
+            probe.Clear();
+            _executor.PublishUpdate();
+            Assert.AreEqual("update", probe.Join());
+        }
+
         private T New<T>(T probe) where T : UnifiedClass {
             _live = probe;
             return probe;
         }
 
         private abstract class Probe : UnifiedClass {
-            private readonly List<string> _events = new List<string>();
+            private readonly List<string> _events = new();
 
             public string Join() {
                 if (_events.Count == 0) {
@@ -252,13 +270,33 @@ namespace Grow.Tests.Editor.Lifecycle {
         private sealed class UpdateProbe : Probe {
             protected override UpdateFlag UpdateFlag => UpdateFlag.Update;
 
-            protected override void OnAwake() => Add("awake");
-            protected override void OnEnabled() => Add("enable");
-            protected override void OnStart() => Add("start");
-            protected override void OnUpdate() => Add("update");
-            protected override void OnDisabled() => Add("disable");
-            protected override void OnDestroyed() => Add("destroy");
-            protected override void OnAppQuit() => Add("quit");
+            protected override void OnAwake() {
+                Add("awake");
+            }
+
+            protected override void OnEnabled() {
+                Add("enable");
+            }
+
+            protected override void OnStart() {
+                Add("start");
+            }
+
+            protected override void OnUpdate() {
+                Add("update");
+            }
+
+            protected override void OnDisabled() {
+                Add("disable");
+            }
+
+            protected override void OnDestroyed() {
+                Add("destroy");
+            }
+
+            protected override void OnAppQuit() {
+                Add("quit");
+            }
         }
 
         private sealed class AppProbe : Probe {
@@ -289,9 +327,17 @@ namespace Grow.Tests.Editor.Lifecycle {
                 Enabled = false;
             }
 
-            protected override void OnEnabled() => Add("enable");
-            protected override void OnStart() => Add("start");
-            protected override void OnDisabled() => Add("disable");
+            protected override void OnEnabled() {
+                Add("enable");
+            }
+
+            protected override void OnStart() {
+                Add("start");
+            }
+
+            protected override void OnDisabled() {
+                Add("disable");
+            }
         }
 
         private sealed class DisableOnEnabledProbe : Probe {
@@ -302,7 +348,9 @@ namespace Grow.Tests.Editor.Lifecycle {
                 Enabled = false;
             }
 
-            protected override void OnDisabled() => Add("disable");
+            protected override void OnDisabled() {
+                Add("disable");
+            }
         }
 
         private sealed class DisableOnStartProbe : Probe {
@@ -313,7 +361,9 @@ namespace Grow.Tests.Editor.Lifecycle {
                 Enabled = false;
             }
 
-            protected override void OnDisabled() => Add("disable");
+            protected override void OnDisabled() {
+                Add("disable");
+            }
         }
     }
 }

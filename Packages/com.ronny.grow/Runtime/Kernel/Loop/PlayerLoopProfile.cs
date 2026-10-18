@@ -9,10 +9,11 @@ namespace Grow.Kernel.Loop {
     /// Installs the five Grow frame phases into Unity's player loop.
     /// </summary>
     /// <remarks>
-    /// The phase table is fixed: PreUpdate before the update group, FixedUpdate after the fixed
-    /// group, Update after scene scripts update, PostUpdate after the whole update group, and
-    /// LateUpdate after scene scripts late-update. Each injected callback checks that the host is
-    /// still alive before raising its event, so a destroyed host cannot throw from the player loop.
+    /// The phase table is fixed: PreUpdate before the update group, FixedUpdate inside the
+    /// FixedUpdate group after <c>ScriptRunBehaviourFixedUpdate</c>, Update after scene scripts
+    /// update, PostUpdate after the whole update group, and LateUpdate after scene scripts
+    /// late-update. Each injected callback checks that the host is still alive before raising its
+    /// event, so a destroyed host cannot throw from the player loop.
     /// <para>
     /// Install is all-or-nothing: if any anchor is missing, systems installed by this profile are
     /// removed again and the method returns false.
@@ -35,7 +36,8 @@ namespace Grow.Kernel.Loop {
             public readonly InsertLocation Location;
             public readonly Phase Phase;
 
-            public PhaseDescriptor(Type systemType, Type anchorType, InsertLocation location, Phase phase) {
+            public PhaseDescriptor(Type systemType, Type anchorType, InsertLocation location,
+                Phase phase) {
                 SystemType = systemType;
                 AnchorType = anchorType;
                 Location = location;
@@ -43,38 +45,45 @@ namespace Grow.Kernel.Loop {
             }
         }
 
-        private sealed class PreUpdateSystem { }
+        private sealed class PreUpdateSystem {
+        }
 
-        private sealed class FixedUpdateSystem { }
+        private sealed class FixedUpdateSystem {
+        }
 
-        private sealed class UpdateSystem { }
+        private sealed class UpdateSystem {
+        }
 
-        private sealed class PostUpdateSystem { }
+        private sealed class PostUpdateSystem {
+        }
 
-        private sealed class LateUpdateSystem { }
+        private sealed class LateUpdateSystem {
+        }
 
         private static readonly PhaseDescriptor[] Phases = {
-            new PhaseDescriptor(
+            new(
                 typeof(PreUpdateSystem),
                 typeof(UnityEngine.PlayerLoop.Update),
                 InsertLocation.Before,
                 Phase.PreUpdate),
-            new PhaseDescriptor(
+            new(
                 typeof(FixedUpdateSystem),
-                typeof(UnityEngine.PlayerLoop.FixedUpdate),
+                // The top-level FixedUpdate is a group, not a fixed-step callback: a sibling after it
+                // runs once per frame. Insert inside the group so Unity invokes it once per fixed step.
+                typeof(UnityEngine.PlayerLoop.FixedUpdate.ScriptRunBehaviourFixedUpdate),
                 InsertLocation.After,
                 Phase.FixedUpdate),
-            new PhaseDescriptor(
+            new(
                 typeof(UpdateSystem),
                 typeof(UnityEngine.PlayerLoop.Update.ScriptRunBehaviourUpdate),
                 InsertLocation.After,
                 Phase.Update),
-            new PhaseDescriptor(
+            new(
                 typeof(PostUpdateSystem),
                 typeof(UnityEngine.PlayerLoop.Update),
                 InsertLocation.After,
                 Phase.PostUpdate),
-            new PhaseDescriptor(
+            new(
                 typeof(LateUpdateSystem),
                 typeof(UnityEngine.PlayerLoop.PreLateUpdate.ScriptRunBehaviourLateUpdate),
                 InsertLocation.After,
@@ -83,10 +92,11 @@ namespace Grow.Kernel.Loop {
 
         private static MonoExecutor _owner;
 
-        /// <summary>True while the profile's phases are installed.</summary>
+        /// <summary>True while an owner is recorded for the profile.</summary>
         internal static bool Installed => _owner != null;
 
         /// <summary>Installs all phases for <paramref name="executor"/>; false if an anchor is missing.</summary>
+        /// <exception cref="System.Exception">An install step threw; any inserted phases are removed first.</exception>
         internal static bool Install(MonoExecutor executor) {
             if (executor == null) {
                 GrowLog.Error("PlayerLoop profile install failed: executor is null.", LogCategory);
@@ -98,22 +108,28 @@ namespace Grow.Kernel.Loop {
             }
 
             var rebind = _owner != null;
-            var installed = true;
-            foreach (var phase in Phases) {
-                installed &= PlayerLoopManager.Install(
-                    phase.SystemType,
-                    CreateCallback(executor, phase.Phase),
-                    phase.AnchorType,
-                    phase.Location);
-            }
+            try {
+                for (var i = 0; i < Phases.Length; i++) {
+                    var phase = Phases[i];
+                    if (PlayerLoopManager.Install(
+                            phase.SystemType,
+                            CreateCallback(executor, phase.Phase),
+                            phase.AnchorType,
+                            phase.Location)) {
+                        continue;
+                    }
 
-            if (!installed) {
-                PlayerLoopManager.RemoveInstalled();
+                    RemoveInstalledSafely();
+                    _owner = null;
+                    GrowLog.Error(
+                        "PlayerLoop profile install incomplete: an anchor is missing; managed systems were removed.",
+                        LogCategory);
+                    return false;
+                }
+            } catch {
+                RemoveInstalledSafely();
                 _owner = null;
-                GrowLog.Error(
-                    "PlayerLoop profile install incomplete: an anchor is missing; managed systems were removed.",
-                    LogCategory);
-                return false;
+                throw;
             }
 
             _owner = executor;
@@ -126,27 +142,44 @@ namespace Grow.Kernel.Loop {
         }
 
         /// <summary>
-        /// Removes the profile's phases. A non-null <paramref name="expectedOwner"/> only uninstalls
-        /// when it is still the owner, so a late <c>OnDestroy</c> from an old host cannot tear down a
-        /// profile that already belongs to its replacement.
+        /// Removes the profile's phases. A non-null <paramref name="expectedOwner"/> is ignored when
+        /// another owner has replaced it, so a late <c>OnDestroy</c> cannot tear down a profile that
+        /// belongs to its replacement. When no owner is recorded, the cleanup still runs: a failed
+        /// install can leave phases behind before the owner is stored.
         /// </summary>
         internal static void Uninstall(MonoExecutor expectedOwner = null) {
-            if (_owner == null) {
+            if (!ReferenceEquals(expectedOwner, null) &&
+                _owner != null &&
+                !ReferenceEquals(_owner, expectedOwner)) {
                 return;
             }
 
-            if (!ReferenceEquals(expectedOwner, null) && !ReferenceEquals(_owner, expectedOwner)) {
-                return;
-            }
-
-            PlayerLoopManager.RemoveInstalled();
+            var wasOwner = _owner != null;
             _owner = null;
-            GrowLog.Info("PlayerLoop profile uninstalled.", LogCategory);
+            try {
+                // Remove even when _owner is null: a failed Install can leave nodes behind before the
+                // owner is recorded.
+                PlayerLoopManager.RemoveInstalled();
+            } finally {
+                if (wasOwner) {
+                    GrowLog.Info("PlayerLoop profile uninstalled.", LogCategory);
+                }
+            }
         }
 
         /// <summary>Drops the static owner without touching the loop (test/session reset helper).</summary>
         internal static void ResetStaticState() {
             _owner = null;
+        }
+
+        private static void RemoveInstalledSafely() {
+            try {
+                PlayerLoopManager.RemoveInstalled();
+            } catch (Exception exception) {
+                GrowLog.Error(
+                    $"[Loop] Failed to clean up a partial profile install: {exception}",
+                    LogCategory);
+            }
         }
 
         private static UpdateFunction CreateCallback(MonoExecutor executor, Phase phase) {

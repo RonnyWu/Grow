@@ -77,6 +77,30 @@ namespace Grow.Tests.Editor.Loop {
         }
 
         [Test]
+        public void PlayerLoopProfile_UninstallWithoutOwner_RemovesPartialNodes() {
+            var root = new GameObject("partial");
+            var executor = root.AddComponent<MonoExecutor>();
+
+            try {
+                Assert.IsTrue(PlayerLoopProfile.Install(executor));
+                Assert.IsTrue(PlayerLoopManager.IsModified);
+
+                PlayerLoopProfile.ResetStaticState();
+                Assert.IsFalse(PlayerLoopProfile.Installed);
+                Assert.IsTrue(PlayerLoopManager.IsModified,
+                    "the nodes are still in the loop after the owner was lost");
+
+                PlayerLoopProfile.Uninstall();
+
+                Assert.IsFalse(PlayerLoopManager.IsModified,
+                    "cleanup must remove managed nodes even when the owner was lost");
+            } finally {
+                PlayerLoopProfile.Uninstall();
+                UnityEngine.Object.DestroyImmediate(root);
+            }
+        }
+
+        [Test]
         public void Install_IsIdempotent() {
             GrowLoop.Install();
             var host = GrowLoop.Host;

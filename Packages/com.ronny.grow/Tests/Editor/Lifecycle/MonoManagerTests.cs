@@ -192,17 +192,34 @@ namespace Grow.Tests.Editor.Lifecycle {
             var next = new FakeMonoExecutor();
             MonoManager.Instance.Bind(next);
 
-            Assert.AreEqual(0, _executor.AppQuit.Count, "rebinding releases subscriptions to the old host");
-            Assert.IsFalse(target.AttachedApp, "the report must be reset when the manager drops the binding");
-            Assert.AreEqual(0, next.AppQuit.Count);
-
-            ((ILifecycle)target).AttachApp();
-
-            Assert.IsTrue(target.AttachedApp);
+            Assert.AreEqual(0, _executor.AppQuit.Count,
+                "rebinding releases subscriptions to the old host");
+            Assert.IsTrue(target.AttachedApp,
+                "the manager replays the binding on the new host");
             Assert.AreEqual(1, next.AppQuit.Count);
 
             next.PublishAppQuit();
             Assert.AreEqual(1, target.AppQuitCount);
+
+            next.Dispose();
+        }
+
+        [Test]
+        public void Unbind_ThenBind_DoesNotResurrectOldSubscriptions() {
+            var target = new LifecycleProbe { LifecycleManager = MonoManager.Instance };
+            ((ILifecycle)target).AttachApp();
+            Assert.AreEqual(1, _executor.AppQuit.Count);
+
+            MonoManager.Instance.Unbind();
+            Assert.IsFalse(target.AttachedApp);
+            Assert.AreEqual(0, _executor.AppQuit.Count);
+
+            var next = new FakeMonoExecutor();
+            MonoManager.Instance.Bind(next);
+
+            Assert.IsFalse(target.AttachedApp,
+                "Unbind ends the host; it must not turn bound targets into late-bind requests");
+            Assert.AreEqual(0, next.AppQuit.Count);
 
             next.Dispose();
         }

@@ -15,7 +15,8 @@ namespace Grow.Kernel.Loop {
     /// and this facade is the only entry point.
     /// <para>
     /// Install and uninstall are idempotent. The facade is static because the host is a singleton
-    /// mechanism; the static host references are cleared at <c>SubsystemRegistration</c>, so a
+    /// mechanism; the static host references are cleared by <see cref="Entry.GrowSession"/> at
+    /// <c>SubsystemRegistration</c>, so a
     /// session without Domain Reload cannot keep a destroyed host alive.
     /// </para>
     /// </remarks>
@@ -110,8 +111,7 @@ namespace Grow.Kernel.Loop {
             _executor.StopCoroutine(coroutine);
         }
 
-        /// <summary>Clears the static host references at the start of every play session.</summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        /// <summary>Clears the static host references; called by <see cref="Entry.GrowSession"/>.</summary>
         internal static void ResetStaticState() {
             PlayerLoopProfile.Uninstall();
             PlayerLoopProfile.ResetStaticState();
