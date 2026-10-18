@@ -22,7 +22,10 @@ namespace Grow.Tests.Editor.Lifecycle {
 
         [TearDown]
         public void TearDown() {
-            if (_live != null) _live.Dispose();
+            if (_live != null) {
+                _live.Dispose();
+            }
+
             _live = null;
             MonoManager.ResetStaticState();
             _executor?.Dispose();
@@ -221,11 +224,16 @@ namespace Grow.Tests.Editor.Lifecycle {
             private readonly List<string> _events = new List<string>();
 
             public string Join() {
-                if (_events.Count == 0) return string.Empty;
+                if (_events.Count == 0) {
+                    return string.Empty;
+                }
 
                 var builder = new StringBuilder();
                 for (var i = 0; i < _events.Count; i++) {
-                    if (i > 0) builder.Append(',');
+                    if (i > 0) {
+                        builder.Append(',');
+                    }
+
                     builder.Append(_events[i]);
                 }
 

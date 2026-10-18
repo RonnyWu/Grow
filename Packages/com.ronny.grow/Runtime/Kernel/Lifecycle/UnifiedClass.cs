@@ -51,7 +51,10 @@ namespace Grow.Kernel.Lifecycle {
         public bool Enabled {
             get => _enabled;
             set {
-                if (_enabled == value) return;
+                if (_enabled == value) {
+                    return;
+                }
+
                 _enabled = value;
                 ApplyEnabledState();
             }
@@ -66,7 +69,10 @@ namespace Grow.Kernel.Lifecycle {
 
         /// <summary>Detaches updates, runs <c>OnDestroyed</c> and detaches app events; idempotent.</summary>
         public void Dispose() {
-            if (_destroyed) return;
+            if (_destroyed) {
+                return;
+            }
+
             _destroyed = true;
 
             DetachUpdater();
@@ -88,16 +94,23 @@ namespace Grow.Kernel.Lifecycle {
         void ILifecycle.OnDestroyed() => OnDestroyed();
 
         void ILifecycle.OnAppFocus(bool hasFocus) {
-            if (_deliveredEnabled) OnAppFocus(hasFocus);
+            if (_deliveredEnabled) {
+                OnAppFocus(hasFocus);
+            }
         }
 
         void ILifecycle.OnAppPause(bool isPause) {
-            if (_deliveredEnabled) OnAppPause(isPause);
+            if (_deliveredEnabled) {
+                OnAppPause(isPause);
+            }
         }
 
         void ILifecycle.OnAppQuit() {
             OnAppQuit();
-            if (_deliveredEnabled) Enabled = false;
+            if (_deliveredEnabled) {
+                Enabled = false;
+            }
+
             Dispose();
         }
 
@@ -170,17 +183,23 @@ namespace Grow.Kernel.Lifecycle {
         void ILifecycleUpdateHooks.OnPostUpdate() => OnPostUpdate();
 
         private void ApplyEnabledState() {
-            if (_destroyed) return;
+            if (_destroyed) {
+                return;
+            }
 
             if (_enabled && !_deliveredEnabled) {
                 _deliveredEnabled = true;
                 OnEnabled();
-                if (!_enabled || _destroyed) return;
+                if (!_enabled || _destroyed) {
+                    return;
+                }
 
                 if (!_started) {
                     _started = true;
                     OnStart();
-                    if (!_enabled || _destroyed) return;
+                    if (!_enabled || _destroyed) {
+                        return;
+                    }
                 }
 
                 AttachUpdater();

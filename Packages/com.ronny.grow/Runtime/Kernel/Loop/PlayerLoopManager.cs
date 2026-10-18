@@ -108,7 +108,9 @@ namespace Grow.Kernel.Loop {
 
         /// <summary>Removes a managed system of <paramref name="systemType"/>.</summary>
         internal static void Remove(Type systemType) {
-            if (systemType == null) return;
+            if (systemType == null) {
+                return;
+            }
 
             if (!Installed.Remove(systemType)) {
                 GrowLog.Error($"Remove {systemType.Name} failed: system is not managed by Grow.", LogCategory);
@@ -151,7 +153,9 @@ namespace Grow.Kernel.Loop {
 
             var removedAny = false;
             foreach (var type in new List<Type>(Installed.Keys)) {
-                while (PlayerLoopGraph.TryRemove(ref systems, type)) removedAny = true;
+                while (PlayerLoopGraph.TryRemove(ref systems, type)) {
+                    removedAny = true;
+                }
             }
 
             if (removedAny) {
@@ -175,7 +179,9 @@ namespace Grow.Kernel.Loop {
         /// reload fallback.
         /// </remarks>
         internal static void RestoreOriginal() {
-            if (!_hasSnapshot) return;
+            if (!_hasSnapshot) {
+                return;
+            }
 
             PlayerLoop.SetPlayerLoop(_original);
             Installed.Clear();
@@ -187,7 +193,9 @@ namespace Grow.Kernel.Loop {
 
         /// <summary>Drops the snapshot when no managed system remains, so the next install re-snapshots.</summary>
         private static void ReleaseSnapshotIfIdle() {
-            if (Installed.Count == 0) ReleaseSnapshot();
+            if (Installed.Count == 0) {
+                ReleaseSnapshot();
+            }
         }
 
         private static void ReleaseSnapshot() {
@@ -215,7 +223,9 @@ namespace Grow.Kernel.Loop {
         internal static void ResetStaticState() {
             // A previous session may have left managed nodes behind when Domain Reload is disabled;
             // restoring the snapshot before forgetting the registry is the only way to find them.
-            if (_hasSnapshot) RestoreOriginal();
+            if (_hasSnapshot) {
+                RestoreOriginal();
+            }
 
             Installed.Clear();
             _original = default;

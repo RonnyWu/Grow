@@ -29,8 +29,13 @@ namespace Grow.Core.Events {
         /// </summary>
         /// <exception cref="ObjectDisposedException">The bag has already been disposed.</exception>
         public void Add(GrowSubscription subscription) {
-            if (_disposed) throw new ObjectDisposedException(nameof(SubscriptionBag));
-            if (!subscription.IsActive) return;
+            if (_disposed) {
+                throw new ObjectDisposedException(nameof(SubscriptionBag));
+            }
+
+            if (!subscription.IsActive) {
+                return;
+            }
 
             if (_items == null) {
                 _items = new GrowSubscription[4];
@@ -43,12 +48,20 @@ namespace Grow.Core.Events {
 
         /// <summary>Disposes every held token in reverse order; safe to call more than once.</summary>
         public void Dispose() {
-            if (_disposed) return;
+            if (_disposed) {
+                return;
+            }
+
             _disposed = true;
 
-            for (var i = _count - 1; i >= 0; i--) _items[i].Dispose();
+            for (var i = _count - 1; i >= 0; i--) {
+                _items[i].Dispose();
+            }
 
-            if (_items != null) Array.Clear(_items, 0, _count);
+            if (_items != null) {
+                Array.Clear(_items, 0, _count);
+            }
+
             _count = 0;
         }
     }

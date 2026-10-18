@@ -170,13 +170,16 @@ namespace Grow.Kernel.Entry {
         }
 
         private static void SetState(GrowState next) {
-            if (_state == next) return;
+            if (_state == next) {
+                return;
+            }
 
             var previous = _state;
             _state = next;
 
-            if (GrowLog.IsEnabled(LogLevel.Info))
+            if (GrowLog.IsEnabled(LogLevel.Info)) {
                 GrowLog.Info($"{previous} -> {next}", "Kernel");
+            }
 
             StateChangedPublisher.Publish(new StateChange(previous, next));
         }

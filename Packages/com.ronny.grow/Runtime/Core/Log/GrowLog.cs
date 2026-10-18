@@ -48,7 +48,9 @@ namespace Grow.Core.Log {
         /// be able to abort a lifecycle entry.
         /// </remarks>
         public static void Write(LogLevel level, string message, string category = null) {
-            if (level < MinimumLevel) return;
+            if (level < MinimumLevel) {
+                return;
+            }
 
             // Read the sink once: a swap must not be observed half-way through a write.
             var sink = _sink;

@@ -126,7 +126,10 @@ namespace Grow.Tests.Editor.Events {
             var onceCalls = 0;
             var subscribed = false;
             Action first = () => {
-                if (subscribed) return;
+                if (subscribed) {
+                    return;
+                }
+
                 subscribed = true;
                 _ = _event.SubscribeOnce(() => onceCalls++);
             };
@@ -210,7 +213,10 @@ namespace Grow.Tests.Editor.Events {
             var added = false;
             Action a = () => {
                 _log.Add("A");
-                if (added) return;
+                if (added) {
+                    return;
+                }
+
                 added = true;
                 _ = _event.Subscribe(Token("B"));
             };
@@ -232,7 +238,10 @@ namespace Grow.Tests.Editor.Events {
             var removed = false;
             Action a = () => {
                 _log.Add("A");
-                if (removed) return;
+                if (removed) {
+                    return;
+                }
+
                 removed = true;
                 subscription.Dispose();
             };
@@ -253,7 +262,10 @@ namespace Grow.Tests.Editor.Events {
             var cleared = false;
             Action a = () => {
                 _log.Add("A");
-                if (cleared) return;
+                if (cleared) {
+                    return;
+                }
+
                 cleared = true;
                 _publisher.Clear();
             };
@@ -287,7 +299,9 @@ namespace Grow.Tests.Editor.Events {
             var calls = 0;
             Action a = () => {
                 calls++;
-                if (calls == 1) _publisher.Publish();
+                if (calls == 1) {
+                    _publisher.Publish();
+                }
             };
             _ = _event.Subscribe(a);
 

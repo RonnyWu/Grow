@@ -33,7 +33,9 @@ namespace Grow.Tests.Editor.Modules {
         public int Count(string call) {
             var total = 0;
             for (var i = 0; i < _calls.Count; i++) {
-                if (string.Equals(_calls[i], call, StringComparison.Ordinal)) total++;
+                if (string.Equals(_calls[i], call, StringComparison.Ordinal)) {
+                    total++;
+                }
             }
 
             return total;
@@ -41,7 +43,9 @@ namespace Grow.Tests.Editor.Modules {
 
         public int IndexOf(string call) {
             for (var i = 0; i < _calls.Count; i++) {
-                if (string.Equals(_calls[i], call, StringComparison.Ordinal)) return i;
+                if (string.Equals(_calls[i], call, StringComparison.Ordinal)) {
+                    return i;
+                }
             }
 
             return -1;
@@ -82,7 +86,9 @@ namespace Grow.Tests.Editor.Modules {
         public virtual void OnRegister(IModuleContext context) {
             Phases.Add(context.Phase);
             Log.Add("Register:" + ModuleName);
-            if (ThrowOnRegister) throw new InvalidOperationException("probe register failure");
+            if (ThrowOnRegister) {
+                throw new InvalidOperationException("probe register failure");
+            }
         }
 
         public virtual void OnInitialize(IModuleContext context) {
@@ -93,7 +99,9 @@ namespace Grow.Tests.Editor.Modules {
         public virtual void OnStart(IModuleContext context) {
             Phases.Add(context.Phase);
             Log.Add("Start:" + ModuleName);
-            if (ThrowOnStart) throw new InvalidOperationException("probe start failure");
+            if (ThrowOnStart) {
+                throw new InvalidOperationException("probe start failure");
+            }
         }
 
         public virtual void OnStop() => Log.Add("Stop:" + ModuleName);
@@ -242,13 +250,17 @@ namespace Grow.Tests.Editor.Modules {
         public void OnInitialize() {
             InitializeCount++;
             _log.Add("SvcInit:" + _name);
-            if (ThrowOnInitialize) throw new InvalidOperationException("managed service initialize failure");
+            if (ThrowOnInitialize) {
+                throw new InvalidOperationException("managed service initialize failure");
+            }
         }
 
         public void OnStart() {
             StartCount++;
             _log.Add("SvcStart:" + _name);
-            if (ThrowOnStart) throw new InvalidOperationException("managed service start failure");
+            if (ThrowOnStart) {
+                throw new InvalidOperationException("managed service start failure");
+            }
         }
 
         public void OnDeinitialize() {
@@ -270,8 +282,13 @@ namespace Grow.Tests.Editor.Modules {
 
         public override void OnRegister(IModuleContext context) {
             base.OnRegister(context);
-            if (First != null) context.Register(First);
-            if (Second != null) context.Register(Second);
+            if (First != null) {
+                context.Register(First);
+            }
+
+            if (Second != null) {
+                context.Register(Second);
+            }
         }
     }
 
@@ -282,7 +299,9 @@ namespace Grow.Tests.Editor.Modules {
 
         public override void OnRegister(IModuleContext context) {
             base.OnRegister(context);
-            for (var i = 0; i < Services.Count; i++) context.Register(Services[i]);
+            for (var i = 0; i < Services.Count; i++) {
+                context.Register(Services[i]);
+            }
         }
     }
 
@@ -303,7 +322,9 @@ namespace Grow.Tests.Editor.Modules {
 
         public void OnStart() {
             StartCount++;
-            if (Late != null) _context.Register(Late);
+            if (Late != null) {
+                _context.Register(Late);
+            }
         }
 
         public void OnDeinitialize() => DeinitializeCount++;

@@ -32,16 +32,24 @@ namespace Grow.Kernel.Lifecycle {
         public static T Instance {
             get {
                 EnsureSession();
-                if (_appQuitting) return null;
+                if (_appQuitting) {
+                    return null;
+                }
 
                 var instance = _instance;
-                if (instance != null) return instance;
+                if (instance != null) {
+                    return instance;
+                }
 
                 lock (Gate) {
-                    if (_appQuitting) return null;
+                    if (_appQuitting) {
+                        return null;
+                    }
 
                     instance = _instance;
-                    if (instance != null) return instance;
+                    if (instance != null) {
+                        return instance;
+                    }
 
                     try {
                         instance = new T();
@@ -79,7 +87,9 @@ namespace Grow.Kernel.Lifecycle {
 
         private static void EnsureSession() {
             var generation = LifecycleSession.Generation;
-            if (_generation == generation) return;
+            if (_generation == generation) {
+                return;
+            }
 
             _generation = generation;
             _instance = null;
@@ -87,7 +97,10 @@ namespace Grow.Kernel.Lifecycle {
         }
 
         protected override void OnDestroyed() {
-            if (ReferenceEquals(_instance, this)) _instance = null;
+            if (ReferenceEquals(_instance, this)) {
+                _instance = null;
+            }
+
             base.OnDestroyed();
         }
 

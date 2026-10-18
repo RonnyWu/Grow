@@ -39,7 +39,10 @@ namespace Grow.Core.Events {
         /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <c>null</c>.</exception>
         /// <exception cref="ObjectDisposedException">The publisher has been disposed.</exception>
         public GrowSubscription Subscribe(Action handler) {
-            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            if (handler == null) {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
             return new GrowSubscription(_buffer, _buffer.Subscribe(handler));
         }
 
@@ -50,7 +53,10 @@ namespace Grow.Core.Events {
         /// <exception cref="ArgumentNullException"><paramref name="handler"/> is <c>null</c>.</exception>
         /// <exception cref="ObjectDisposedException">The publisher has been disposed.</exception>
         public GrowSubscription SubscribeOnce(Action handler) {
-            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            if (handler == null) {
+                throw new ArgumentNullException(nameof(handler));
+            }
+
             return new GrowSubscription(_buffer, _buffer.Subscribe(handler, true));
         }
 
@@ -98,7 +104,9 @@ namespace Grow.Core.Events {
             /// <summary>Publishes synchronously, in subscription order.</summary>
             /// <exception cref="InvalidOperationException">Called from a thread other than the owner thread, or the nesting cap was reached.</exception>
             public void Publish() {
-                if (_buffer.IsDisposed) return;
+                if (_buffer.IsDisposed) {
+                    return;
+                }
 
                 _buffer.AssertThread(nameof(Publish));
                 PublishCore();
@@ -106,7 +114,9 @@ namespace Grow.Core.Events {
 
             /// <summary>Removes every subscription but keeps the publisher usable.</summary>
             public void Clear() {
-                if (_buffer.IsDisposed) return;
+                if (_buffer.IsDisposed) {
+                    return;
+                }
 
                 _buffer.AssertThread(nameof(Clear));
                 _buffer.Clear();
@@ -119,20 +129,25 @@ namespace Grow.Core.Events {
             }
 
             private void PublishCore() {
-                if (_buffer.Depth >= MaxDepth)
+                if (_buffer.Depth >= MaxDepth) {
                     throw new InvalidOperationException(
                         $"GrowEvent.Publish exceeded the nesting cap ({MaxDepth}); " +
                         "a listener is probably publishing its own event without a stopping condition.");
+                }
 
                 var outermost = _buffer.Depth == 0;
                 ExceptionDispatchInfo fault = null;
                 _buffer.EnterDispatch();
                 try {
                     Dispatch();
-                    if (outermost) fault = _buffer.ConsumeFault();
+                    if (outermost) {
+                        fault = _buffer.ConsumeFault();
+                    }
                 } finally {
                     _buffer.ExitDispatch();
-                    if (outermost && fault == null) _buffer.ClearFault();
+                    if (outermost && fault == null) {
+                        _buffer.ClearFault();
+                    }
                 }
 
                 fault?.Throw();
@@ -145,9 +160,13 @@ namespace Grow.Core.Events {
                 for (var i = 0; i < count; i++) {
                     var slot = slots[i];
                     var handler = slot.Handler;
-                    if (handler == null || slot.Consumed) continue;
+                    if (handler == null || slot.Consumed) {
+                        continue;
+                    }
 
-                    if (slot.Once) _buffer.ConsumeOnce(i);
+                    if (slot.Once) {
+                        _buffer.ConsumeOnce(i);
+                    }
 
                     try {
                         handler();
