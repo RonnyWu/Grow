@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Grow.Editor.Settings` — reusable editor settings infrastructure: the standard settings-page
+  margin and label-width wrapper, YAML settings-asset load/save/delete helpers, and the
+  project/user settings paths. Adds read-only **Project Settings > Grow** and
+  **Preferences > Grow** pages that report package identity and current session state; no
+  persisted setting is exposed yet.
 - `Grow.Core` assembly — passive primitives, starting with `Grow.Core.Log`: the
   `GrowLog` facade, the `ILogSink` extension point, the `UnityLogSink` default
   sink, and the `LogEntry` / `LogLevel` value types.

@@ -26,6 +26,18 @@ Each layer depends only on the layers below it:
 | Kernel | Mechanisms — entry, modules, service registry, lifetime, loop |
 | Core | Passive primitives (e.g. logging); no third-party dependencies |
 
+## Editor settings
+
+The package registers two read-only pages:
+
+- **Edit > Project Settings > Grow** shows the package identity and the documentation path.
+- **Edit > Preferences > Grow** shows the current session log level, log sink, and kernel state.
+
+The pages are intentionally read-only until a setting has a real consumer. The reusable
+infrastructure lives in `Packages/com.ronny.grow/Editor/Settings`: the standard settings-page
+margin and label-width wrapper, YAML settings-asset load/save/delete helpers, and the
+project/user settings paths.
+
 ## Requirements
 
 - Unity **2022.3 LTS** (the `unity` field of `package.json`).
