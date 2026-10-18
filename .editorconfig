@@ -1,20 +1,20 @@
+root = true
 # EditorConfig — https://editorconfig.org
 #
 # The repository's shared baseline for file formatting and for the C# conventions
-# listed below. Editors apply it subject to their own support; what CI actually
-# enforces is exactly these two commands:
+# listed below. Editors apply it subject to their own support; what CI enforces
+# for formatting is exactly these two commands:
 #
 #   dotnet format whitespace ci/format/Grow.Format.csproj --verify-no-changes
-#   dotnet format style ci/format/Grow.Format.csproj --diagnostics IDE0073 IDE1006 --severity info --verify-no-changes
+#   dotnet format style ci/format/Grow.Format.csproj --diagnostics IDE0011 IDE0073 IDE1006 --severity info --verify-no-changes
 #
-# `--severity info` matters: the rules below are declared `suggestion` — including the
-# file-header rule, which `dotnet format whitespace` cannot add. Anything not listed
-# here is applied by the IDE alone.
+# `--severity info` matters: most of the rules below are declared `suggestion`,
+# including the file-header rule, which `dotnet format whitespace` cannot add.
+# Braces are the exception — IDE0011 is a `warning`, so a plain `dotnet format style`
+# also fixes them. Anything not listed here is applied by the IDE alone.
 #
 # Style: K&R braces, four-space indent, 100-column margin, a one-line SPDX header,
-# and the naming convention below.
-
-root = true
+# required braces, and the naming convention below.
 
 [*]
 charset = utf-8
@@ -51,11 +51,36 @@ csharp_new_line_before_finally = false
 csharp_new_line_before_members_in_object_initializers = false
 csharp_new_line_between_query_expression_clauses = false
 
-# `if (x) return;` and `{ get; }` stay on one line — the formatter must not expand
-# them into a block. Neither key governs *whether* braces are required, so a
-# brace-less single statement stays allowed and no brace preference is pinned here.
+# `{ get; }` and one-line blocks stay on one line; this is layout only.
 csharp_preserve_single_line_statements = true
 csharp_preserve_single_line_blocks = true
+
+# --- Braces: required ---------------------------------------------------------
+# Every statement that can carry a brace block must carry one: `if` / `else`,
+# `for`, `foreach`, `while`, `do`, `using`, `fixed`, `lock`. A brace-less
+# `if (x) return;` is a violation — the shape that turns into a
+# `goto fail`-class bug once a second statement is added under it.
+#
+# Two layers, because the two tools answer separately:
+#   * `csharp_prefer_braces` — Roslyn (IDE0011), so the IDE warns and
+#     `dotnet format style` adds the braces.
+#   * `resharper_braces_for_*` — JetBrains, so Rider's cleanup also adds them;
+#     `resharper_braces_redundant` stops it from removing braces that are already
+#     written.
+#
+# Note the asymmetry: an existing one-line block `if (x) { return; }` is kept on
+# one line (`csharp_preserve_single_line_blocks`), while Roslyn's fix for a
+# brace-less statement expands it into a three-line block.
+resharper_braces_redundant = false
+csharp_prefer_braces = true:warning
+resharper_braces_for_ifelse = required
+resharper_braces_for_for = required
+resharper_braces_for_foreach = required
+resharper_braces_for_while = required
+resharper_braces_for_dowhile = required
+resharper_braces_for_using = required
+resharper_braces_for_fixed = required
+resharper_braces_for_lock = required
 
 # --- Layout ------------------------------------------------------------------
 # Inside a `switch`, the `case` labels are indented one level and their contents
@@ -143,7 +168,8 @@ dotnet_naming_symbols.grow_locals.applicable_accessibilities = *
 
 # --- Not covered by CI --------------------------------------------------------
 # Applied by the IDE alone — either JetBrains-only (`resharper_*`) or impossible
-# for Roslyn to express, so this file does not reproduce them:
+# for Roslyn to express. Braces are the exception and are declared for both
+# toolchains above; everything below is not reproduced here:
 #
 #   private field names — Roslyn matches fields by accessibility and modifiers,
 #   never by attribute, so it cannot tell `[SerializeField] private float speed;`
