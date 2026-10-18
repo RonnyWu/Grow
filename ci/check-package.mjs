@@ -120,6 +120,17 @@ if (kernelRefs.length !== 1 || kernelRefs[0] !== "Grow.Core") {
     fail(`Grow.Kernel references must be exactly Grow.Core, got ${kernelRefs.join(", ")}`);
 }
 
+const editor = asmdef("Packages/com.ronny.grow/Editor/Grow.Editor.asmdef");
+const editorAllowed = new Set(["Grow.Core", "Grow.Kernel"]);
+for (const reference of editor.references ?? []) {
+    if (!editorAllowed.has(reference)) {
+        fail(`Grow.Editor has an unexpected reference: ${reference}`);
+    }
+}
+if (!(editor.includePlatforms ?? []).includes("Editor")) {
+    fail("Grow.Editor must include the Editor platform only");
+}
+
 const contracts = asmdef("Packages/com.ronny.grow.store.contracts/Runtime/Grow.Store.Contracts.asmdef");
 const contractAllowed = new Set(["Grow.Core", "Grow.Kernel"]);
 for (const reference of contracts.references ?? []) {
@@ -164,7 +175,14 @@ for (const storePackage of ["com.ronny.grow.store", "com.ronny.grow.store.contra
 for (const { relative, isDirectory } of walk(path.join(root, "Packages"))) {
     if (isDirectory || !relative.endsWith(".asmdef")) continue;
     const definition = asmdef(relative);
-    for (const reference of definition.references ?? []) {
+    const references = definition.references ?? [];
+    const includePlatforms = definition.includePlatforms ?? [];
+
+    if (!includePlatforms.includes("Editor") && references.includes("Grow.Editor")) {
+        fail(`runtime assembly references Grow.Editor: ${relative}`);
+    }
+
+    for (const reference of references) {
         if (reference.startsWith("Grow.Tests")) fail(`non-test assembly references ${reference}: ${relative}`);
     }
 }

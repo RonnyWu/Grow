@@ -1,0 +1,31 @@
+{
+    "schemaVersion": 1,
+    "language": "ru",
+    "languageName": "Русский",
+    "entries": [
+        { "key": "grow.settings.project.general.title", "value": "Общие" },
+        { "key": "grow.settings.project.general.help", "value": "На этой странице показан установленный пакет. Настройки проекта добавляются только тогда, когда их использует какая-либо функция." },
+        { "key": "grow.settings.project.package", "value": "Пакет" },
+        { "key": "grow.settings.project.displayName", "value": "Отображаемое имя" },
+        { "key": "grow.settings.project.version", "value": "Версия" },
+        { "key": "grow.settings.project.documentation", "value": "Документация" },
+        { "key": "grow.settings.project.revealDocumentation", "value": "Показать документацию" },
+        { "key": "grow.settings.project.openDocumentation", "value": "Открыть документацию" },
+        { "key": "grow.settings.project.description", "value": "Описание" },
+        { "key": "grow.settings.project.unresolved", "value": "Не удалось получить сведения о пакете com.ronny.grow." },
+        { "key": "grow.settings.preferences.general.title", "value": "Общие" },
+        { "key": "grow.settings.preferences.general.help", "value": "Язык следует за пользователем во всех проектах. Уровень журналирования действует только в текущем сеансе редактора." },
+        { "key": "grow.settings.preferences.language", "value": "Язык" },
+        { "key": "grow.settings.preferences.language.system", "value": "Системный" },
+        { "key": "grow.settings.preferences.session", "value": "Сеанс" },
+        { "key": "grow.settings.preferences.minimumLogLevel", "value": "Минимальный уровень журналирования" },
+        { "key": "grow.settings.preferences.minimumLogLevel.tooltip", "value": "Действует только в текущем сеансе редактора. В режиме Play сбрасывается на Info." },
+        { "key": "grow.settings.preferences.logSink", "value": "Вывод журнала" },
+        { "key": "grow.settings.preferences.resetToInfo", "value": "Сбросить на Info" },
+        { "key": "grow.settings.preferences.sessionNote", "value": "GrowLog сбрасывается на Info в начале каждого сеанса Play." },
+        { "key": "grow.settings.preferences.corrupted", "value": "Файл настроек Grow повреждён. До сброса используются значения по умолчанию." },
+        { "key": "grow.settings.preferences.newerSchema", "value": "Файл настроек Grow создан более новой версией. Он доступен только для чтения." },
+        { "key": "grow.settings.preferences.reset", "value": "Сбросить настройки" }
+    ],
+    "keywords": [ "grow", "настройки", "язык", "журнал" ]
+}
