@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
 
 // Package-level structural checks that dotnet format cannot see: Unity meta pairing,
-// SPDX headers, package/project version alignment, asmdef direction and accidental
-// Unity 6 writes into a 2022.3 project. Run from the repository root:
+// SPDX headers, package/project version alignment, embedded dependency versions,
+// asmdef direction and file-only Store persistence. Every folder under Packages/
+// with a package.json is treated as a first-party embedded package; registry packages
+// in Library/PackageCache are out of scope. Run from any directory:
 //   node ci/check-package.mjs
 
 import fs from "node:fs";
@@ -119,8 +121,11 @@ if (kernelRefs.length !== 1 || kernelRefs[0] !== "Grow.Core") {
 }
 
 const contracts = asmdef("Packages/com.ronny.grow.store.contracts/Runtime/Grow.Store.Contracts.asmdef");
-if ((contracts.references ?? []).length !== 0) {
-    fail("Grow.Store.Contracts must not reference another assembly");
+const contractAllowed = new Set(["Grow.Core", "Grow.Kernel"]);
+for (const reference of contracts.references ?? []) {
+    if (!contractAllowed.has(reference)) {
+        fail(`Grow.Store.Contracts has an unexpected reference: ${reference}`);
+    }
 }
 if (contracts.noEngineReferences !== true) {
     fail("Grow.Store.Contracts must set noEngineReferences to true");
@@ -134,7 +139,7 @@ for (const reference of store.references ?? []) {
     }
 }
 if (store.autoReferenced !== false) {
-    fail("Grow.Store must set autoReferenced to false; consumers opt in through the meta package");
+    fail("Grow.Store must set autoReferenced to false; consumers reference Grow.Store explicitly");
 }
 
 for (const { relative, isDirectory } of walk(
