@@ -6,6 +6,21 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "com.ronny.grow.store": {
+      "version": "file:com.ronny.grow.store",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.ronny.grow": "3.0.0-exp.1",
+        "com.ronny.grow.store.contracts": "3.0.0-exp.1"
+      }
+    },
+    "com.ronny.grow.store.contracts": {
+      "version": "file:com.ronny.grow.store.contracts",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.ai.navigation": {
       "version": "1.1.6",
       "depth": 0,

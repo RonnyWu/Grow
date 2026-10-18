@@ -419,8 +419,9 @@ InitTestScene*.unity*
 
 # `Documentation~` is the Unity package documentation folder (Unity ignores any
 # path ending in `~`, so it needs no .meta files). The `*~` rule in the Linux
-# block above would ignore it as well -- re-include the package's docs.
+# block above would ignore it as well -- re-include the package docs.
 !Packages/com.ronny.grow/Documentation~/
+!Packages/com.ronny.grow.store/Documentation~/
 
 # Secrets - never commit credentials
 .env
@@ -428,3 +429,6 @@ InitTestScene*.unity*
 !.env.example
 *.snk
 *.pfx
+
+# Grow store quarantine files (an unreadable .kv is moved aside, not deleted)
+*.corrupt-*

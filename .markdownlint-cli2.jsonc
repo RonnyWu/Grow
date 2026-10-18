@@ -12,11 +12,14 @@
     // The delimiter row `|---|---|` is the established style in this repository (README, CHANGELOG).
     "MD060": false
   },
-  // The package's table of contents is deliberately a list of links: Unity renders it, and it is
-  // not a page. Every other file opens with a level-1 heading.
+  // Package tables of contents are deliberately lists of links: Unity renders them, and they are
+  // not pages. Every other file opens with a level-1 heading.
   "overrides": [
     {
-      "filter": ["Packages/com.ronny.grow/Documentation~/TableOfContents.md"],
+      "filter": [
+        "Packages/com.ronny.grow/Documentation~/TableOfContents.md",
+        "Packages/com.ronny.grow.store/Documentation~/TableOfContents.md"
+      ],
       "config": { "MD041": false },
       "combine": "merge"
     }
