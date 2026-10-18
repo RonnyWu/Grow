@@ -10,14 +10,14 @@ using UnityEngine;
 
 namespace Grow.Kernel.Entry {
     /// <summary>
-    /// The single <c>SubsystemRegistration</c> entry that clears static session state.
+    /// The kernel-side <c>SubsystemRegistration</c> entry that clears static session state.
     /// </summary>
     /// <remarks>
-    /// Unity runs every <c>SubsystemRegistration</c> callback in an unspecified order. Keeping one
-    /// callback here makes the order explicit and prevents a new kernel subsystem from adding a
-    /// tenth competing hook. The sequence clears composition flags, the IOC root, lifecycle
-    /// bindings, the loop host and the player-loop registry before clearing logging and pooling
-    /// statics.
+    /// Unity runs every <c>SubsystemRegistration</c> callback in an unspecified order. Keeping the
+    /// kernel's resets here makes their order explicit; Core primitives may keep their own hooks
+    /// because they cannot depend on the kernel. The sequence clears composition flags, the IOC
+    /// root, lifecycle bindings, the loop host and the player-loop registry before clearing logging
+    /// and pooling statics.
     /// <para>
     /// Capabilities are deliberately absent: a capability owns its runtime state in its module and
     /// releases it through <c>IModule.OnDispose</c>. The composition root settles the module registry

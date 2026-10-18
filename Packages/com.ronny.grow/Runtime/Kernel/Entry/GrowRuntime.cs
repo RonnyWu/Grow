@@ -13,7 +13,7 @@ namespace Grow.Kernel.Entry {
     /// Internal on purpose: <see cref="GrowBoot"/> is the public face, so callers cannot reach
     /// around it.
     /// <para>
-    /// v1 is driven by hand — tests today, <c>IGrowBootstrapper</c> later. Nothing is started
+    /// The runtime is driven by hand: tests today, and the composition root in a game. Nothing is started
     /// automatically: <see cref="ResetStaticState"/> only <em>invalidates</em> state at the start of
     /// a play session, it never begins a cycle.
     /// </para>
@@ -201,7 +201,5 @@ namespace Grow.Kernel.Entry {
             return new InvalidOperationException(
                 $"{entry}() cannot run after Shutdown(); call Reset() to start a new cycle.");
         }
-
-        /// <summary>Invalidates the static state; called by <see cref="GrowSession"/>.</summary>
     }
 }

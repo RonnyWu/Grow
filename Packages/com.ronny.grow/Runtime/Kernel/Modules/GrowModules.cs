@@ -66,11 +66,14 @@ namespace Grow.Kernel.Modules {
         }
 
         /// <summary>
-        /// Drops the registry; intended for tests and hosts that explicitly reset a session. The static
-        /// facade intentionally has no automatic <c>SubsystemRegistration</c> hook: modules are commonly
-        /// registered in that same load phase, where hook order is unspecified. The composition root
-        /// owns the composition lifecycle and settles an old registry before bootstrapping.
+        /// Stops started modules and replaces the registry with an empty one.
         /// </summary>
+        /// <remarks>
+        /// Intended for tests and hosts that explicitly reset a session. A started module receives
+        /// <c>OnStop</c> and <c>OnDispose</c> before the registry is replaced. The static facade has no
+        /// automatic <c>SubsystemRegistration</c> hook: modules are commonly registered in that same
+        /// load phase, where hook order is unspecified.
+        /// </remarks>
         public static void Reset() {
             ResetStaticState();
         }

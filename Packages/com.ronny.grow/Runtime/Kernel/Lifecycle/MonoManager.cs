@@ -63,7 +63,9 @@ namespace Grow.Kernel.Lifecycle {
         /// <summary>Raised before scene scripts update.</summary>
         public GrowEvent PreUpdate => Get(executor => executor.PreUpdate, nameof(PreUpdate));
 
-        /// <summary>Raised after the fixed-update group.</summary>
+        /// <summary>
+        /// Raised inside Unity's FixedUpdate group, after <c>ScriptRunBehaviourFixedUpdate</c>.
+        /// </summary>
         public GrowEvent FixedUpdate => Get(executor => executor.FixedUpdate, nameof(FixedUpdate));
 
         /// <summary>Raised after scene scripts update.</summary>

@@ -218,9 +218,10 @@ namespace Grow.Kernel.Loop {
         }
 
         private static void OnEditorPlayModeStateChanged(UnityEditor.PlayModeStateChange state) {
-            if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode
-                || state == UnityEditor.PlayModeStateChange.ExitingEditMode)
+            if (state == UnityEditor.PlayModeStateChange.ExitingPlayMode ||
+                state == UnityEditor.PlayModeStateChange.ExitingEditMode) {
                 RestoreOriginal();
+            }
         }
 #endif
 

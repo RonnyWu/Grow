@@ -9,10 +9,11 @@ namespace Grow.Kernel.Loop {
     /// Installs the five Grow frame phases into Unity's player loop.
     /// </summary>
     /// <remarks>
-    /// The phase table is fixed: PreUpdate before the update group, FixedUpdate after the fixed
-    /// group, Update after scene scripts update, PostUpdate after the whole update group, and
-    /// LateUpdate after scene scripts late-update. Each injected callback checks that the host is
-    /// still alive before raising its event, so a destroyed host cannot throw from the player loop.
+    /// The phase table is fixed: PreUpdate before the update group, FixedUpdate inside the
+    /// FixedUpdate group after <c>ScriptRunBehaviourFixedUpdate</c>, Update after scene scripts
+    /// update, PostUpdate after the whole update group, and LateUpdate after scene scripts
+    /// late-update. Each injected callback checks that the host is still alive before raising its
+    /// event, so a destroyed host cannot throw from the player loop.
     /// <para>
     /// Install is all-or-nothing: if any anchor is missing, systems installed by this profile are
     /// removed again and the method returns false.
@@ -91,10 +92,11 @@ namespace Grow.Kernel.Loop {
 
         private static MonoExecutor _owner;
 
-        /// <summary>True while the profile's phases are installed.</summary>
+        /// <summary>True while an owner is recorded for the profile.</summary>
         internal static bool Installed => _owner != null;
 
         /// <summary>Installs all phases for <paramref name="executor"/>; false if an anchor is missing.</summary>
+        /// <exception cref="System.Exception">An install step threw; any inserted phases are removed first.</exception>
         internal static bool Install(MonoExecutor executor) {
             if (executor == null) {
                 GrowLog.Error("PlayerLoop profile install failed: executor is null.", LogCategory);
@@ -140,9 +142,10 @@ namespace Grow.Kernel.Loop {
         }
 
         /// <summary>
-        /// Removes the profile's phases. A non-null <paramref name="expectedOwner"/> only uninstalls
-        /// when it is still the owner, so a late <c>OnDestroy</c> from an old host cannot tear down a
-        /// profile that already belongs to its replacement.
+        /// Removes the profile's phases. A non-null <paramref name="expectedOwner"/> is ignored when
+        /// another owner has replaced it, so a late <c>OnDestroy</c> cannot tear down a profile that
+        /// belongs to its replacement. When no owner is recorded, the cleanup still runs: a failed
+        /// install can leave phases behind before the owner is stored.
         /// </summary>
         internal static void Uninstall(MonoExecutor expectedOwner = null) {
             if (!ReferenceEquals(expectedOwner, null) &&

@@ -77,10 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   modules in a fixed order, and shuts them down in reverse ownership order.
   Initialize / shutdown are idempotent; a failed initialization performs best-effort
   cleanup and rethrows.
-- `Grow.Kernel.Entry.GrowSession` — the single `SubsystemRegistration` entry. It resets
+- `Grow.Kernel.Entry.GrowSession` — the kernel-side `SubsystemRegistration` entry. It resets
   `GrowApp`, `GrowRuntime`, `IOC`, `MonoManager`, `LifecycleSession`, `GrowLoop`,
-  `PlayerLoopManager`, `GrowLog` and `StringBuilderPool` in a fixed order; capabilities own
-  their runtime state in their module and are not part of this hook.
+  `PlayerLoopManager`, `GrowLog` and `StringBuilderPool` in a fixed order; Core primitives may
+  keep their own hooks because they cannot depend on the kernel.
 - EditMode tests for both assemblies and PlayMode coverage for automatic startup and a
   same-frame restart.
 
@@ -109,9 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   keeps its generation and cannot be judged without the map. `SlotMap` now wraps a slot's
   generation back to 1 instead of producing a zero/negative generation, and documents that a
   foreign handle is not detected.
-- **Behavior (session):** `GrowApp.Shutdown()` now keeps the registered module table for a
-  same-session restart; `SettleForSessionEnd()` (Play Mode exit) and a failed bootstrap drop
-  it. `GrowModules.Reset()` is the public explicit reset.
+- `GrowModules.Reset()` is now a public explicit reset: it shuts down started modules before
+  replacing the registry, and a failed initialization also resets the registry.
 
 ### Fixed
 
@@ -119,9 +118,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `Uninstall` still cleans up when the owner was never recorded, so a failed install
   cannot leave Grow systems in the player loop. `PlayerLoopManager` records a system before
   applying it, so cleanup can find it even when `SetPlayerLoop` throws.
-- `GrowApp.Shutdown` no longer drops the module registry; `Shutdown` followed by
-  `Initialize` restarts the registered modules. `SettleForSessionEnd` drops the registry so
-  the next Play session can register fresh instances with the same names.
 - `OnFixedUpdate` is inserted inside Unity's `FixedUpdate` group instead of as a top-level
   sibling, so it runs once per fixed step rather than once per frame.
 - `MonoManager.Bind` replays application subscriptions and enabled updater bindings, so a

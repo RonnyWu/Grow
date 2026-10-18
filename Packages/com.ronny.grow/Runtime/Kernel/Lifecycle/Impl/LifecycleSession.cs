@@ -29,7 +29,10 @@ namespace Grow.Kernel.Lifecycle.Impl {
             MainThreadId = Environment.CurrentManagedThreadId;
         }
 
-        /// <summary>Advances the generation; called by <c>GrowSession</c> and by session tests.</summary>
+        /// <summary>
+        /// Advances the generation and records the calling thread as the session main thread; call it
+        /// only from the main thread. Called by <c>GrowSession</c> and by session tests.
+        /// </summary>
         internal static void ResetForSession() {
             Generation++;
             MainThreadId = Environment.CurrentManagedThreadId;

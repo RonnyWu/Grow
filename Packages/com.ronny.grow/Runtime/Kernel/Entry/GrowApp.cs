@@ -16,8 +16,10 @@ namespace Grow.Kernel.Entry {
     /// </summary>
     /// <remarks>
     /// Initialization order is fixed: <see cref="GrowBoot.Reset"/>, <see cref="GrowLoop.Install"/>,
-    /// <see cref="MonoManager.Bind"/>, <see cref="GrowModules.Bootstrap"/>, <see cref="GrowBoot.Install"/>,
-    /// then <see cref="GrowBoot.Boot"/>. The Installed notification is published only after the
+    /// <see cref="MonoManager.Bind"/>, <see cref="GrowModules.Shutdown"/>,
+    /// <see cref="GrowModules.Bootstrap"/>, <see cref="GrowBoot.Install"/>, then
+    /// <see cref="GrowBoot.Boot"/>. The defensive shutdown settles a module table left by a previous
+    /// session before the new bootstrap. The Installed notification is published only after the
     /// modules have started, so an observer never sees Installed while the module graph is still
     /// coming up. Shutdown reverses the ownership order: modules first (they may use the loop), then
     /// the manager binding, the loop host and the boot state.
