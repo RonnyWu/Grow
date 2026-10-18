@@ -1,0 +1,23 @@
+{
+  "name": "com.ronny.grow.store.contracts",
+  "displayName": "Grow Store Contracts",
+  "version": "3.0.0-exp.1",
+  "unity": "2022.3",
+  "description": "Persistence contract for Grow: a file-backed key/value store.",
+  "keywords": [
+    "grow",
+    "store",
+    "contracts",
+    "persistence"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Ronny Wu",
+    "url": "https://github.com/RonnyWu"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RonnyWu/Grow.git"
+  },
+  "dependencies": {}
+}
