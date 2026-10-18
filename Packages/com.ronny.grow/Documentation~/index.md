@@ -28,15 +28,16 @@ Each layer depends only on the layers below it:
 
 ## Editor settings
 
-The package registers two read-only pages:
+The package registers two pages:
 
-- **Edit > Project Settings > Grow** shows the package identity and the documentation path.
-- **Edit > Preferences > Grow** shows the current session log level, log sink, and kernel state.
+- **Edit > Project Settings... > Grow > General** shows the installed package identity and a
+  shortcut to the package documentation.
+- **Edit > Preferences > Grow > General** sets the minimum log level for the current editor
+  session, with a button to reset it to `Info`.
 
-The pages are intentionally read-only until a setting has a real consumer. The reusable
-infrastructure lives in `Packages/com.ronny.grow/Editor/Settings`: the standard settings-page
-margin and label-width wrapper, YAML settings-asset load/save/delete helpers, and the
-project/user settings paths.
+Both pages are intentionally minimal. Project-level settings are added only when a feature
+consumes them; user preferences are added only when a value needs to survive a restart. The
+log level is session state: `GrowLog` resets it to `Info` at the start of each play session.
 
 ## Requirements
 

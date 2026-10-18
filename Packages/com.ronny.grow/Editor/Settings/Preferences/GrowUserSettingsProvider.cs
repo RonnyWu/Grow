@@ -1,29 +1,30 @@
 // SPDX-License-Identifier: MIT
 
 using Grow.Core.Log;
-using Grow.Kernel.Entry;
 using UnityEditor;
 using UnityEngine;
 
 namespace Grow.Editor.Settings.Preferences {
     /// <summary>
-    /// Read-only <b>Preferences &gt; Grow</b> page.
+    /// <b>Preferences &gt; Grow &gt; General</b> page.
     /// </summary>
     /// <remarks>
-    /// The page reports session state that the kernel already owns. It deliberately exposes no
-    /// persisted user setting yet; a setting is added only when a feature consumes it.
+    /// The page exposes one real session setting: the minimum log level. It is not persisted;
+    /// <see cref="GrowLog.Reset"/> restores the default at the start of every play session.
+    /// Persisted user settings are added only when a feature consumes them.
     /// </remarks>
     internal sealed class GrowUserSettingsProvider : GrowSettingsProviderBase {
+        internal const string ProviderPath = "Preferences/Grow/General";
+
         private GrowUserSettingsProvider(string path, SettingsScope scope) : base(path, scope) {
         }
 
-        /// <summary>Registers the page under <b>Preferences &gt; Grow</b>.</summary>
+        /// <summary>Registers the page under <b>Preferences &gt; Grow &gt; General</b>.</summary>
         [SettingsProvider]
         public static SettingsProvider Create() {
-            return new GrowUserSettingsProvider(
-                GrowSettingsConstants.UserProviderPath, SettingsScope.User) {
+            return new GrowUserSettingsProvider(ProviderPath, SettingsScope.User) {
                 label = "Grow",
-                keywords = GrowSettingsConstants.Keywords
+                keywords = new[] { "grow", "log" }
             };
         }
 
@@ -31,25 +32,33 @@ namespace Grow.Editor.Settings.Preferences {
         protected override void DrawContent(string searchContext) {
             EditorGUILayout.LabelField("Grow", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "This page is read-only. User-level settings are added only when a feature " +
-                "consumes them.", MessageType.Info);
+                "This page only contains session state. Persisted user settings are added only " +
+                "when a feature consumes them.", MessageType.Info);
 
             EditorGUILayout.Space(8);
             EditorGUILayout.LabelField("Session", EditorStyles.boldLabel);
 
-            DrawValue("Log level", GrowLog.MinimumLevel.ToString());
-            DrawValue("Log sink", GrowLog.Sink.GetType().Name);
-            DrawValue("Kernel initialized", GrowApp.IsInitialized ? "Yes" : "No");
-            DrawValue("Auto initialize", GrowApp.AutoInitialize ? "Enabled" : "Disabled");
+            var current = GrowLog.MinimumLevel;
+            var next = (LogLevel)EditorGUILayout.EnumPopup(
+                new GUIContent(
+                    "Minimum log level",
+                    "Applies to this editor session only. Play Mode resets it to Info."),
+                current);
+
+            if (next != current) {
+                GrowLog.MinimumLevel = next;
+            }
+
+            GrowSettingsUi.DrawValue("Log sink", GrowLog.Sink.GetType().Name);
+
+            if (GUILayout.Button("Reset to Info")) {
+                GrowLog.MinimumLevel = LogLevel.Info;
+            }
 
             EditorGUILayout.Space(8);
             EditorGUILayout.HelpBox(
                 "GrowLog resets to Info at the start of each play session.",
                 MessageType.None);
-        }
-
-        private static void DrawValue(string label, string value) {
-            EditorGUILayout.LabelField(label, string.IsNullOrEmpty(value) ? "-" : value);
         }
     }
 }
