@@ -79,8 +79,13 @@ namespace Grow.Kernel.Lifecycle {
 
         /// <summary>Binds the engine host; internal composition-root entry.</summary>
         internal void Bind(IMonoExecutor executor) {
-            if (executor == null) return;
-            if (ReferenceEquals(_executor, executor)) return;
+            if (executor == null) {
+                return;
+            }
+
+            if (ReferenceEquals(_executor, executor)) {
+                return;
+            }
 
             ClearAppBindings();
             _executor = executor;
@@ -122,7 +127,9 @@ namespace Grow.Kernel.Lifecycle {
         /// Subscribes the target to quit, focus and pause. The call is all-or-nothing and retryable.
         /// </summary>
         public bool AttachApp(ILifecycle target) {
-            if (target == null) return false;
+            if (target == null) {
+                return false;
+            }
 
             if (!Valid) {
                 // Drop a stale binding left by a host that was destroyed before detaching.
@@ -131,12 +138,16 @@ namespace Grow.Kernel.Lifecycle {
                 return false;
             }
 
-            if (_appBindings.TryGetValue(target, out _)) return true;
+            if (_appBindings.TryGetValue(target, out _)) {
+                return true;
+            }
 
             var appQuit = AppQuit;
             var appFocus = AppFocus;
             var appPause = AppPause;
-            if (appQuit == null || appFocus == null || appPause == null) return false;
+            if (appQuit == null || appFocus == null || appPause == null) {
+                return false;
+            }
 
             var subscriptions = new SubscriptionBag();
             try {
@@ -159,7 +170,9 @@ namespace Grow.Kernel.Lifecycle {
 
         /// <summary>Releases the target's application subscriptions; safe to repeat.</summary>
         public void DetachApp(ILifecycle target) {
-            if (target == null) return;
+            if (target == null) {
+                return;
+            }
 
             if (_appBindings.TryGetValue(target, out var subscriptions)) {
                 _appBindings.Remove(target);
@@ -188,7 +201,10 @@ namespace Grow.Kernel.Lifecycle {
         }
 
         private void LogUnavailable(string accessorName) {
-            if (_executorUnavailableLogged) return;
+            if (_executorUnavailableLogged) {
+                return;
+            }
+
             _executorUnavailableLogged = true;
             GrowLog.Error(
                 $"[MonoManager] The loop executor is unavailable; cannot access {accessorName}. " +
@@ -197,7 +213,10 @@ namespace Grow.Kernel.Lifecycle {
         }
 
         private void ClearAppBindings() {
-            foreach (var pair in _appBindings) pair.Value.Dispose();
+            foreach (var pair in _appBindings) {
+                pair.Value.Dispose();
+            }
+
             _appBindings = new ConditionalWeakTable<ILifecycle, SubscriptionBag>();
         }
 

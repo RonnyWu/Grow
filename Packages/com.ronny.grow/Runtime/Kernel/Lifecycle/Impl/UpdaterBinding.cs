@@ -78,8 +78,13 @@ namespace Grow.Kernel.Lifecycle.Impl {
         /// <summary>Subscribes every declared phase that is not attached yet.</summary>
         public void Attach() {
             var epoch = CurrentEpoch;
-            if (_attachedEpoch != epoch) Detach();
-            if (Attached) return;
+            if (_attachedEpoch != epoch) {
+                Detach();
+            }
+
+            if (Attached) {
+                return;
+            }
 
             var manager = _manager;
             if (manager == null || !manager.Valid) {
@@ -88,23 +93,33 @@ namespace Grow.Kernel.Lifecycle.Impl {
             }
 
             if (Has(UpdateFlag.FixedUpdate) && !_fixedUpdateAttached) {
-                if (!TryAttach(manager.FixedUpdate, FixedUpdateAction, ref _fixedUpdateAttached)) return;
+                if (!TryAttach(manager.FixedUpdate, FixedUpdateAction, ref _fixedUpdateAttached)) {
+                    return;
+                }
             }
 
             if (Has(UpdateFlag.PreUpdate) && !_preUpdateAttached) {
-                if (!TryAttach(manager.PreUpdate, PreUpdateAction, ref _preUpdateAttached)) return;
+                if (!TryAttach(manager.PreUpdate, PreUpdateAction, ref _preUpdateAttached)) {
+                    return;
+                }
             }
 
             if (Has(UpdateFlag.Update) && !_updateAttached) {
-                if (!TryAttach(manager.Update, UpdateAction, ref _updateAttached)) return;
+                if (!TryAttach(manager.Update, UpdateAction, ref _updateAttached)) {
+                    return;
+                }
             }
 
             if (Has(UpdateFlag.LateUpdate) && !_lateUpdateAttached) {
-                if (!TryAttach(manager.LateUpdate, LateUpdateAction, ref _lateUpdateAttached)) return;
+                if (!TryAttach(manager.LateUpdate, LateUpdateAction, ref _lateUpdateAttached)) {
+                    return;
+                }
             }
 
             if (Has(UpdateFlag.PostUpdate) && !_postUpdateAttached) {
-                if (!TryAttach(manager.PostUpdate, PostUpdateAction, ref _postUpdateAttached)) return;
+                if (!TryAttach(manager.PostUpdate, PostUpdateAction, ref _postUpdateAttached)) {
+                    return;
+                }
             }
 
             _unavailableWarned = false;
@@ -162,7 +177,10 @@ namespace Grow.Kernel.Lifecycle.Impl {
         }
 
         private void WarnUnavailable() {
-            if (_unavailableWarned) return;
+            if (_unavailableWarned) {
+                return;
+            }
+
             _unavailableWarned = true;
             GrowLog.Warning(
                 "[UpdaterBinding] The lifecycle updater is unavailable; update callbacks were not " +

@@ -23,10 +23,15 @@ namespace Grow.Tests.Editor.Events {
                 }
 
                 var iterations = IterationsFor(size);
-                for (var i = 0; i < 200; i++) publisher.Publish();
+                for (var i = 0; i < 200; i++) {
+                    publisher.Publish();
+                }
 
                 var stopwatch = Stopwatch.StartNew();
-                for (var i = 0; i < iterations; i++) publisher.Publish();
+                for (var i = 0; i < iterations; i++) {
+                    publisher.Publish();
+                }
+
                 stopwatch.Stop();
 
                 var nsPerPublish = stopwatch.Elapsed.TotalMilliseconds * 1_000_000.0 / iterations;
@@ -102,11 +107,16 @@ namespace Grow.Tests.Editor.Events {
         [Test]
         public void EmptyPublish_ThreadAssertOverhead() {
             var publisher = new GrowEvent.Publisher();
-            for (var i = 0; i < 1000; i++) publisher.Publish();
+            for (var i = 0; i < 1000; i++) {
+                publisher.Publish();
+            }
 
             var stopwatch = Stopwatch.StartNew();
             const int iterations = 200000;
-            for (var i = 0; i < iterations; i++) publisher.Publish();
+            for (var i = 0; i < iterations; i++) {
+                publisher.Publish();
+            }
+
             stopwatch.Stop();
 
             var nsPerPublish = stopwatch.Elapsed.TotalMilliseconds * 1_000_000.0 / iterations;
@@ -125,12 +135,20 @@ namespace Grow.Tests.Editor.Events {
                 handlers[i] = () => sink[index]++;
             }
 
-            for (var i = 0; i < size; i++) _ = publisher.Event.Subscribe(handlers[i]);
-            for (var i = 0; i < 100; i++) publisher.Publish();
+            for (var i = 0; i < size; i++) {
+                _ = publisher.Event.Subscribe(handlers[i]);
+            }
+
+            for (var i = 0; i < 100; i++) {
+                publisher.Publish();
+            }
 
             var before = GC.GetAllocatedBytesForCurrentThread();
             const int publishes = 10000;
-            for (var i = 0; i < publishes; i++) publisher.Publish();
+            for (var i = 0; i < publishes; i++) {
+                publisher.Publish();
+            }
+
             var publishBytes = GC.GetAllocatedBytesForCurrentThread() - before;
 
             for (var i = 0; i < size; i++) {
@@ -152,10 +170,22 @@ namespace Grow.Tests.Editor.Events {
         }
 
         private static int IterationsFor(int size) {
-            if (size <= 4) return 200000;
-            if (size <= 16) return 100000;
-            if (size <= 64) return 20000;
-            if (size <= 256) return 5000;
+            if (size <= 4) {
+                return 200000;
+            }
+
+            if (size <= 16) {
+                return 100000;
+            }
+
+            if (size <= 64) {
+                return 20000;
+            }
+
+            if (size <= 256) {
+                return 5000;
+            }
+
             return 1000;
         }
     }

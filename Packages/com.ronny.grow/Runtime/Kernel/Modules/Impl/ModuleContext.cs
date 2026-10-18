@@ -43,7 +43,9 @@ namespace Grow.Kernel.Modules.Impl {
 
         /// <inheritdoc />
         public void Register<T>(T instance) where T : class {
-            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance == null) {
+                throw new ArgumentNullException(nameof(instance));
+            }
 
             ManagedEntry entry;
             var type = typeof(T);
@@ -53,12 +55,16 @@ namespace Grow.Kernel.Modules.Impl {
                 entry = TrackManagedLocked(instance, fromLazy: false);
             }
 
-            if (entry != null && Phase == ModulePhase.Running) DriveImmediate(entry);
+            if (entry != null && Phase == ModulePhase.Running) {
+                DriveImmediate(entry);
+            }
         }
 
         /// <inheritdoc />
         public void RegisterLazy<T>(Func<T> factory) where T : class {
-            if (factory == null) throw new ArgumentNullException(nameof(factory));
+            if (factory == null) {
+                throw new ArgumentNullException(nameof(factory));
+            }
 
             lock (_gate) {
                 _owned.Add(typeof(T));
@@ -81,7 +87,9 @@ namespace Grow.Kernel.Modules.Impl {
         }
 
         private void TrackResolved<T>(T instance) where T : class {
-            if (instance == null) return;
+            if (instance == null) {
+                return;
+            }
 
             ManagedEntry managed = null;
             lock (_gate) {
@@ -90,7 +98,9 @@ namespace Grow.Kernel.Modules.Impl {
                 }
             }
 
-            if (managed != null && Phase == ModulePhase.Running) DriveImmediate(managed);
+            if (managed != null && Phase == ModulePhase.Running) {
+                DriveImmediate(managed);
+            }
         }
 
         /// <summary>Returns the registry-wide shared lifecycle scope.</summary>
@@ -106,7 +116,10 @@ namespace Grow.Kernel.Modules.Impl {
         internal IReadOnlyList<object> DriveManagedInitialize() {
             var failed = new List<object>();
             var entries = SnapshotManaged();
-            for (var i = 0; i < entries.Length; i++) DriveInitializeEntry(entries[i], failed);
+            for (var i = 0; i < entries.Length; i++) {
+                DriveInitializeEntry(entries[i], failed);
+            }
+
             return failed;
         }
 
@@ -121,11 +134,16 @@ namespace Grow.Kernel.Modules.Impl {
             for (var pass = 0; pass < maxPasses; pass++) {
                 var entries = SnapshotManaged();
                 for (var i = 0; i < entries.Length; i++) {
-                    if (!DriveInitializeEntry(entries[i], failed)) continue;
+                    if (!DriveInitializeEntry(entries[i], failed)) {
+                        continue;
+                    }
+
                     DriveStartEntry(entries[i], failed);
                 }
 
-                if (SnapshotManaged().Length == entries.Length) return failed;
+                if (SnapshotManaged().Length == entries.Length) {
+                    return failed;
+                }
             }
 
             GrowLog.Error(
@@ -164,7 +182,10 @@ namespace Grow.Kernel.Modules.Impl {
         /// <summary>Removes this context's registrations and managed entries before the next bootstrap.</summary>
         internal void ResetForNextBootstrap() {
             lock (_gate) {
-                foreach (var type in _owned) _services.Remove(type, string.Empty);
+                foreach (var type in _owned) {
+                    _services.Remove(type, string.Empty);
+                }
+
                 _owned.Clear();
                 _managed.Clear();
                 _managedSet.Clear();
@@ -181,8 +202,13 @@ namespace Grow.Kernel.Modules.Impl {
         }
 
         private ManagedEntry TrackManagedLocked(object instance, bool fromLazy) {
-            if (!IsManaged(instance)) return null;
-            if (!_managedSet.Add(instance)) return null;
+            if (!IsManaged(instance)) {
+                return null;
+            }
+
+            if (!_managedSet.Add(instance)) {
+                return null;
+            }
 
             var entry = new ManagedEntry(instance, fromLazy);
             _managed.Add(entry);
@@ -190,23 +216,35 @@ namespace Grow.Kernel.Modules.Impl {
         }
 
         private void UntrackManagedLocked(object instance) {
-            if (instance == null) return;
-            if (!_managedSet.Remove(instance)) return;
+            if (instance == null) {
+                return;
+            }
+
+            if (!_managedSet.Remove(instance)) {
+                return;
+            }
 
             for (var i = _managed.Count - 1; i >= 0; i--) {
-                if (!ReferenceEquals(_managed[i].Instance, instance)) continue;
+                if (!ReferenceEquals(_managed[i].Instance, instance)) {
+                    continue;
+                }
+
                 _managed.RemoveAt(i);
                 return;
             }
         }
 
         private ManagedEntry[] SnapshotManaged() {
-            lock (_gate) return _managed.ToArray();
+            lock (_gate) {
+                return _managed.ToArray();
+            }
         }
 
         private void DriveImmediate(ManagedEntry entry) {
             var failed = new List<object>();
-            if (DriveInitializeEntry(entry, failed)) DriveStartEntry(entry, failed);
+            if (DriveInitializeEntry(entry, failed)) {
+                DriveStartEntry(entry, failed);
+            }
 
             for (var i = 0; i < failed.Count; i++) {
                 ReportFailure(
@@ -217,7 +255,10 @@ namespace Grow.Kernel.Modules.Impl {
         }
 
         private bool DriveInitializeEntry(ManagedEntry entry, List<object> failed) {
-            if (entry.InitializeDriven) return entry.InitializeSucceeded;
+            if (entry.InitializeDriven) {
+                return entry.InitializeSucceeded;
+            }
+
             entry.InitializeDriven = true;
 
             if (!(entry.Instance is IInitializable initializable)) {
@@ -240,11 +281,19 @@ namespace Grow.Kernel.Modules.Impl {
         }
 
         private void DriveStartEntry(ManagedEntry entry, List<object> failed) {
-            if (entry.StartDriven) return;
-            if (!entry.InitializeSucceeded) return;
+            if (entry.StartDriven) {
+                return;
+            }
+
+            if (!entry.InitializeSucceeded) {
+                return;
+            }
+
             entry.StartDriven = true;
 
-            if (!(entry.Instance is IStartable startable)) return;
+            if (!(entry.Instance is IStartable startable)) {
+                return;
+            }
 
             try {
                 startable.OnStart();

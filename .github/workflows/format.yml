@@ -20,5 +20,5 @@ jobs:
           dotnet-version: 8.0.x
       - name: Whitespace (.editorconfig, K&R)
         run: dotnet format whitespace ci/format/Grow.Format.csproj --verify-no-changes
-      - name: Headers and names
-        run: dotnet format style ci/format/Grow.Format.csproj --diagnostics IDE0073 IDE1006 --verify-no-changes --severity info
+      - name: Headers, names and braces
+        run: dotnet format style ci/format/Grow.Format.csproj --diagnostics IDE0011 IDE0073 IDE1006 --severity info --verify-no-changes

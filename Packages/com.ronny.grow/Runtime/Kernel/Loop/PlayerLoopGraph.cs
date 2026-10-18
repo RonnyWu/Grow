@@ -29,10 +29,14 @@ namespace Grow.Kernel.Loop {
     internal static class PlayerLoopGraph {
         /// <summary>Finds the first top-level system of <paramref name="type"/>; returns -1 when absent.</summary>
         public static int FindIndex(PlayerLoopSystem[] systems, Type type) {
-            if (systems == null || type == null) return -1;
+            if (systems == null || type == null) {
+                return -1;
+            }
 
             for (var i = 0; i < systems.Length; i++) {
-                if (systems[i].type == type) return i;
+                if (systems[i].type == type) {
+                    return i;
+                }
             }
 
             return -1;
@@ -47,21 +51,33 @@ namespace Grow.Kernel.Loop {
 
         /// <summary>Deep-clones a system list, including every sub-tree.</summary>
         public static PlayerLoopSystem[] CloneArray(PlayerLoopSystem[] systems) {
-            if (systems == null) return null;
+            if (systems == null) {
+                return null;
+            }
 
             var clone = new PlayerLoopSystem[systems.Length];
-            for (var i = 0; i < systems.Length; i++) clone[i] = Clone(systems[i]);
+            for (var i = 0; i < systems.Length; i++) {
+                clone[i] = Clone(systems[i]);
+            }
+
             return clone;
         }
 
         /// <summary>True when the type exists anywhere in the tree.</summary>
         public static bool ContainsType(PlayerLoopSystem[] systems, Type type) {
-            if (systems == null || type == null) return false;
+            if (systems == null || type == null) {
+                return false;
+            }
 
             for (var i = 0; i < systems.Length; i++) {
                 var system = systems[i];
-                if (system.type == type) return true;
-                if (system.subSystemList != null && ContainsType(system.subSystemList, type)) return true;
+                if (system.type == type) {
+                    return true;
+                }
+
+                if (system.subSystemList != null && ContainsType(system.subSystemList, type)) {
+                    return true;
+                }
             }
 
             return false;
@@ -77,8 +93,13 @@ namespace Grow.Kernel.Loop {
             Type anchorType,
             PlayerLoopSystem system,
             InsertLocation location) {
-            if (anchorType == null) return false;
-            if (systems == null) systems = Array.Empty<PlayerLoopSystem>();
+            if (anchorType == null) {
+                return false;
+            }
+
+            if (systems == null) {
+                systems = Array.Empty<PlayerLoopSystem>();
+            }
 
             var index = FindIndex(systems, anchorType);
             if (index >= 0) {
@@ -89,8 +110,13 @@ namespace Grow.Kernel.Loop {
 
             for (var i = 0; i < systems.Length; i++) {
                 var child = systems[i].subSystemList;
-                if (child == null || child.Length == 0) continue;
-                if (!TryInsert(ref child, anchorType, system, location)) continue;
+                if (child == null || child.Length == 0) {
+                    continue;
+                }
+
+                if (!TryInsert(ref child, anchorType, system, location)) {
+                    continue;
+                }
 
                 var parent = systems[i];
                 parent.subSystemList = child;
@@ -104,7 +130,9 @@ namespace Grow.Kernel.Loop {
         /// <summary>Removes the first system of <paramref name="type"/>, searching sub-groups too.</summary>
         /// <returns>False when the type is absent; the input is then left unchanged.</returns>
         public static bool TryRemove(ref PlayerLoopSystem[] systems, Type type) {
-            if (systems == null || type == null) return false;
+            if (systems == null || type == null) {
+                return false;
+            }
 
             var index = FindIndex(systems, type);
             if (index >= 0) {
@@ -114,8 +142,13 @@ namespace Grow.Kernel.Loop {
 
             for (var i = 0; i < systems.Length; i++) {
                 var child = systems[i].subSystemList;
-                if (child == null || child.Length == 0) continue;
-                if (!TryRemove(ref child, type)) continue;
+                if (child == null || child.Length == 0) {
+                    continue;
+                }
+
+                if (!TryRemove(ref child, type)) {
+                    continue;
+                }
 
                 var parent = systems[i];
                 parent.subSystemList = child;
@@ -131,16 +164,28 @@ namespace Grow.Kernel.Loop {
             int index,
             PlayerLoopSystem item) {
             var array = new PlayerLoopSystem[source.Length + 1];
-            if (index > 0) Array.Copy(source, 0, array, 0, index);
+            if (index > 0) {
+                Array.Copy(source, 0, array, 0, index);
+            }
+
             array[index] = item;
-            if (index < source.Length) Array.Copy(source, index, array, index + 1, source.Length - index);
+            if (index < source.Length) {
+                Array.Copy(source, index, array, index + 1, source.Length - index);
+            }
+
             return array;
         }
 
         private static PlayerLoopSystem[] RemoveAt(PlayerLoopSystem[] source, int index) {
             var array = new PlayerLoopSystem[source.Length - 1];
-            if (index > 0) Array.Copy(source, 0, array, 0, index);
-            if (index < source.Length - 1) Array.Copy(source, index + 1, array, index, source.Length - index - 1);
+            if (index > 0) {
+                Array.Copy(source, 0, array, 0, index);
+            }
+
+            if (index < source.Length - 1) {
+                Array.Copy(source, index + 1, array, index, source.Length - index - 1);
+            }
+
             return array;
         }
     }

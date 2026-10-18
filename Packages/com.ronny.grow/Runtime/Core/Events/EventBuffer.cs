@@ -100,7 +100,9 @@ namespace Grow.Core.Events {
         /// <summary>Registers a handler; when <paramref name="once"/> is true it is consumed before its first call.</summary>
         public int Subscribe(TDelegate handler, bool once) {
             AssertThread(nameof(Subscribe));
-            if (_disposed) throw new ObjectDisposedException(nameof(GrowEvent));
+            if (_disposed) {
+                throw new ObjectDisposedException(nameof(GrowEvent));
+            }
 
             var id = _nextId++;
             if (_depth > 0) {
@@ -115,10 +117,15 @@ namespace Grow.Core.Events {
         /// <summary>Removes the subscription with <paramref name="id"/>; unknown ids are ignored.</summary>
         public bool Unsubscribe(int id) {
             AssertThread(nameof(Unsubscribe));
-            if (_disposed) return false;
+            if (_disposed) {
+                return false;
+            }
 
             if (_depth > 0) {
-                if (!IsActive(id)) return false;
+                if (!IsActive(id)) {
+                    return false;
+                }
+
                 Pend(new PendingOp(PendingKind.Remove, default, id));
                 return true;
             }
@@ -129,19 +136,27 @@ namespace Grow.Core.Events {
         /// <summary>True when the subscription is applied, or will be after the current pass.</summary>
         public bool IsActive(int id) {
             AssertThread(nameof(IsActive));
-            if (_disposed || id <= 0) return false;
+            if (_disposed || id <= 0) {
+                return false;
+            }
 
             var active = false;
             for (var i = 0; i < _count; i++) {
-                if (_slots[i].Id != id) continue;
+                if (_slots[i].Id != id) {
+                    continue;
+                }
+
                 active = !_slots[i].Consumed;
                 break;
             }
 
             for (var i = 0; i < _pendingCount; i++) {
                 var op = _pending[i];
-                if (op.Kind == PendingKind.Clear) active = false;
-                else if (op.Id == id) active = op.Kind == PendingKind.Add;
+                if (op.Kind == PendingKind.Clear) {
+                    active = false;
+                } else if (op.Id == id) {
+                    active = op.Kind == PendingKind.Add;
+                }
             }
 
             return active;
@@ -150,7 +165,9 @@ namespace Grow.Core.Events {
         /// <summary>Drops every subscription and every queued change.</summary>
         public void Clear() {
             AssertThread(nameof(Clear));
-            if (_disposed) return;
+            if (_disposed) {
+                return;
+            }
 
             if (_depth > 0) {
                 Pend(new PendingOp(PendingKind.Clear, default, 0));
@@ -164,7 +181,9 @@ namespace Grow.Core.Events {
         /// <summary>Makes the event terminal: clears subscriptions and rejects future subscriptions.</summary>
         public void Dispose() {
             AssertThread(nameof(Dispose));
-            if (_disposed) return;
+            if (_disposed) {
+                return;
+            }
 
             _disposed = true;
             if (_depth > 0) {
@@ -183,14 +202,22 @@ namespace Grow.Core.Events {
         /// <summary>Ends a dispatch pass and applies queued changes when the outermost pass ends.</summary>
         public bool ExitDispatch() {
             _depth--;
-            if (_depth != 0) return false;
+            if (_depth != 0) {
+                return false;
+            }
+
             return ApplyPending();
         }
 
         /// <summary>Marks a one-shot slot consumed before it is invoked and schedules its removal.</summary>
         public void ConsumeOnce(int index) {
-            if (index < 0 || index >= _count) return;
-            if (!_slots[index].Once || _slots[index].Consumed) return;
+            if (index < 0 || index >= _count) {
+                return;
+            }
+
+            if (!_slots[index].Once || _slots[index].Consumed) {
+                return;
+            }
 
             _slots[index].Consumed = true;
             Pend(new PendingOp(PendingKind.Remove, default, _slots[index].Id));
@@ -199,7 +226,9 @@ namespace Grow.Core.Events {
         /// <summary>Fails fast when a mutating operation runs on a different thread than the creator.</summary>
         public void AssertThread(string operation) {
             var current = Environment.CurrentManagedThreadId;
-            if (current == _ownerThreadId) return;
+            if (current == _ownerThreadId) {
+                return;
+            }
 
             throw new InvalidOperationException(
                 $"GrowEvent.{operation} must run on the thread that created the event " +
@@ -257,7 +286,9 @@ namespace Grow.Core.Events {
         }
 
         private bool ApplyPending() {
-            if (_pendingCount == 0) return false;
+            if (_pendingCount == 0) {
+                return false;
+            }
 
             var cleared = false;
             for (var i = 0; i < _pendingCount; i++) {
@@ -292,8 +323,10 @@ namespace Grow.Core.Events {
         }
 
         private void ClearPending() {
-            if (_pending != null && _pendingCount > 0)
+            if (_pending != null && _pendingCount > 0) {
                 Array.Clear(_pending, 0, _pendingCount);
+            }
+
             _pendingCount = 0;
         }
 
@@ -314,13 +347,20 @@ namespace Grow.Core.Events {
         }
 
         private bool RemoveSlot(int id) {
-            if (_slots == null) return false;
+            if (_slots == null) {
+                return false;
+            }
 
             for (var i = 0; i < _count; i++) {
-                if (_slots[i].Id != id) continue;
+                if (_slots[i].Id != id) {
+                    continue;
+                }
 
                 var move = _count - i - 1;
-                if (move > 0) Array.Copy(_slots, i + 1, _slots, i, move);
+                if (move > 0) {
+                    Array.Copy(_slots, i + 1, _slots, i, move);
+                }
+
                 _count--;
                 _slots[_count] = default;
                 return true;
@@ -333,14 +373,18 @@ namespace Grow.Core.Events {
             if (_slots != null) {
                 Array.Clear(_slots, 0, _count);
                 // A burst of thousands of subscriptions should not pin the array for the whole session.
-                if (_slots.Length > 256) _slots = null;
+                if (_slots.Length > 256) {
+                    _slots = null;
+                }
             }
 
             _count = 0;
         }
 
         private void Capture(Exception exception) {
-            if (_fault == null) _fault = ExceptionDispatchInfo.Capture(exception);
+            if (_fault == null) {
+                _fault = ExceptionDispatchInfo.Capture(exception);
+            }
         }
 
         bool ISubscriptionOwner.IsActive(int id) => IsActive(id);

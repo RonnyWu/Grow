@@ -141,7 +141,9 @@ namespace Grow.Tests.Editor.Entry {
         public void ReadyNotification_ObservesInitializedTrue() {
             var observed = false;
             var token = GrowBoot.StateChanged.Subscribe(change => {
-                if (change.Next == GrowState.Ready) observed = GrowApp.IsInitialized;
+                if (change.Next == GrowState.Ready) {
+                    observed = GrowApp.IsInitialized;
+                }
             });
 
             GrowApp.Initialize();
@@ -153,7 +155,9 @@ namespace Grow.Tests.Editor.Entry {
         [Test]
         public void ShutdownFromReadyNotification_DoesNotNoOp() {
             var token = GrowBoot.StateChanged.Subscribe(change => {
-                if (change.Next == GrowState.Ready) GrowApp.Shutdown();
+                if (change.Next == GrowState.Ready) {
+                    GrowApp.Shutdown();
+                }
             });
 
             GrowApp.Initialize();

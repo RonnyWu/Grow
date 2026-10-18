@@ -413,12 +413,18 @@ namespace Grow.Tests.Editor.Lifecycle {
             public int DeinitializeCount;
 
             public void OnInitialize() {
-                if (InitializeThrows) throw new InvalidOperationException("initialize failed");
+                if (InitializeThrows) {
+                    throw new InvalidOperationException("initialize failed");
+                }
+
                 InitializeCount++;
             }
 
             public void OnStart() {
-                if (StartThrows) throw new InvalidOperationException("start failed");
+                if (StartThrows) {
+                    throw new InvalidOperationException("start failed");
+                }
+
                 StartCount++;
             }
 

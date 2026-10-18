@@ -51,10 +51,15 @@ namespace Grow.Kernel.Ioc.Common {
 
         public override object Get() {
             var instance = _instance;
-            if (instance != null) return instance;
+            if (instance != null) {
+                return instance;
+            }
 
             lock (_sync) {
-                if (_instance == null) _instance = _factory(Key.Key);
+                if (_instance == null) {
+                    _instance = _factory(Key.Key);
+                }
+
                 return _instance;
             }
         }
