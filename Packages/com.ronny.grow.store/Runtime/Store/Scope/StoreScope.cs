@@ -993,7 +993,6 @@ namespace Grow.Store.Scope {
             return StoreManifest.TryParseFileName(original, out var parsed, out _, out _) &&
                    string.Equals(parsed, store, StringComparison.Ordinal);
         }
-        }
 
         private void Quarantine(string path) {
             var quarantine = Path.Combine(_root, "quarantine");
