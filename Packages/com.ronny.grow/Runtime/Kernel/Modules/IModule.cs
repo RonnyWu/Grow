@@ -13,6 +13,12 @@ namespace Grow.Kernel.Modules {
     /// concrete module types; a declaration must match exactly one registered module. A missing or
     /// ambiguous dependency skips the dependent module, and a dependency cycle skips every module in
     /// the cycle (and, transitively, its dependents).
+    /// <para>
+    /// <see cref="GrowApp.Shutdown"/> stops and disposes the started modules but keeps their
+    /// registrations, so a later <see cref="GrowApp.Initialize()"/> calls <see cref="OnRegister"/>
+    /// again on the same instance. A module that owns disposable state must recreate it in
+    /// <see cref="OnRegister"/>. Play Mode exit drops the registry instead.
+    /// </para>
     /// </remarks>
     public interface IModule {
         /// <summary>Unique module name; duplicates are rejected at registration.</summary>
@@ -44,9 +50,10 @@ namespace Grow.Kernel.Modules {
     /// The module-facing context: current phase, cross-module services and a module-owned scope.
     /// </summary>
     /// <remarks>
-    /// Services registered here are the module container's table; the IOC root remains a separate
-    /// locator. The module container drives managed services that implement initialize, start and
-    /// deinitialize; the IOC never drives lifetimes.
+    /// Services registered here go into the same table as the IOC root; the context only tracks
+    /// which entries it owns so a module shutdown can remove them. The module container drives
+    /// managed services that implement initialize, start and deinitialize; the IOC never drives
+    /// lifetimes.
     /// </remarks>
     public interface IModuleContext {
         /// <summary>Current module phase.</summary>

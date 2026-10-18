@@ -88,25 +88,19 @@ namespace Grow.Core.Log {
 
         /// <summary>Restores the default sink and level.</summary>
         /// <remarks>
-        /// Called at the start of every play session by <see cref="ResetStaticStateOnLoad"/>, and by
-        /// tests; a host that manages its own sessions may also call it by hand.
+        /// Called at the start of every play session by this type's own runtime hook and by
+        /// <c>GrowSession</c>, and by tests.
         /// </remarks>
         public static void Reset() {
             _sink = new UnityLogSink();
             MinimumLevel = LogLevel.Info;
         }
 
-        /// <summary>Drops the facade's static state at the start of every play session.</summary>
-        /// <remarks>
-        /// Unity skips the domain reload when "Enter Play Mode Options" disables it, so statics
-        /// otherwise survive <c>Play</c> → <c>Stop</c> → <c>Play</c>.
-        /// <c>SubsystemRegistration</c> still runs in that configuration, and runs before any
-        /// consumer code, which makes it the right place to invalidate. This resets state; it never
-        /// installs or boots anything.
-        /// </remarks>
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStaticStateOnLoad() {
             Reset();
         }
+
     }
 }

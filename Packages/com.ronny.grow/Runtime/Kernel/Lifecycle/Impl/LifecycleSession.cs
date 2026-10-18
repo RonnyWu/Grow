@@ -10,9 +10,10 @@ namespace Grow.Kernel.Lifecycle.Impl {
     /// <remarks>
     /// A generic type cannot receive a single <c>RuntimeInitializeOnLoadMethod</c> callback for
     /// every closed construction, so <see cref="UnifiedClassSingleton{T}"/> compares this generation
-    /// lazily on first access. The counter increments at <c>SubsystemRegistration</c>, which runs even
-    /// when the domain reload is disabled. The main-thread id is captured at the same boundary; the
-    /// static constructor is a fallback for EditMode/test access.
+    /// lazily on first access. <see cref="Entry.GrowSession"/> increments the counter at
+    /// <c>SubsystemRegistration</c>, which runs even when the domain reload is disabled. The
+    /// main-thread id is captured at the same boundary; the static constructor is a fallback for
+    /// EditMode/test access.
     /// </remarks>
     internal static class LifecycleSession {
         /// <summary>Current play-session generation.</summary>
@@ -28,16 +29,15 @@ namespace Grow.Kernel.Lifecycle.Impl {
             MainThreadId = Environment.CurrentManagedThreadId;
         }
 
-        /// <summary>Advances the generation; tests use it to simulate a new play session.</summary>
-        internal static void ResetForTests() {
+        /// <summary>
+        /// Advances the generation and records the calling thread as the session main thread; call it
+        /// only from the main thread. Called by <c>GrowSession</c> and by session tests.
+        /// </summary>
+        internal static void ResetForSession() {
             Generation++;
             MainThreadId = Environment.CurrentManagedThreadId;
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetOnLoad() {
-            Generation++;
-            MainThreadId = Environment.CurrentManagedThreadId;
-        }
+
     }
 }

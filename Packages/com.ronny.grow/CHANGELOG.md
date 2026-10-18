@@ -64,6 +64,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   modules in a fixed order, and shuts them down in reverse ownership order.
   Initialize / shutdown are idempotent; a failed initialization performs best-effort
   cleanup and rethrows.
+- `Grow.Kernel.Entry.GrowSession` — the kernel-side `SubsystemRegistration` entry. It resets
+  `GrowApp`, `GrowRuntime`, `IOC`, `MonoManager`, `LifecycleSession`, `GrowLoop`,
+  `PlayerLoopManager`, `GrowLog` and `StringBuilderPool` in a fixed order; Core primitives may
+  keep their own hooks because they cannot depend on the kernel.
 - EditMode tests for both assemblies and PlayMode coverage for automatic startup and a
   same-frame restart.
 
@@ -82,6 +86,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   internal. `GrowApp` is the only boot-state writer; call `GrowApp.Initialize` /
   `Shutdown` instead of driving the state machine directly. `MonoManager.Bind` / `Unbind`
   were internal from their introduction and are not part of this change.
+- `GrowApp.Initialize` now publishes `GrowState.Installed` after `GrowModules.Bootstrap()`.
+  Module hooks therefore observe `GrowState.Reset`, and a `StateChanged` handler for
+  `Installed` observes a fully composed kernel.
+- `GrowModules.Reset()` is now a public explicit reset: it shuts down started modules before
+  replacing the registry, and a failed initialization also resets the registry.
+
+### Fixed
+
+- `PlayerLoopProfile.Install` now removes partially inserted systems when an install throws,
+  and `Uninstall` still cleans up when the owner was never recorded. `PlayerLoopManager`
+  records a system before applying it, so cleanup can find it even when `SetPlayerLoop`
+  throws.
+- `OnFixedUpdate` is inserted inside Unity's `FixedUpdate` group instead of as a top-level
+  sibling, so it runs once per fixed step rather than once per frame.
+- `MonoManager.Bind` replays application subscriptions and enabled updater bindings, so a
+  `UnifiedClass` created before the host is bound attaches once the host exists.
+  `MonoManager.Unbind` clears those bindings and no longer queues bound targets for replay.
+- The `IModuleContext` remarks now say it shares the IOC root table instead of claiming a
+  separate locator.
 
 ## [3.0.0-exp.1] - 2026-10-11
 

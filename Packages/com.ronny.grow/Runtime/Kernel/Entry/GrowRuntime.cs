@@ -13,7 +13,7 @@ namespace Grow.Kernel.Entry {
     /// Internal on purpose: <see cref="GrowBoot"/> is the public face, so callers cannot reach
     /// around it.
     /// <para>
-    /// v1 is driven by hand — tests today, <c>IGrowBootstrapper</c> later. Nothing is started
+    /// The runtime is driven by hand: tests today, and the composition root in a game. Nothing is started
     /// automatically: <see cref="ResetStaticState"/> only <em>invalidates</em> state at the start of
     /// a play session, it never begins a cycle.
     /// </para>
@@ -48,8 +48,7 @@ namespace Grow.Kernel.Entry {
         internal static GrowEvent<StateChange> StateChanged => StateChangedPublisher.Event;
 
         private static readonly GrowEvent<StateChange>.Publisher StateChangedPublisher =
-            new GrowEvent<StateChange>.Publisher(
-                exception => GrowLog.Error($"A StateChanged handler threw: {exception}", "Kernel"));
+            new(exception => GrowLog.Error($"A StateChanged handler threw: {exception}", "Kernel"));
 
         /// <summary>
         /// Starts a cycle: <see cref="GrowState.None"/> and <see cref="GrowState.Shutdown"/> move to
@@ -77,7 +76,10 @@ namespace Grow.Kernel.Entry {
         /// when called before <see cref="Reset"/>; from <see cref="GrowState.Installed"/> onwards it
         /// does nothing.
         /// </summary>
-        /// <remarks>In v1 there are no modules yet, so this entry only advances the state.</remarks>
+        /// <remarks>
+        /// The composition root calls this after the loop, manager and modules are installed, so the
+        /// Installed notification observes a fully composed kernel.
+        /// </remarks>
         internal static void Install() {
             switch (_state) {
                 case GrowState.None:
@@ -147,8 +149,9 @@ namespace Grow.Kernel.Entry {
         /// <see cref="_state"/> and <see cref="StateChanged"/> would otherwise survive
         /// <c>Play</c> → <c>Stop</c> → <c>Play</c>: a stale <see cref="GrowState.Ready"/> makes the
         /// next session's <see cref="Install"/> throw, and stale handlers fire against objects Unity
-        /// has already destroyed. <c>SubsystemRegistration</c> still runs in that configuration, and
-        /// runs before any consumer code, so subscribers registered later see a clean machine.
+        /// has already destroyed. <see cref="GrowSession"/> still runs at
+        /// <c>SubsystemRegistration</c> in that configuration, before any consumer code, so
+        /// subscribers registered later see a clean machine.
         /// </remarks>
         internal static void ResetStaticState() {
             _state = GrowState.None;
@@ -197,12 +200,6 @@ namespace Grow.Kernel.Entry {
         private static InvalidOperationException AfterShutdown(string entry) {
             return new InvalidOperationException(
                 $"{entry}() cannot run after Shutdown(); call Reset() to start a new cycle.");
-        }
-
-        /// <summary>Invalidates the static state; see <see cref="ResetStaticState"/>.</summary>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStaticStateOnLoad() {
-            ResetStaticState();
         }
     }
 }
