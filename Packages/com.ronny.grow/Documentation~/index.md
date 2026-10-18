@@ -36,8 +36,9 @@ The package registers two pages:
   minimum log level for the current editor session.
 
 Language is a user-global preference and is stored under Unity's Preferences folder, so it
-follows you across projects. The editor UI sample ships with the six official UN languages:
-Arabic, Chinese, English, French, Russian and Spanish. The log level is session state:
+follows you across projects. The supported editor UI languages are English and Simplified
+Chinese. French, Russian and Spanish live under test fixtures only and do not appear in the
+language selector; Arabic is intentionally not included. The log level is session state:
 `GrowLog` resets it to `Info` at the start of each play session. Project-level settings are
 added only when a feature consumes them.
 
