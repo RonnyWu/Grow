@@ -33,6 +33,18 @@ function* walk(directory) {
     }
 }
 
+// Package samples are ignored by Unity's normal import pipeline (`~` suffix), but they are
+// still shipped and referenced by GUID from their scenes. They need their own checks.
+function* walkIncludingTilde(directory) {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        if (entry.name === ".git") continue;
+        const full = path.join(directory, entry.name);
+        const relative = path.relative(root, full).replaceAll(path.sep, "/");
+        yield { relative, isDirectory: entry.isDirectory() };
+        if (entry.isDirectory()) yield* walkIncludingTilde(full);
+    }
+}
+
 // Every embedded package (a folder under Packages/ with a package.json). Registry
 // packages live in Library/PackageCache and are out of scope.
 const packages = fs.readdirSync(packagesRoot, { withFileTypes: true })
@@ -47,6 +59,42 @@ const packageByName = new Map();
 for (const packagePath of packages) {
     const json = JSON.parse(read(`${packagePath}/package.json`));
     packageByName.set(json.name, { path: packagePath, json });
+}
+
+// Package samples (`Samples~`) are skipped by `walk` for meta checks, so verify registration,
+// meta pairing and SPDX explicitly.
+for (const [packageName, info] of packageByName) {
+    const samplesRoot = path.join(root, info.path, "Samples~");
+    if (!fs.existsSync(samplesRoot)) continue;
+
+    const samples = info.json.samples ?? [];
+    for (const entry of fs.readdirSync(samplesRoot, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const relative = `Samples~/${entry.name}`;
+        if (!samples.some((sample) => sample.path === relative)) {
+            fail(`${packageName}: sample ${relative} is not registered in package.json samples[]`);
+        }
+    }
+
+    for (const sample of samples) {
+        if (!fs.existsSync(path.join(root, info.path, sample.path))) {
+            fail(`${packageName}: package.json samples path does not exist: ${sample.path}`);
+        }
+    }
+
+    for (const { relative, isDirectory } of walkIncludingTilde(samplesRoot)) {
+        if (isDirectory || relative.endsWith(".meta")) continue;
+        if (!fs.existsSync(path.join(root, `${relative}.meta`))) {
+            fail(`missing sample meta: ${relative}`);
+        }
+
+        if (relative.endsWith(".cs")) {
+            const firstLine = read(relative).split(/\r?\n/, 1)[0];
+            if (firstLine !== "// SPDX-License-Identifier: MIT") {
+                fail(`missing SPDX header: ${relative}`);
+            }
+        }
+    }
 }
 
 // 1. Every package asset/folder (outside ~ folders) has a sibling .meta, and no .meta is orphaned.
@@ -129,6 +177,17 @@ for (const reference of editor.references ?? []) {
 }
 if (!(editor.includePlatforms ?? []).includes("Editor")) {
     fail("Grow.Editor must include the Editor platform only");
+}
+
+const lens = asmdef("Packages/com.ronny.grow.lens/Editor/Grow.Lens.Editor.asmdef");
+const lensAllowed = new Set();
+for (const reference of lens.references ?? []) {
+    if (!lensAllowed.has(reference)) {
+        fail(`Grow.Lens.Editor has an unexpected reference: ${reference}`);
+    }
+}
+if (!(lens.includePlatforms ?? []).includes("Editor")) {
+    fail("Grow.Lens.Editor must include the Editor platform only");
 }
 
 const contracts = asmdef("Packages/com.ronny.grow.store.contracts/Runtime/Grow.Store.Contracts.asmdef");

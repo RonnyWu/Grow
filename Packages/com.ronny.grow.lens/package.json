@@ -1,0 +1,23 @@
+{
+  "name": "com.ronny.grow.lens",
+  "displayName": "Grow Lens",
+  "version": "3.0.0-exp.1",
+  "unity": "2022.3",
+  "description": "Optional editor productivity tools for Grow: Hierarchy component icons, formatted separators and tree connectors, asset header actions, context menus and a toolbar menu.",
+  "keywords": [
+    "grow",
+    "lens",
+    "editor",
+    "hierarchy",
+    "inspector"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Ronny Wu",
+    "url": "https://github.com/RonnyWu"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RonnyWu/Grow.git"
+  }
+}
