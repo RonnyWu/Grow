@@ -18,5 +18,12 @@
     "type": "git",
     "url": "https://github.com/RonnyWu/Grow.git"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "Grow Editor Demo",
+      "description": "Seven components demonstrating the annotation-driven inspector: field decoration, enum flags, grouping, conditions, value callbacks, button actions and a custom workflow.",
+      "path": "Samples~/GrowEditorDemo"
+    }
+  ]
 }
