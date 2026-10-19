@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `Grow.Core.Attributes` — authoring attributes for the annotation-driven inspector:
+  `GrowLabel`, `GrowReadOnly`, `GrowHelpBox`, `GrowSeparator`, `GrowEnumFlags`,
+  `GrowPropertyOrder`, `GrowGroup`, `GrowShowIf` / `GrowHideIf` / `GrowEnableIf` /
+  `GrowDisableIf`, `GrowOnValueChanged` and `GrowButton`. All names carry the `Grow`
+  prefix so they can coexist with Odin / NaughtyAttributes; `GrowEnumFlags` is explicit
+  opt-in and there is no project-wide enum drawer.
+- `Grow.Editor.Inspector` — the annotation-driven inspector framework: `GrowEditorBase`
+  (workflow, change tracking, opt-in scene and prefab write-back, and explicit `SaveAll`) and
+  `GrowEditor` (model, grouping, conditional fields, `[GrowButton]` methods with persisted
+  parameters, enum flags and hierarchical multi-select). Includes the property/decorator drawers for
+  `GrowLabel`, `GrowReadOnly`, `GrowHelpBox`, `GrowSeparator` and `GrowEnumFlags`, plus the shared
+  enumeration and multi-select helpers. Automatic background saving is intentionally not included;
+  saving is an explicit action.
+- `Samples~/GrowEditorDemo` — seven small components covering field decoration, enum flags,
+  grouping, conditions, value callbacks, button actions and a fully custom workflow, plus a scene
+  that mounts all of them under one root.
 - `Grow.Editor.Settings` — internal editor settings plumbing: JSON settings files with schema
   versioning, atomic replacement, backup and corruption quarantine; the settings-page margin
   and label-width wrapper; and a shared IMGUI value helper. Adds **Project Settings > Grow >
