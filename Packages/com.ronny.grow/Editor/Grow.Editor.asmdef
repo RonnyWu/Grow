@@ -2,8 +2,7 @@
     "name": "Grow.Editor",
     "rootNamespace": "Grow",
     "references": [
-        "Grow.Core",
-        "Grow.Kernel"
+        "Grow.Core"
     ],
     "includePlatforms": [
         "Editor"
