@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using Grow.Lens.Editor.Core;
+using Grow.Lens.Editor.Menus;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -164,10 +165,13 @@ namespace Grow.Lens.Editor.Toolbar {
             AddMenuItem(menu, "Input Debugger", "Window/Analysis/Input Debugger");
             menu.AddSeparator("");
             AddMenuItem(menu, "Open C# Project", "Assets/Open C# Project");
+            menu.AddItem(new GUIContent("Create Separator"), GrowMenuActions.CanCreateHierarchySeparator,
+                () => GrowLensGuard.RunAction("Toolbar separator",
+                    GrowMenuActions.CreateHierarchySeparator));
             menu.AddItem(new GUIContent("Take Screenshot"), false,
-                () => GrowLensGuard.Run("Toolbar screenshot", TakeScreenshot));
+                () => GrowLensGuard.RunAction("Toolbar screenshot", TakeScreenshot));
             menu.AddItem(new GUIContent("Open Screenshots Folder"), false,
-                () => GrowLensGuard.Run("Toolbar screenshots folder", OpenScreenshotsFolder));
+                () => GrowLensGuard.RunAction("Toolbar screenshots folder", OpenScreenshotsFolder));
             if (_button != null) {
                 menu.DropDown(_button.worldBound);
             } else {
@@ -177,7 +181,7 @@ namespace Grow.Lens.Editor.Toolbar {
 
         private static void AddMenuItem(GenericMenu menu, string text, string menuPath) {
             menu.AddItem(new GUIContent(text), false,
-                () => GrowLensGuard.Run($"Toolbar {text}", () => EditorApplication.ExecuteMenuItem(menuPath)));
+                () => GrowLensGuard.RunAction($"Toolbar {text}", () => EditorApplication.ExecuteMenuItem(menuPath)));
         }
 
         private static string ScreenshotsDirectory {

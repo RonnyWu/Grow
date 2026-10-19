@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace Grow.Lens.Editor.Menus {
@@ -52,6 +54,41 @@ namespace Grow.Lens.Editor.Menus {
 
         internal static void CreateFolder() {
             ProjectWindowUtil.CreateFolder();
+        }
+
+        /// <summary>True when a separator can be created without editing a prefab asset.</summary>
+        internal static bool CanCreateHierarchySeparator =>
+            PrefabStageUtility.GetCurrentPrefabStage() == null;
+
+        /// <summary>Creates a default separator GameObject after the active scene object.</summary>
+        internal static void CreateHierarchySeparator() {
+            if (!CanCreateHierarchySeparator) {
+                return;
+            }
+
+            var active = Selection.activeGameObject;
+            var activeIsSceneObject = active != null && !EditorUtility.IsPersistent(active);
+            var parent = activeIsSceneObject ? active.transform.parent : null;
+            var targetScene = activeIsSceneObject && active.scene.IsValid()
+                ? active.scene
+                : SceneManager.GetActiveScene();
+            var separator = new GameObject("##383838 Section");
+            Undo.RegisterCreatedObjectUndo(separator, "Create Hierarchy Separator");
+            if (targetScene.IsValid() && separator.scene != targetScene) {
+                SceneManager.MoveGameObjectToScene(separator, targetScene);
+            }
+
+            if (parent != null) {
+                separator.transform.SetParent(parent, false);
+            }
+
+            if (activeIsSceneObject) {
+                separator.transform.SetSiblingIndex(active.transform.GetSiblingIndex() + 1);
+            }
+
+            Selection.activeGameObject = separator;
+            EditorGUIUtility.PingObject(separator);
+            SceneView.RepaintAll();
         }
 
         internal static void ExecuteMenuItem(string menuPath) {

@@ -37,7 +37,8 @@ namespace Grow.Lens.Editor.Settings {
 
             EditorGUILayout.Space(8);
             EditorGUILayout.LabelField("Features", EditorStyles.boldLabel);
-            DrawFeature("Hierarchy component icons", enabled);
+            DrawFeature("Hierarchy component icons (click opens focused Inspector)", enabled);
+            DrawFeature("Hierarchy separators (##RRGGBB[#RRGGBB]Text)", enabled);
             DrawFeature("Hierarchy indent guides", enabled);
             DrawFeature("Asset header path / GUID / Rider actions", enabled);
             DrawFeature("Project and Hierarchy context menus", enabled);

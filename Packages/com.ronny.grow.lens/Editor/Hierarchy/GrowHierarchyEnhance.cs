@@ -38,11 +38,21 @@ namespace Grow.Lens.Editor.Hierarchy {
                     return;
                 }
 
+                var isSearching = HierarchyGuideProbe.TryGetContext()?.IsSearching == true;
                 if (current.type == EventType.MouseDown) {
+                    if (!isSearching && HierarchySeparator.IsSeparator(gameObject.name)) {
+                        return;
+                    }
+
                     if (ItemComponentIcon.TryHandleClick(instanceID, gameObject, rect)) {
                         current.Use();
                     }
 
+                    return;
+                }
+
+                if (!isSearching && HierarchySeparator.TryDraw(instanceID, gameObject, rect)) {
+                    ItemIndentLine.OnGameObjectGUI(instanceID, rect);
                     return;
                 }
 
@@ -54,6 +64,7 @@ namespace Grow.Lens.Editor.Hierarchy {
         private static void OnHierarchyChanged() {
             GameObjectCache.Clear();
             ItemComponentIcon.OnHierarchyChanged();
+            HierarchySeparator.OnHierarchyChanged();
             ItemIndentLine.OnHierarchyChanged();
         }
 

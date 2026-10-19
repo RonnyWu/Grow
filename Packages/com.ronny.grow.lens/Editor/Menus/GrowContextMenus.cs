@@ -104,6 +104,8 @@ namespace Grow.Lens.Editor.Menus {
                 () => GrowMenuActions.CreateEmpty("GameObject/Create Empty Child"));
             Add(menu, "Create Empty Parent And Reset",
                 () => GrowMenuActions.CreateEmpty("GameObject/Create Empty Parent"));
+            Add(menu, "Create Separator", GrowMenuActions.CreateHierarchySeparator,
+                GrowMenuActions.CanCreateHierarchySeparator);
 
             menu.AddSeparator("");
             Add(menu, "Delete", GrowMenuActions.DeleteSelection);
