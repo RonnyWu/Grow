@@ -37,13 +37,14 @@ namespace Grow.Lens.Editor.Hierarchy {
                 }
 
                 ItemComponentIcon.OnGameObjectGUI(instanceID, gameObject, rect);
-                ItemIndentLine.OnGameObjectGUI(rect);
+                ItemIndentLine.OnGameObjectGUI(instanceID, rect);
             });
         }
 
         private static void OnHierarchyChanged() {
             GameObjectCache.Clear();
             ItemComponentIcon.OnHierarchyChanged();
+            ItemIndentLine.OnHierarchyChanged();
         }
 
         private static bool TryGetGameObject(int instanceID, out GameObject gameObject) {
