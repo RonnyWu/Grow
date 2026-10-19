@@ -1,4 +1,4 @@
-<!-- source: README.md @ blob:a38334ac7e5810a4984a009d03cb814194e1a62a -->
+<!-- source: README.md @ blob:17409410f548787f4fd8bdcce17e83113736fd19 -->
 <!-- 中文译文；以英文 README.md 为准，译文可能滞后于原文。blob 是 README.md 的内容 sha，可用 git hash-object README.md 核验。 -->
 
 # Grow
@@ -8,9 +8,11 @@
 一个内核很薄的模块化 Unity 游戏框架。
 
 - 状态：**早期规划**——API 与结构尚不稳定。
-- 包：Grow 内核与 Core（[`Packages/com.ronny.grow`](../Packages/com.ronny.grow)）· Store 契约
+- 包：Grow 内核与 Core（含注解驱动的 Inspector）
+  [`Packages/com.ronny.grow`](../Packages/com.ronny.grow) · Store 契约
   [`Packages/com.ronny.grow.store.contracts`](../Packages/com.ronny.grow.store.contracts) ·
-  Store 实现 [`Packages/com.ronny.grow.store`](../Packages/com.ronny.grow.store)
+  Store 实现 [`Packages/com.ronny.grow.store`](../Packages/com.ronny.grow.store) · 可选编辑器增强
+  [`Packages/com.ronny.grow.lens`](../Packages/com.ronny.grow.lens)
 - Unity：**2022.3 LTS**
 
 ## 架构

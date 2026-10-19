@@ -26,6 +26,32 @@ Each layer depends only on the layers below it:
 | Kernel | Mechanisms — entry, modules, service registry, lifetime, loop |
 | Core | Passive primitives (e.g. logging); no third-party dependencies |
 
+## Editor inspector
+
+`Grow.Core.Attributes` and `Grow.Editor.Inspector` provide an optional annotation-driven
+Inspector. Drawers for `GrowLabel`, `GrowReadOnly`, `GrowHelpBox`, `GrowSeparator` and
+`GrowEnumFlags` work in the default Inspector; the driver annotations (`GrowGroup`,
+`GrowPropertyOrder`, `GrowShowIf` / `GrowHideIf` / `GrowEnableIf` / `GrowDisableIf`,
+`GrowOnValueChanged` and `GrowButton`) require an Editor that derives from `GrowEditor`:
+
+```csharp
+[CustomEditor(typeof(MyConfig))]
+public sealed class MyConfigEditor : GrowEditor {
+}
+```
+
+`GrowEditorBase` is the reusable workflow base for fully custom IMGUI panels. Saving is
+explicit through `SaveAll()`; there is no background auto-save. `GrowEnumFlags` is explicit
+opt-in, so the package does not replace every enum field in the project with a custom drawer.
+
+See [Editor inspector](editor-inspector.md) for the attribute reference, condition syntax, button
+arguments and troubleshooting.
+
+The optional `com.ronny.grow.lens` package adds editor-only productivity tools (clickable
+Hierarchy component icons, tree connectors and separators, asset header actions, context menus and a
+toolbar menu). It is disabled by default, has no runtime dependency on the kernel, and is not
+required by it.
+
 ## Editor settings
 
 The package registers two pages:

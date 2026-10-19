@@ -5,9 +5,11 @@
 A modular Unity game framework built on a thin kernel.
 
 - Status: **early planning** — the API and structure are not stable yet.
-- Packages: Grow core + kernel [`Packages/com.ronny.grow`](Packages/com.ronny.grow) · Store
-  contracts [`Packages/com.ronny.grow.store.contracts`](Packages/com.ronny.grow.store.contracts) ·
-  Store implementation [`Packages/com.ronny.grow.store`](Packages/com.ronny.grow.store)
+- Packages: Grow core + kernel with the annotation-driven Inspector
+  [`Packages/com.ronny.grow`](Packages/com.ronny.grow) · Store contracts
+  [`Packages/com.ronny.grow.store.contracts`](Packages/com.ronny.grow.store.contracts) · Store
+  implementation [`Packages/com.ronny.grow.store`](Packages/com.ronny.grow.store) · optional editor
+  lens [`Packages/com.ronny.grow.lens`](Packages/com.ronny.grow.lens)
 - Unity: **2022.3 LTS**
 
 ## Architecture
