@@ -27,12 +27,22 @@ namespace Grow.Lens.Editor.Hierarchy {
         }
 
         private static void OnHierarchyGUI(int instanceID, Rect rect) {
-            if (Event.current == null || Event.current.type != EventType.Repaint) {
+            var current = Event.current;
+            if (current == null ||
+                (current.type != EventType.Repaint && current.type != EventType.MouseDown)) {
                 return;
             }
 
             GrowLensGuard.Run("Hierarchy decorations", () => {
                 if (!TryGetGameObject(instanceID, out var gameObject)) {
+                    return;
+                }
+
+                if (current.type == EventType.MouseDown) {
+                    if (ItemComponentIcon.TryHandleClick(instanceID, gameObject, rect)) {
+                        current.Use();
+                    }
+
                     return;
                 }
 
