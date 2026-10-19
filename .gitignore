@@ -422,6 +422,10 @@ InitTestScene*.unity*
 # block above would ignore it as well -- re-include the package docs.
 !Packages/com.ronny.grow/Documentation~/
 !Packages/com.ronny.grow.store/Documentation~/
+!Packages/com.ronny.grow.lens/Documentation~/
+
+# Game view screenshots from the optional lens toolbar
+/Screenshots/
 
 # Secrets - never commit credentials
 .env
