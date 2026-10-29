@@ -49,8 +49,8 @@ arguments and troubleshooting.
 
 The optional `com.ronny.grow.lens` package adds editor-only productivity tools (clickable
 Hierarchy component icons, tree connectors and separators, asset header actions, context menus and a
-toolbar menu). It is disabled by default, has no runtime dependency on the kernel, and is not
-required by it.
+toolbar menu). It is disabled by default, depends on this package for the shared editor
+settings-page shell, installs no runtime code of its own, and is not required by the kernel.
 
 ## Editor settings
 
