@@ -10,9 +10,10 @@ package so the kernel package keeps its behaviour unchanged for every consumer.
 ## Goals
 
 - Keep the kernel package free of global editor hooks and Unity internal API risk.
-- Make every feature opt-in: with the switch off, no `hierarchyWindowItemOnGUI`,
+- Make the package opt-in: with the master switch off, no `hierarchyWindowItemOnGUI`,
   `projectWindowItemOnGUI`, `finishedDefaultHeaderGUI`, `hierarchyChanged` or
-  `EditorApplication.update` callback is registered.
+  `EditorApplication.update` callback is registered. Individual feature switches can then
+  remove a subsystem without disabling the rest.
 - Keep one owner for all subscriptions so enabling and disabling cannot leave partial handlers.
 - Degrade safely when a Unity internal API changes.
 
@@ -28,34 +29,78 @@ package so the kernel package keeps its behaviour unchanged for every consumer.
 
 ```text
 com.ronny.grow        kernel + Grow.Editor (editor assembly)
-com.ronny.grow.lens   editor-only, independent
+com.ronny.grow.lens   editor-only, depends on Grow.Editor
 ```
 
-Lens never references the Store packages or a Grow assembly, so the package graph stays acyclic.
-The Lens assembly itself only uses Unity editor APIs; its `package.json` declares no package
-dependency on the kernel.
+Lens references `Grow.Editor` for the shared settings-page base and language service, and its
+`package.json` declares a dependency on `com.ronny.grow`. It never references the Store packages or
+the runtime kernel, so the package graph stays acyclic. The `Grow.Editor` friends list includes
+`Grow.Lens.Editor`; the page shell is still internal rather than public API.
 
 ## Settings
 
-`UserSettings/Grow/Lens.json` is a small per-project JSON file with a single boolean (`Enabled`). It
-lives outside `Assets/`, so Unity does not import it and it does not ship in a build; this repository
-also ignores `UserSettings/`. The default is `false`; a missing or unreadable file also resolves to
-`false`.
+`UserSettings/Grow/Lens.json` is a small per-project JSON file. Schema 4 stores the master
+`Enabled` switch, one boolean for each feature, and the indent-guide style settings:
+`HierarchyComponentIcons`, `HierarchySeparators`, `HierarchyIndentGuides`, `HierarchyActiveToggle`,
+`HierarchyContextMenus`, `ProjectContextMenus`, `AssetHeader`, `Toolbar`, `HierarchyGuideDashed`,
+`HierarchyGuideCustomColor` and `HierarchyGuideColor`. It lives outside `Assets/`, so Unity does not
+import it and it does not ship in a build; this repository also ignores `UserSettings/`. The master
+switch defaults to `false`; a missing or unreadable file also resolves to `false`. Feature switches
+default to `true`, so enabling the master switch preserves the all-features-on behaviour.
 
-The settings page is **Preferences > Grow > Lens**. Changing the toggle applies the host immediately;
-no domain reload is required. The toggle is also the only supported way to change the setting: there
-is no menu or toolbar shortcut for it.
+Schema 1 contains only `Enabled`; schema 2 stored the old shared `ContextMenus` switch. Loading either
+file normalizes it in memory to schema 4 with every missing feature enabled and copies the old
+context-menu value to both `ProjectContextMenus` and `HierarchyContextMenus`. Schema 3 added those
+two switches and `HierarchyActiveToggle`; schema 4 adds the dashed/solid guide style and custom
+guide color, defaulting to dashed with the theme-derived color. An existing user therefore keeps the
+same result.
+
+The page groups settings into **Inspector enhancements**, **Project enhancements**, **Hierarchy
+enhancements** and **Toolbar enhancements**. Each group row is a derived batch switch, not another
+stored boolean. Hierarchy shows all-on, all-off or the mixed marker from its five children; clicking
+a group sets its children through one save and one host update. Children stay individually
+switchable, including when their group row is off. Feature switches remain editable while the master
+switch is off; only the host subscriptions are gated, so the values can be prepared before enabling
+Lens again.
+
+The settings page is **Preferences > Grow > Lens**: the category is **Grow** and the page label is
+**Lens**, not **Grow Lens**, so the tree does not repeat the product prefix. It derives from the
+shared `GrowSettingsPageBase`, which supplies the same margin, label width and failure containment as
+the built-in Grow pages. The page draws a transient `SerializedObject` proxy through
+`EditorGUILayout.PropertyField` for native label/control rendering; the JSON file remains the source
+of truth. Changing the master or a feature toggle applies the host immediately and requests a
+repaint; no domain reload is required. There is no menu or toolbar shortcut for changing settings.
+
+## Language
+
+Lens bundles English and Simplified Chinese labels under `Editor/Localization/Locales`. The language
+comes from Grow's shared localization service and follows the user-global
+**Preferences > Grow > General** choice. The settings page, context menus, toolbar menu and asset
+header read the language at draw/open time, so switching the language is reflected on the next
+repaint without restarting the editor. The page's search keywords are rebuilt when the language
+changes, so a term typed in either language still finds the page.
 
 ## Host
 
 `GrowLensHost` is the only place that subscribes or unsubscribes editor callbacks. Features expose
 `Subscribe` / `Unsubscribe` methods and never subscribe in their own initializers.
 
-`Apply()` is idempotent, compares the desired state with the current one and does nothing when they
-match. It is called when:
+`Apply()` is idempotent. It resolves the master switch and each feature, then attaches only the
+subsystems that need a callback:
+
+- one Hierarchy row callback while component icons, separators, indent guides or the active toggle
+  are enabled;
+- the asset header callback while asset header actions are enabled;
+- the Project context-menu callback while Project context menus are enabled;
+- the Hierarchy context-menu callback while Hierarchy context menus are enabled;
+- the toolbar poller and button while the toolbar menu is enabled.
+
+Turning a feature off removes or gates only that feature; turning the master switch off removes all
+subscriptions. `Apply()` is called when:
 
 - the editor loads and `[InitializeOnLoadMethod]` runs, including after a domain reload;
-- the settings toggle changes.
+- the master switch changes;
+- any feature toggle changes.
 
 `GrowLensHost.Disable(reason)` is the failure path: it logs an error, marks Lens disabled for the
 current editor session, and removes every subscription. The saved preference stays enabled, so a
@@ -70,8 +115,10 @@ The host also treats batch mode as disabled, so a headless test run never instal
 | Hierarchy component icons | `ItemComponentIcon` | Right-aligned icons packed in component order; plain left-click opens a focused Inspector, matching the component's **Properties...** action |
 | Hierarchy separators | `HierarchySeparator` | Read-only `##RRGGBB[#RRGGBB]Text` headers; create through **GameObject > Grow > Create Separator**; search mode skips them |
 | Hierarchy tree connectors | `ItemIndentLine` | T/L connectors on ancestor columns plus horizontal arms, from the live `TreeViewGUI` geometry and visible row depths |
+| Hierarchy active toggle | `ItemActiveToggle` | Pinned checkbox at the row's right edge; toggles `activeSelf` with Undo and reserves space before component icons |
 | Asset header actions | `GrowAssetHead` | Copy full path, asset path and GUID; Rider actions are optional and the row is hidden for excluded types |
-| Project / Hierarchy menus | `GrowContextMenus` + `GrowMenuActions` | Ctrl+right-click; calls Unity APIs and Unity menu items directly |
+| Project context menus | `GrowContextMenus` + `GrowMenuActions` | Ctrl+right-click in the Project window; calls Unity APIs and Unity menu items directly |
+| Hierarchy context menus | `GrowContextMenus` + `GrowMenuActions` | Ctrl+right-click in the Hierarchy window; includes separator creation |
 | Toolbar menu | `GrowToolbar` | One left-side **Grow** entry that opens a menu; no Play mode container changes |
 
 ### Hierarchy component icons
@@ -87,6 +134,14 @@ consumes the event so the Hierarchy does not also select the row. Any modifier, 
 click outside the icon rect leaves the event to the Hierarchy. If the internal entry point cannot be
 resolved, the fallback selects the component and opens the Inspector window, which does change the
 selection.
+
+### Hierarchy active toggle
+
+`ItemActiveToggle` pins a 16-pixel checkbox two pixels from the row's right edge. Component icons
+subtract its reserved width, so the two never overlap. A plain left click records Undo, calls
+`GameObject.SetActive`, marks the object dirty and consumes the event; the checkbox reflects
+`activeSelf`. The toggle is available on separator rows as well, because those are ordinary
+GameObjects.
 
 ### Hierarchy separators
 
@@ -119,6 +174,14 @@ full-height segment with a following sibling or a half-height segment on the las
 horizontal arm that stops at the foldout arrow for branches and reaches the content for leaves. The
 current row's own foldout column is never used. Depth 0 (a scene header), a searching tree and any
 unresolved geometry draw nothing; the unresolved case logs once.
+
+The line style is configurable while indent guides are enabled: `Dashed guides` selects the fixed
+dashed pattern or a solid line. `Guide color` selects a custom color and `Reset` restores the
+theme-derived color. Line width, dash length and gap stay fixed so the connector column remains
+aligned with the foldout triangle. Vertical lines are pixel-snapped around the guide X. The parent
+vertical is split around the arm's pixel row, and the horizontal arm starts at the vertical's left
+edge, so the arm owns the corner pixel: a T/L joint neither overlaps by half a line nor leaves a
+missing corner.
 
 ## Asset header
 
@@ -186,31 +249,37 @@ user-action error into a persistent opt-out.
 - Context menus require Ctrl+right-click. Copy and reveal actions use the clicked row; Delete acts on
   the current selection, and create actions run Unity's built-in asset/GameObject commands.
 - Separators are real GameObjects, so they exist at runtime and in a build.
-- The package has no localization catalog; its UI text is English.
+- English and Simplified Chinese are bundled; adding another language means adding a locale JSON file
+  under `Editor/Localization/Locales`.
 
 ## Testing
 
 The package has an EditMode test assembly for the parts that do not need IMGUI: the settings JSON
-round-trip, separator parsing, component icon layout, connector geometry, the reflection probes
-against the 2022.3 internal members, and Hierarchy path helpers. Drawing, clicks, menus and the
-toolbar are checked manually in the editor; the automated suite cannot drive them.
+round-trip, feature-switch defaults and legacy migration, language selection and fallback, separator
+parsing, component icon layout, connector geometry, the reflection probes against the 2022.3 internal
+members, and Hierarchy path helpers. Drawing, clicks, menus and the toolbar are checked manually in
+the editor; the automated suite cannot drive them.
 
 Manual smoke checklist for Unity 2022.3:
 
-1. Enable Lens under **Preferences > Grow > Lens**; the toolbar entry appears without a restart.
+1. Enable Grow Lens under **Preferences > Grow > Lens**; the toolbar entry appears without a restart.
 2. Open the **Grow** toolbar menu and check Preferences, Console and Take Screenshot.
 3. Select a material or texture and confirm the Inspector header actions; select a Hierarchy object
-   and confirm component icons and tree connectors.
+   and confirm component icons, the right-edge active toggle and tree connectors.
 4. Click a component icon with a plain left click; the focused Inspector opens and the selection does
-   not change. Modifier clicks and right-clicks still belong to the Hierarchy.
+   not change. Click the active toggle and confirm Undo restores the previous state. Modifier clicks
+   and right-clicks still belong to the Hierarchy.
 5. Ctrl+right-click a Project item and a Hierarchy row; confirm the menus act on the clicked item.
 6. Create a separator with **GameObject > Grow > Create Separator**, rename it to
    `##2E7D32#FFFFFF Section`, then select it and confirm the native row returns.
 7. Search the Hierarchy and confirm separators and connectors disappear.
-8. Toggle Lens off and confirm the Grow entry and every Hierarchy/header decoration disappear.
-9. Enter Play mode, change the editor layout, and confirm the Grow entry re-attaches without duplicate
-   buttons.
-10. Run `pwsh ci/run-tests.ps1 -Mode EditMode`; batch mode must not install callbacks.
+8. Turn individual feature switches off and confirm only that subsystem disappears; turn the master
+   switch off and confirm the Grow entry and every decoration disappear.
+9. Change the language in **Preferences > Grow > General** and confirm the Lens page, context menu,
+   toolbar menu and asset header update without a restart.
+10. Enter Play mode, change the editor layout, and confirm the Grow entry re-attaches without
+    duplicate buttons.
+11. Run `pwsh ci/run-tests.ps1 -Mode EditMode`; batch mode must not install callbacks.
 
 ## See also
 
