@@ -10,7 +10,9 @@
       "version": "file:com.ronny.grow.lens",
       "depth": 0,
       "source": "embedded",
-      "dependencies": {}
+      "dependencies": {
+        "com.ronny.grow": "3.0.0-exp.1"
+      }
     },
     "com.ronny.grow.store": {
       "version": "file:com.ronny.grow.store",

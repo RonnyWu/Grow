@@ -19,6 +19,17 @@ namespace Grow.Lens.Tests.Editor.Hierarchy {
         }
 
         [Test]
+        public void Icons_ReserveTheActiveToggleInset() {
+            var row = new Rect(10f, 20f, 100f, 16f);
+
+            Assert.AreEqual(3, ComponentIconLayout.GetVisibleCount(row, 20f, 10, 16f, 18f));
+            Assert.AreEqual(new Rect(76f, 20f, 16f, 16f),
+                ComponentIconLayout.GetRect(row, 0, 16f, 18f));
+            Assert.AreEqual(new Rect(60f, 20f, 16f, 16f),
+                ComponentIconLayout.GetRect(row, 1, 16f, 18f));
+        }
+
+        [Test]
         public void Icons_StopAtNameWidth() {
             var row = new Rect(10f, 20f, 100f, 16f);
 

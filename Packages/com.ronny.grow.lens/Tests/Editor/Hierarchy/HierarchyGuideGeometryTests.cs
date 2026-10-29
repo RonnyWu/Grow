@@ -63,6 +63,23 @@ namespace Grow.Lens.Tests.Editor.Hierarchy {
         }
 
         [Test]
+        public void LineStart_IsCenteredOnTheGuide() {
+            const float center = 38f;
+            const float width = 3f;
+
+            Assert.AreEqual(36.5f, HierarchyGuideGeometry.CenteredStart(center, width));
+            Assert.AreEqual(center, HierarchyGuideGeometry.CenteredStart(center, width) + width * 0.5f);
+        }
+
+        [Test]
+        public void PixelSnap_RoundsIntegerAndHalfIntegerCentersToTheRightColumn() {
+            Assert.AreEqual(39f, HierarchyGuideGeometry.PixelSnappedStart(39f, 1f));
+            Assert.AreEqual(39f, HierarchyGuideGeometry.PixelSnappedStart(39.5f, 1f));
+            Assert.AreEqual(39f, HierarchyGuideGeometry.PixelSnappedStart(39.2f, 1f));
+            Assert.AreEqual(40f, HierarchyGuideGeometry.PixelSnappedStart(39.6f, 1f));
+        }
+
+        [Test]
         public void FollowingSibling_RespectsTreeDepth() {
             // 0 / 1 A / 2 A1 / 2 A2 / 1 B / 2 B1 / 2 B2 / 1 C
             var depths = new[] { 0, 1, 2, 2, 1, 2, 2, 1 };

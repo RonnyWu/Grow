@@ -9,12 +9,17 @@ namespace Grow.Lens.Editor.Hierarchy {
     internal static class HierarchySeparatorMenu {
         [MenuItem("GameObject/Grow/Create Separator", false, 10)]
         private static void Create() {
+            if (!GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchySeparators)) {
+                return;
+            }
+
             GrowLensGuard.RunAction("Create Hierarchy Separator", GrowMenuActions.CreateHierarchySeparator);
         }
 
         [MenuItem("GameObject/Grow/Create Separator", true)]
         private static bool Validate() {
-            return GrowLensSettings.Enabled && GrowMenuActions.CanCreateHierarchySeparator;
+            return GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchySeparators) &&
+                GrowMenuActions.CanCreateHierarchySeparator;
         }
     }
 }

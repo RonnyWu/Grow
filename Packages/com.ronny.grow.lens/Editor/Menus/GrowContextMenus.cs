@@ -2,6 +2,7 @@
 
 using System;
 using Grow.Lens.Editor.Core;
+using Grow.Lens.Editor.Localization;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -12,15 +13,21 @@ namespace Grow.Lens.Editor.Menus {
     /// directly and never run Grow's own menu items through <c>EditorApplication.ExecuteMenuItem</c>.
     /// </summary>
     internal static class GrowContextMenus {
-        internal static void Subscribe() {
+        internal static void SubscribeProject() {
             EditorApplication.projectWindowItemOnGUI -= OnProjectGUI;
             EditorApplication.projectWindowItemOnGUI += OnProjectGUI;
+        }
+
+        internal static void UnsubscribeProject() {
+            EditorApplication.projectWindowItemOnGUI -= OnProjectGUI;
+        }
+
+        internal static void SubscribeHierarchy() {
             EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyGUI;
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
         }
 
-        internal static void Unsubscribe() {
-            EditorApplication.projectWindowItemOnGUI -= OnProjectGUI;
+        internal static void UnsubscribeHierarchy() {
             EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyGUI;
         }
 
@@ -66,59 +73,67 @@ namespace Grow.Lens.Editor.Menus {
             var hasAsset = target != null && !string.IsNullOrEmpty(assetPath);
 
             var menu = new GenericMenu();
-            menu.AddDisabledItem(new GUIContent("Grow Lens"));
+            menu.AddDisabledItem(new GUIContent(Text("grow.lens.menu.header")));
             menu.AddSeparator("");
 
-            Add(menu, "Copy Name", () => GrowMenuActions.CopyName(target), hasAsset);
-            Add(menu, "Copy Path", () => GrowMenuActions.CopyPath(target), hasAsset);
-            Add(menu, "Copy GUID", () => GrowMenuActions.CopyGuid(target), hasAsset);
-            Add(menu, "Show in Explorer", () => GrowMenuActions.RevealInFinder(target), hasAsset);
+            Add(menu, "grow.lens.menu.copyName", () => GrowMenuActions.CopyName(target), hasAsset);
+            Add(menu, "grow.lens.menu.copyPath", () => GrowMenuActions.CopyPath(target), hasAsset);
+            Add(menu, "grow.lens.menu.copyGuid", () => GrowMenuActions.CopyGuid(target), hasAsset);
+            Add(menu, "grow.lens.menu.showInExplorer", () => GrowMenuActions.RevealInFinder(target), hasAsset);
 
             menu.AddSeparator("");
-            Add(menu, "Create Folder", GrowMenuActions.CreateFolder);
-            Add(menu, "Create Scene", () => GrowMenuActions.ExecuteMenuItem("Assets/Create/Scene"));
-            Add(menu, "Create Material", () => GrowMenuActions.ExecuteMenuItem("Assets/Create/Material"));
-            Add(menu, "Create Prefab", () => GrowMenuActions.ExecuteMenuItem("Assets/Create/Prefab"));
-            Add(menu, "Create Prefab Variant",
+            Add(menu, "grow.lens.menu.createFolder", GrowMenuActions.CreateFolder);
+            Add(menu, "grow.lens.menu.createScene",
+                () => GrowMenuActions.ExecuteMenuItem("Assets/Create/Scene"));
+            Add(menu, "grow.lens.menu.createMaterial",
+                () => GrowMenuActions.ExecuteMenuItem("Assets/Create/Material"));
+            Add(menu, "grow.lens.menu.createPrefab",
+                () => GrowMenuActions.ExecuteMenuItem("Assets/Create/Prefab"));
+            Add(menu, "grow.lens.menu.createPrefabVariant",
                 () => GrowMenuActions.ExecuteMenuItem("Assets/Create/Prefab Variant"));
 
             menu.AddSeparator("");
-            Add(menu, "Delete", GrowMenuActions.DeleteSelection, hasAsset);
+            Add(menu, "grow.lens.menu.delete", GrowMenuActions.DeleteSelection, hasAsset);
             menu.ShowAsContext();
         }
 
         private static void ShowHierarchyMenu(GameObject target) {
             var menu = new GenericMenu();
-            menu.AddDisabledItem(new GUIContent("Grow Lens"));
+            menu.AddDisabledItem(new GUIContent(Text("grow.lens.menu.header")));
             menu.AddSeparator("");
 
             var hasGuid = GrowMenuActions.TryGetGuidInfo(target, out _, out _);
-            Add(menu, "Copy Name", () => GrowMenuActions.CopyName(target));
-            Add(menu, "Copy Path", () => GrowMenuActions.CopyPath(target));
-            Add(menu, "Copy GUID", () => GrowMenuActions.CopyGuid(target), hasGuid);
+            Add(menu, "grow.lens.menu.copyName", () => GrowMenuActions.CopyName(target));
+            Add(menu, "grow.lens.menu.copyPath", () => GrowMenuActions.CopyPath(target));
+            Add(menu, "grow.lens.menu.copyGuid", () => GrowMenuActions.CopyGuid(target), hasGuid);
 
             menu.AddSeparator("");
-            Add(menu, "Create Empty And Reset",
+            Add(menu, "grow.lens.menu.createEmptyReset",
                 () => GrowMenuActions.CreateEmpty("GameObject/Create Empty"));
-            Add(menu, "Create Empty Child And Reset",
+            Add(menu, "grow.lens.menu.createEmptyChildReset",
                 () => GrowMenuActions.CreateEmpty("GameObject/Create Empty Child"));
-            Add(menu, "Create Empty Parent And Reset",
+            Add(menu, "grow.lens.menu.createEmptyParentReset",
                 () => GrowMenuActions.CreateEmpty("GameObject/Create Empty Parent"));
-            Add(menu, "Create Separator", GrowMenuActions.CreateHierarchySeparator,
+            Add(menu, "grow.lens.menu.createSeparator", GrowMenuActions.CreateHierarchySeparator,
+                GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchySeparators) &&
                 GrowMenuActions.CanCreateHierarchySeparator);
 
             menu.AddSeparator("");
-            Add(menu, "Delete", GrowMenuActions.DeleteSelection);
+            Add(menu, "grow.lens.menu.delete", GrowMenuActions.DeleteSelection);
             menu.ShowAsContext();
         }
 
-        private static void Add(GenericMenu menu, string text, Action action, bool enabled = true) {
-            var content = new GUIContent(text);
+        private static void Add(GenericMenu menu, string textKey, Action action, bool enabled = true) {
+            var content = new GUIContent(Text(textKey));
             if (enabled) {
                 menu.AddItem(content, false, () => GrowLensGuard.RunAction("Context menu action", action));
             } else {
                 menu.AddDisabledItem(content);
             }
+        }
+
+        private static string Text(string key) {
+            return GrowLensLocalization.Get(key);
         }
     }
 }

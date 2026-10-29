@@ -66,5 +66,18 @@ namespace Grow.Lens.Editor.Hierarchy {
             int ancestorDepth) {
             return baseIndent + ancestorDepth * indentWidth + foldoutWidth * 0.5f;
         }
+
+        /// <summary>Left edge of a line centered on <paramref name="center"/>.</summary>
+        internal static float CenteredStart(float center, float width) {
+            return center - width * 0.5f;
+        }
+
+        /// <summary>
+        /// Snaps a line to an integer pixel column. Rounding up after subtracting half the width
+        /// keeps both integer and half-integer foldout centers on the same pixel grid.
+        /// </summary>
+        internal static float PixelSnappedStart(float center, float width) {
+            return Mathf.Ceil(center - width * 0.5f);
+        }
     }
 }

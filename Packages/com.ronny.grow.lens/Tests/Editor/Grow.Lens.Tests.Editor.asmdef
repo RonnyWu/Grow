@@ -2,6 +2,7 @@
     "name": "Grow.Lens.Tests.Editor",
     "rootNamespace": "Grow.Lens",
     "references": [
+        "Grow.Editor",
         "Grow.Lens.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

@@ -1,7 +1,9 @@
 {
   "name": "Grow.Lens.Editor",
   "rootNamespace": "Grow.Lens",
-  "references": [],
+  "references": [
+    "Grow.Editor"
+  ],
   "includePlatforms": [
     "Editor"
   ],

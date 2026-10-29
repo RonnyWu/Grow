@@ -41,7 +41,8 @@ namespace Grow.Lens.Editor.Hierarchy {
             }
         }
 
-        internal static void OnGameObjectGUI(int instanceID, GameObject gameObject, Rect rect) {
+        internal static void OnGameObjectGUI(int instanceID, GameObject gameObject, Rect rect,
+            float rightInset = 0f) {
             if (!_missingScriptIconResolved) {
                 _missingScriptIcon = EditorGUIUtility.IconContent(MissingScriptIconName).image as Texture2D;
                 _missingScriptIconResolved = true;
@@ -52,10 +53,10 @@ namespace Grow.Lens.Editor.Hierarchy {
                 return;
             }
 
-            var visibleCount =
-                ComponentIconLayout.GetVisibleCount(rect, GetNameWidth(gameObject.name), icons.Count, IconSize);
+            var visibleCount = ComponentIconLayout.GetVisibleCount(rect,
+                GetNameWidth(gameObject.name), icons.Count, IconSize, rightInset);
             for (var index = 0; index < visibleCount; index++) {
-                var iconRect = ComponentIconLayout.GetRect(rect, index, IconSize);
+                var iconRect = ComponentIconLayout.GetRect(rect, index, IconSize, rightInset);
                 var entry = icons[index];
                 if (entry.Texture != null) {
                     GUI.DrawTexture(iconRect, entry.Texture);
@@ -68,7 +69,8 @@ namespace Grow.Lens.Editor.Hierarchy {
         }
 
         /// <summary>Returns true when the event is a plain left click on a visible component icon.</summary>
-        internal static bool TryHandleClick(int instanceID, GameObject gameObject, Rect rect) {
+        internal static bool TryHandleClick(int instanceID, GameObject gameObject, Rect rect,
+            float rightInset = 0f) {
             var current = Event.current;
             if (current == null || current.type != EventType.MouseDown || current.button != 0 ||
                 current.control || current.shift || current.alt || current.command ||
@@ -81,10 +83,11 @@ namespace Grow.Lens.Editor.Hierarchy {
                 return false;
             }
 
-            var visibleCount =
-                ComponentIconLayout.GetVisibleCount(rect, GetNameWidth(gameObject.name), icons.Count, IconSize);
+            var visibleCount = ComponentIconLayout.GetVisibleCount(rect,
+                GetNameWidth(gameObject.name), icons.Count, IconSize, rightInset);
             for (var index = 0; index < visibleCount; index++) {
-                if (!ComponentIconLayout.GetRect(rect, index, IconSize).Contains(current.mousePosition)) {
+                if (!ComponentIconLayout.GetRect(rect, index, IconSize, rightInset)
+                        .Contains(current.mousePosition)) {
                     continue;
                 }
 
