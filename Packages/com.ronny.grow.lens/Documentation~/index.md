@@ -194,6 +194,8 @@ row of buttons and does not touch the Play mode controls.
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | No feature appears | The master switch or that specific feature is off, or the editor is in batch mode. | Enable Lens and the feature under **Preferences > Grow > Lens**. |
+| The page is read-only | The settings file is damaged, was written by a newer version, or is marked read-only. | Check the warning at the top of the page; fix or remove `UserSettings/Grow/Lens.json` and reopen the page. |
+| A change did not stick | The write failed; the page shows an error and keeps the previous values. | Check the Console for the file error, fix the path or permissions, and change the setting again. |
 | Hierarchy decorations are missing | Another editor tool is drawing over the row, or the project is in search mode. | Clear the Hierarchy search; disable the other row tool. |
 | Connectors are missing | The Hierarchy tree geometry cannot be resolved. | Check the Console for the one-time warning; icons and separators are unaffected. |
 | A separator is not colored | The name does not match the format. | Use `##RRGGBB[#RRGGBB]Text` or `##-`. |

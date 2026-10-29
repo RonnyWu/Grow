@@ -71,6 +71,14 @@ the built-in Grow pages. The page draws a transient `SerializedObject` proxy thr
 of truth. Changing the master or a feature toggle applies the host immediately and requests a
 repaint; no domain reload is required. There is no menu or toolbar shortcut for changing settings.
 
+The page treats the file as the single source of truth and never lies about a write. One page
+interaction produces at most one file write and at most one host update, and the in-memory values
+are replaced only after the write succeeds, so a failed save leaves the running editor on the last
+committed values and shows an error instead. A damaged file, a file written by a newer version and
+a read-only file are shown as warnings and make the page read-only: they are never overwritten or
+downgraded to the current schema. Style-only changes (dashed guides, guide color) repaint without
+touching the host subscriptions.
+
 ## Language
 
 Lens bundles English and Simplified Chinese labels under `Editor/Localization/Locales`. The language

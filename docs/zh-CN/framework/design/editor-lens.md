@@ -1,4 +1,4 @@
-<!-- source: docs/en/framework/design/editor-lens.md @ blob:4fe7a5ad98e772f52fb95e8a62ed0273053c938e -->
+<!-- source: docs/en/framework/design/editor-lens.md @ blob:3f6b265a2991970f0a7a5658e6274e5e7dbeb67d -->
 <!-- 中文译文；以英文 docs/en/framework/design/editor-lens.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/framework/design/editor-lens.md 核验。 -->
 
 # 编辑器 Lens
@@ -42,6 +42,8 @@ schema 1 只有 `Enabled`；schema 2 使用一个共享的 `ContextMenus` 开关
 设置页按 **Inspector 增强**、**Project 增强**、**Hierarchy 增强**、**Toolbar 增强** 四类分组。每个分组行都是派生的批量开关，不是额外持久化字段。Hierarchy 根据五个子项显示全开、全关或混合标记；点击分组会通过一次保存和一次宿主更新设置子项。子项始终可以单独切换，包括分组行关闭时。主开关关闭时功能开关仍可编辑，只是不订阅宿主，因此可以先配置再重新启用 Lens。
 
 设置页在 **Preferences > Grow > Lens**：分类是 **Grow**，页面标签是 **Lens** 而不是 **Grow Lens**，因此树中不会重复产品前缀。页面继承共享的 `GrowSettingsPageBase`，与内置 Grow 页面使用相同的边距、label 宽度和失败隔离。页面通过临时 `SerializedObject` 代理和 `EditorGUILayout.PropertyField` 绘制原生 label/控件，JSON 文件仍是唯一真源。切换主开关或功能开关会立即应用宿主并请求重绘，无需域重载。没有用于修改设置的菜单或工具栏快捷入口。
+
+页面把文件当作唯一真源，并且不会谎报写入结果。一次页面交互至多产生一次写盘和一次宿主更新；内存中的值只在写盘成功后替换，因此保存失败时编辑器仍使用上一次成功提交的值，并在页面上显示错误。损坏的文件、由更新版本写入的文件以及只读文件会显示警告并让页面只读：它们永远不会被覆盖，也不会被降写为当前 schema。仅样式类的修改（虚线引导线、引导线颜色）只重绘，不触碰宿主订阅。
 
 ## 语言
 
