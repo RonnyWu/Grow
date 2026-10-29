@@ -65,6 +65,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   immediately instead of waiting for the next mouse movement.
 - The Preferences page's search keywords are rebuilt when the shared language changes, so the page
   stays findable in both languages.
+- The page reports settings-file problems instead of failing silently: a damaged file, a file
+  written by a newer version and a read-only file make the page read-only and are never
+  overwritten, and a failed write keeps the previous values and shows an error. A damaged or newer
+  file is no longer replaced or downgraded on the next change.
+- One page interaction now produces at most one file write and at most one host update, and a
+  style-only change repaints without touching the host subscriptions.
+- A session-level disable after a feature failure is no longer written to disk by a later change,
+  so Grow Lens comes back after a restart.
 
 ## [3.0.0-exp.1] - 2026-10-19
 

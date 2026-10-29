@@ -31,6 +31,7 @@ namespace Grow.Lens.Editor.Settings {
         private SerializedProperty _projectContextMenus;
         private SerializedProperty _assetHeader;
         private SerializedProperty _toolbar;
+        private bool _resetGuideColor;
 
         private GrowLensSettingsProvider(string path, SettingsScope scope) : base(path, scope) {
         }
@@ -87,13 +88,26 @@ namespace Grow.Lens.Editor.Settings {
         protected override void DrawContent(string searchContext) {
             EnsureProxy();
 
-            var allInspector = GrowLensSettings.GetFeature(GrowLensFeature.AssetHeader);
-            var allProject = GrowLensSettings.GetFeature(GrowLensFeature.ProjectContextMenus);
-            var allHierarchy = GrowLensSettings.AllHierarchyFeatures;
-            var mixedHierarchy = GrowLensSettings.AnyHierarchyFeature && !allHierarchy;
-            var allToolbar = GrowLensSettings.GetFeature(GrowLensFeature.Toolbar);
-            SyncProxy(allInspector, allProject, allHierarchy, allToolbar);
+            var snapshot = GrowLensSettings.Snapshot;
+            SyncProxy(snapshot);
+            DrawStatus(GrowLensSettings.Status);
 
+            // A read-only file still shows its values; the controls are disabled instead of
+            // accepting edits that the file would refuse.
+            using (new EditorGUI.DisabledScope(!GrowLensSettings.CanSave)) {
+                DrawSettings(snapshot);
+            }
+
+            if (!_serialized.ApplyModifiedPropertiesWithoutUndo()) {
+                return;
+            }
+
+            // One frame becomes one candidate, one save and at most one host update.
+            GrowLensSettings.TryApply(BuildEdits(snapshot));
+            _resetGuideColor = false;
+        }
+
+        private void DrawSettings(GrowLensSettings.Data snapshot) {
             EditorGUILayout.PropertyField(_enabled, Content(
                 "grow.lens.preferences.master", "grow.lens.preferences.master.tooltip"));
 
@@ -113,6 +127,8 @@ namespace Grow.Lens.Editor.Settings {
                 EditorGUI.indentLevel--;
             }
 
+            var allHierarchy = GrowLensSettings.AllHierarchy(snapshot);
+            var mixedHierarchy = !allHierarchy && GrowLensSettings.AnyHierarchy(snapshot);
             DrawGroup(_hierarchyGroup, "grow.lens.preferences.hierarchyGroup", mixedHierarchy);
             EditorGUI.indentLevel++;
             try {
@@ -137,61 +153,117 @@ namespace Grow.Lens.Editor.Settings {
             } finally {
                 EditorGUI.indentLevel--;
             }
+        }
 
-            if (!_serialized.ApplyModifiedPropertiesWithoutUndo()) {
+        /// <summary>Reports a settings file that cannot be saved instead of failing silently.</summary>
+        private static void DrawStatus(GrowLensSettingsStatus status) {
+            var key = status switch {
+                GrowLensSettingsStatus.Corrupted => "grow.lens.preferences.corrupted",
+                GrowLensSettingsStatus.NewerSchema => "grow.lens.preferences.newerSchema",
+                GrowLensSettingsStatus.ReadOnly => "grow.lens.preferences.readOnly",
+                GrowLensSettingsStatus.WriteFailed => "grow.lens.preferences.writeFailed",
+                _ => null
+            };
+
+            if (key == null) {
                 return;
             }
 
-            if (_enabled.boolValue != GrowLensSettings.Enabled) {
-                GrowLensSettings.Enabled = _enabled.boolValue;
+            var type = status == GrowLensSettingsStatus.WriteFailed
+                ? MessageType.Error
+                : MessageType.Warning;
+            EditorGUILayout.HelpBox(GrowLensLocalization.Get(key), type);
+        }
+
+        /// <summary>
+        /// Turns the proxy into the frame's edit set. Only values that differ from the snapshot
+        /// are reported, so an untouched frame produces no candidate and no save.
+        /// </summary>
+        private GrowLensPageEdits BuildEdits(GrowLensSettings.Data snapshot) {
+            var edits = new GrowLensPageEdits();
+
+            if (_enabled.boolValue != snapshot.Enabled) {
+                edits.Master = _enabled.boolValue;
             }
 
-            // A group row is a batch switch over its children. Apply each changed group, then
-            // apply the children of groups that did not change, so clicking one group never
-            // discards an edit made to a child of another group in the same frame.
-            var inspectorChanged = _inspectorGroup.boolValue != allInspector;
-            var projectChanged = _projectGroup.boolValue != allProject;
-            var hierarchyChanged = _hierarchyGroup.boolValue != allHierarchy;
-            var toolbarChanged = _toolbarGroup.boolValue != allToolbar;
-
-            if (inspectorChanged) {
-                GrowLensSettings.SetFeature(GrowLensFeature.AssetHeader, _inspectorGroup.boolValue);
+            if (_inspectorGroup.boolValue != snapshot.AssetHeader) {
+                edits.InspectorGroup = _inspectorGroup.boolValue;
             }
 
-            if (projectChanged) {
-                GrowLensSettings.SetFeature(
-                    GrowLensFeature.ProjectContextMenus, _projectGroup.boolValue);
+            if (_projectGroup.boolValue != snapshot.ProjectContextMenus) {
+                edits.ProjectGroup = _projectGroup.boolValue;
             }
 
-            if (hierarchyChanged) {
-                GrowLensSettings.SetHierarchyFeatures(_hierarchyGroup.boolValue);
+            if (_hierarchyGroup.boolValue != GrowLensSettings.AllHierarchy(snapshot)) {
+                edits.HierarchyGroup = _hierarchyGroup.boolValue;
             }
 
-            if (toolbarChanged) {
-                GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, _toolbarGroup.boolValue);
+            if (_toolbarGroup.boolValue != snapshot.Toolbar) {
+                edits.ToolbarGroup = _toolbarGroup.boolValue;
             }
 
-            if (!hierarchyChanged) {
-                ApplyFeature(_hierarchyComponentIcons, GrowLensFeature.HierarchyComponentIcons);
-                ApplyFeature(_hierarchySeparators, GrowLensFeature.HierarchySeparators);
-                ApplyFeature(_hierarchyIndentGuides, GrowLensFeature.HierarchyIndentGuides);
-                ApplyFeature(_hierarchyActiveToggle, GrowLensFeature.HierarchyActiveToggle);
-                ApplyFeature(_hierarchyContextMenus, GrowLensFeature.HierarchyContextMenus);
+            ApplyFeatureEdit(ref edits, _assetHeader, snapshot, GrowLensFeature.AssetHeader);
+            ApplyFeatureEdit(ref edits, _projectContextMenus, snapshot,
+                GrowLensFeature.ProjectContextMenus);
+            ApplyFeatureEdit(ref edits, _hierarchyComponentIcons, snapshot,
+                GrowLensFeature.HierarchyComponentIcons);
+            ApplyFeatureEdit(ref edits, _hierarchySeparators, snapshot,
+                GrowLensFeature.HierarchySeparators);
+            ApplyFeatureEdit(ref edits, _hierarchyIndentGuides, snapshot,
+                GrowLensFeature.HierarchyIndentGuides);
+            ApplyFeatureEdit(ref edits, _hierarchyActiveToggle, snapshot,
+                GrowLensFeature.HierarchyActiveToggle);
+            ApplyFeatureEdit(ref edits, _hierarchyContextMenus, snapshot,
+                GrowLensFeature.HierarchyContextMenus);
+            ApplyFeatureEdit(ref edits, _toolbar, snapshot, GrowLensFeature.Toolbar);
+
+            if (_hierarchyGuideDashed.boolValue != snapshot.HierarchyGuideDashed) {
+                edits.GuideDashed = _hierarchyGuideDashed.boolValue;
             }
 
-            if (!projectChanged) {
-                ApplyFeature(_projectContextMenus, GrowLensFeature.ProjectContextMenus);
+            // A reset wins over a color edit in the same frame.
+            if (_resetGuideColor) {
+                edits.ResetGuideColor = true;
+            } else if (_hierarchyGuideColor.colorValue != GrowLensSettings.HierarchyGuideColor) {
+                edits.GuideColor = _hierarchyGuideColor.colorValue;
             }
 
-            if (!inspectorChanged) {
-                ApplyFeature(_assetHeader, GrowLensFeature.AssetHeader);
+            return edits;
+        }
+
+        private static void ApplyFeatureEdit(ref GrowLensPageEdits edits,
+            SerializedProperty property, GrowLensSettings.Data snapshot, GrowLensFeature feature) {
+            var value = property.boolValue;
+            if (value == GrowLensSettings.ReadFeature(snapshot, feature)) {
+                return;
             }
 
-            if (!toolbarChanged) {
-                ApplyFeature(_toolbar, GrowLensFeature.Toolbar);
+            switch (feature) {
+                case GrowLensFeature.AssetHeader:
+                    edits.AssetHeader = value;
+                    break;
+                case GrowLensFeature.ProjectContextMenus:
+                    edits.ProjectContextMenus = value;
+                    break;
+                case GrowLensFeature.HierarchyComponentIcons:
+                    edits.HierarchyComponentIcons = value;
+                    break;
+                case GrowLensFeature.HierarchySeparators:
+                    edits.HierarchySeparators = value;
+                    break;
+                case GrowLensFeature.HierarchyIndentGuides:
+                    edits.HierarchyIndentGuides = value;
+                    break;
+                case GrowLensFeature.HierarchyActiveToggle:
+                    edits.HierarchyActiveToggle = value;
+                    break;
+                case GrowLensFeature.HierarchyContextMenus:
+                    edits.HierarchyContextMenus = value;
+                    break;
+                case GrowLensFeature.Toolbar:
+                    edits.Toolbar = value;
+                    break;
             }
-
-            ApplyGuideSettings();
         }
 
         private static void DrawGroup(SerializedProperty property, string key, bool mixed) {
@@ -218,31 +290,18 @@ namespace Grow.Lens.Editor.Settings {
                 EditorGUILayout.PropertyField(_hierarchyGuideColor, Content(
                     "grow.lens.preferences.guideColor",
                     "grow.lens.preferences.guideColor.tooltip"));
-                if (GUILayout.Button(
-                        new GUIContent(
-                            GrowLensLocalization.Get("grow.lens.preferences.guideColorReset"),
-                            GrowLensLocalization.Get(
-                                "grow.lens.preferences.guideColorReset.tooltip")),
-                        GUILayout.Width(56f))) {
-                    GrowLensSettings.ResetHierarchyGuideColor();
-                    _hierarchyGuideColor.colorValue = GrowLensSettings.HierarchyGuideColor;
+                using (new EditorGUI.DisabledScope(
+                    !GrowLensSettings.HierarchyGuideColorCustomized)) {
+                    if (GUILayout.Button(
+                            new GUIContent(
+                                GrowLensLocalization.Get("grow.lens.preferences.guideColorReset"),
+                                GrowLensLocalization.Get(
+                                    "grow.lens.preferences.guideColorReset.tooltip")),
+                            GUILayout.Width(56f))) {
+                        // Collected and applied with the rest of the frame's edits.
+                        _resetGuideColor = true;
+                    }
                 }
-            }
-        }
-
-        private static void ApplyFeature(SerializedProperty property, GrowLensFeature feature) {
-            if (property.boolValue != GrowLensSettings.GetFeature(feature)) {
-                GrowLensSettings.SetFeature(feature, property.boolValue);
-            }
-        }
-
-        private void ApplyGuideSettings() {
-            if (_hierarchyGuideDashed.boolValue != GrowLensSettings.HierarchyGuideDashed) {
-                GrowLensSettings.HierarchyGuideDashed = _hierarchyGuideDashed.boolValue;
-            }
-
-            if (_hierarchyGuideColor.colorValue != GrowLensSettings.HierarchyGuideColor) {
-                GrowLensSettings.SetHierarchyGuideColor(_hierarchyGuideColor.colorValue);
             }
         }
 
@@ -276,29 +335,22 @@ namespace Grow.Lens.Editor.Settings {
             _toolbar = _serialized.FindProperty("toolbar");
         }
 
-        private void SyncProxy(bool allInspector, bool allProject, bool allHierarchy,
-            bool allToolbar) {
-            _proxy.Enabled = GrowLensSettings.Enabled;
-            _proxy.InspectorGroup = allInspector;
-            _proxy.ProjectGroup = allProject;
-            _proxy.HierarchyGroup = allHierarchy;
-            _proxy.ToolbarGroup = allToolbar;
-            _proxy.HierarchyComponentIcons =
-                GrowLensSettings.GetFeature(GrowLensFeature.HierarchyComponentIcons);
-            _proxy.HierarchySeparators =
-                GrowLensSettings.GetFeature(GrowLensFeature.HierarchySeparators);
-            _proxy.HierarchyIndentGuides =
-                GrowLensSettings.GetFeature(GrowLensFeature.HierarchyIndentGuides);
-            _proxy.HierarchyGuideDashed = GrowLensSettings.HierarchyGuideDashed;
+        private void SyncProxy(GrowLensSettings.Data snapshot) {
+            _proxy.Enabled = snapshot.Enabled;
+            _proxy.InspectorGroup = snapshot.AssetHeader;
+            _proxy.ProjectGroup = snapshot.ProjectContextMenus;
+            _proxy.HierarchyGroup = GrowLensSettings.AllHierarchy(snapshot);
+            _proxy.ToolbarGroup = snapshot.Toolbar;
+            _proxy.HierarchyComponentIcons = snapshot.HierarchyComponentIcons;
+            _proxy.HierarchySeparators = snapshot.HierarchySeparators;
+            _proxy.HierarchyIndentGuides = snapshot.HierarchyIndentGuides;
+            _proxy.HierarchyGuideDashed = snapshot.HierarchyGuideDashed;
             _proxy.HierarchyGuideColor = GrowLensSettings.HierarchyGuideColor;
-            _proxy.HierarchyActiveToggle =
-                GrowLensSettings.GetFeature(GrowLensFeature.HierarchyActiveToggle);
-            _proxy.HierarchyContextMenus =
-                GrowLensSettings.GetFeature(GrowLensFeature.HierarchyContextMenus);
-            _proxy.ProjectContextMenus =
-                GrowLensSettings.GetFeature(GrowLensFeature.ProjectContextMenus);
-            _proxy.AssetHeader = GrowLensSettings.GetFeature(GrowLensFeature.AssetHeader);
-            _proxy.Toolbar = GrowLensSettings.GetFeature(GrowLensFeature.Toolbar);
+            _proxy.HierarchyActiveToggle = snapshot.HierarchyActiveToggle;
+            _proxy.HierarchyContextMenus = snapshot.HierarchyContextMenus;
+            _proxy.ProjectContextMenus = snapshot.ProjectContextMenus;
+            _proxy.AssetHeader = snapshot.AssetHeader;
+            _proxy.Toolbar = snapshot.Toolbar;
             _serialized.Update();
         }
 

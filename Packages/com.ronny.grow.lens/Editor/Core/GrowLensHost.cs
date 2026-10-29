@@ -100,6 +100,7 @@ namespace Grow.Lens.Editor.Core {
         /// <summary>Clears subscriptions and session state without reading project settings; tests only.</summary>
         internal static void ResetForTests() {
             SessionState.SetBool(SessionDisabledKey, false);
+            GrowLensSettings.ResetSessionDisable();
             UnsubscribeAll();
             GrowLensGuard.ResetForTests();
         }

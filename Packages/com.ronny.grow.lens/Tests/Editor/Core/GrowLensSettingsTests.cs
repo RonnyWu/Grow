@@ -53,6 +53,13 @@ namespace Grow.Lens.Tests.Editor.Core {
             LogAssert.Expect(LogType.Warning, new Regex("Could not read"));
             GrowLensSettings.ReloadForTests();
             Assert.IsFalse(GrowLensSettings.Enabled);
+            Assert.AreEqual(GrowLensSettingsStatus.Corrupted, GrowLensSettings.Status);
+            Assert.IsFalse(GrowLensSettings.CanSave);
+
+            GrowLensSettings.Enabled = true;
+
+            Assert.IsFalse(GrowLensSettings.Enabled);
+            Assert.AreEqual("{ not json", File.ReadAllText(_path));
         }
 
         [Test]
@@ -199,6 +206,168 @@ namespace Grow.Lens.Tests.Editor.Core {
 
             GrowLensSettings.Enabled = true;
             Assert.IsTrue(GrowLensSettings.IsFeatureEnabled(GrowLensFeature.Toolbar));
+        }
+
+        [Test]
+        public void SessionDisable_DoesNotPersistTheMasterSwitch() {
+            GrowLensSettings.Enabled = true;
+            GrowLensSettings.DisableForSession();
+            Assert.IsFalse(GrowLensSettings.Enabled);
+
+            // An unrelated edit must not write the session-only switch to disk.
+            GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, false);
+            GrowLensSettings.ReloadForTests();
+
+            Assert.IsTrue(GrowLensSettings.Enabled);
+        }
+
+        [Test]
+        public void MissingFile_ReportsMissingAndDoesNotCreateTheFile() {
+            Assert.AreEqual(GrowLensSettingsStatus.Missing, GrowLensSettings.Status);
+            Assert.IsTrue(GrowLensSettings.CanSave);
+            Assert.IsFalse(File.Exists(_path));
+        }
+
+        [Test]
+        public void FirstCommit_CreatesTheFileAndReportsOk() {
+            GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, false);
+
+            Assert.AreEqual(GrowLensSettingsStatus.Ok, GrowLensSettings.Status);
+            Assert.IsTrue(File.Exists(_path));
+            StringAssert.Contains("\"SchemaVersion\": 4", File.ReadAllText(_path));
+        }
+
+        [Test]
+        public void TryApply_WritesOnceForAMultiEditFrame() {
+            GrowLensSettings.Enabled = true;
+            GrowLensSettings.ReloadForTests();
+            var before = GrowLensSettings.SaveCountForTests;
+
+            var applied = GrowLensSettings.TryApply(new GrowLensPageEdits {
+                Master = true,
+                HierarchyGroup = false,
+                Toolbar = false,
+                GuideDashed = false
+            });
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual(before + 1, GrowLensSettings.SaveCountForTests);
+            Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.HierarchySeparators));
+            Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.Toolbar));
+            Assert.IsFalse(GrowLensSettings.HierarchyGuideDashed);
+        }
+
+        [Test]
+        public void TryApply_WithoutAChangeDoesNotWrite() {
+            GrowLensSettings.Enabled = true;
+            var before = GrowLensSettings.SaveCountForTests;
+
+            var applied = GrowLensSettings.TryApply(new GrowLensPageEdits());
+
+            Assert.IsTrue(applied);
+            Assert.AreEqual(before, GrowLensSettings.SaveCountForTests);
+        }
+
+        [Test]
+        public void Reduce_GroupWinsOverItsChildrenAndKeepsOtherGroups() {
+            var current = GrowLensSettings.Snapshot;
+            current.HierarchyComponentIcons = false;
+            current.AssetHeader = false;
+
+            var next = GrowLensSettings.Reduce(current, new GrowLensPageEdits {
+                HierarchyGroup = false,
+                HierarchyComponentIcons = true,
+                AssetHeader = true
+            });
+
+            // The group command owns its five children, so the child edit inside it is ignored.
+            Assert.IsFalse(next.HierarchyComponentIcons);
+            Assert.IsFalse(next.HierarchySeparators);
+            Assert.IsFalse(next.HierarchyIndentGuides);
+            Assert.IsFalse(next.HierarchyActiveToggle);
+            Assert.IsFalse(next.HierarchyContextMenus);
+            // A different group's child edit still applies.
+            Assert.IsTrue(next.AssetHeader);
+        }
+
+        [Test]
+        public void Reduce_ResetColorWinsOverAColorEdit() {
+            var current = GrowLensSettings.Snapshot;
+            current.HierarchyGuideCustomColor = true;
+            current.HierarchyGuideColor = new Color(1f, 0f, 0f, 1f);
+
+            var next = GrowLensSettings.Reduce(current, new GrowLensPageEdits {
+                GuideColor = new Color(0f, 1f, 0f, 1f),
+                ResetGuideColor = true
+            });
+
+            Assert.IsFalse(next.HierarchyGuideCustomColor);
+        }
+
+        [Test]
+        public void GuideStyle_StaysEditableWhileTheMasterSwitchIsOff() {
+            Assert.IsFalse(GrowLensSettings.Enabled);
+
+            GrowLensSettings.HierarchyGuideDashed = false;
+            GrowLensSettings.SetHierarchyGuideColor(new Color(1f, 0f, 0f, 0.5f));
+
+            Assert.IsFalse(GrowLensSettings.HierarchyGuideDashed);
+            Assert.IsTrue(GrowLensSettings.HierarchyGuideColorCustomized);
+            Assert.AreEqual(0.5f, GrowLensSettings.HierarchyGuideColor.a, 0.001f);
+        }
+
+        [Test]
+        public void NewerSchema_IsReadOnlyAndKeepsItsValues() {
+            Directory.CreateDirectory(_directory);
+            File.WriteAllText(_path,
+                "{\"SchemaVersion\":99,\"Enabled\":true,\"Toolbar\":false}");
+            GrowLensSettings.ReloadForTests();
+
+            Assert.AreEqual(GrowLensSettingsStatus.NewerSchema, GrowLensSettings.Status);
+            Assert.IsFalse(GrowLensSettings.CanSave);
+            Assert.IsTrue(GrowLensSettings.Enabled);
+
+            GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, true);
+
+            Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.Toolbar));
+            StringAssert.Contains("\"SchemaVersion\":99", File.ReadAllText(_path));
+        }
+
+        [Test]
+        public void ReadOnlyFile_IsReportedAndNotOverwritten() {
+            Directory.CreateDirectory(_directory);
+            File.WriteAllText(_path, "{\"SchemaVersion\":4,\"Enabled\":true}");
+            var attributes = File.GetAttributes(_path);
+            File.SetAttributes(_path, attributes | FileAttributes.ReadOnly);
+            try {
+                GrowLensSettings.ReloadForTests();
+
+                Assert.AreEqual(GrowLensSettingsStatus.ReadOnly, GrowLensSettings.Status);
+                Assert.IsFalse(GrowLensSettings.CanSave);
+
+                GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, false);
+
+                Assert.IsTrue(GrowLensSettings.GetFeature(GrowLensFeature.Toolbar));
+            } finally {
+                File.SetAttributes(_path, attributes);
+            }
+        }
+
+        [Test]
+        public void WriteFailure_KeepsThePreviousValues() {
+            Directory.CreateDirectory(_directory);
+            File.WriteAllText(_path, "placeholder");
+            GrowLensSettings.SetPathForTests(Path.Combine(_path, "Lens.json"));
+            Assert.AreEqual(GrowLensSettingsStatus.Missing, GrowLensSettings.Status);
+
+            LogAssert.Expect(LogType.Error, new Regex("Could not write"));
+            GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, false);
+
+            Assert.AreEqual(GrowLensSettingsStatus.WriteFailed, GrowLensSettings.Status);
+            Assert.IsTrue(GrowLensSettings.GetFeature(GrowLensFeature.Toolbar));
+            Assert.AreEqual("placeholder", File.ReadAllText(_path));
+
+            GrowLensSettings.SetPathForTests(_path);
         }
     }
 }
