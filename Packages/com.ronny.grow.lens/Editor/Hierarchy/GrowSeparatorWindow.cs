@@ -100,10 +100,16 @@ namespace Grow.Lens.Editor.Hierarchy {
 
         private static GUIStyle PreviewStyle {
             get {
-                _previewStyle ??= new GUIStyle(EditorStyles.boldLabel) {
-                    alignment = TextAnchor.MiddleCenter,
-                    clipping = TextClipping.Clip
-                };
+                if (_previewStyle == null) {
+                    _previewStyle = new GUIStyle(EditorStyles.boldLabel) {
+                        alignment = TextAnchor.MiddleCenter,
+                        clipping = TextClipping.Clip
+                    };
+                    // contentColor tints the style color; force white so the preview shows the
+                    // same opaque text color as the Hierarchy row in both editor skins.
+                    _previewStyle.normal.textColor = Color.white;
+                }
+
                 return _previewStyle;
             }
         }
