@@ -82,6 +82,9 @@ namespace Grow.Lens.Editor.Hierarchy {
                 return;
             }
 
+            // Read the style once per row instead of once per segment.
+            var color = GrowLensSettings.HierarchyGuideColor;
+            var dashed = GrowLensSettings.HierarchyGuideDashed;
             var midY = rect.y + rect.height * 0.5f;
 
             // Higher ancestors: their path child must have a following sibling for the vertical
@@ -92,7 +95,8 @@ namespace Grow.Lens.Editor.Hierarchy {
                 }
 
                 DrawVertical(rect,
-                    HierarchyGuideGeometry.GuideX(baseIndent, indentWidth, foldoutWidth, ancestor));
+                    HierarchyGuideGeometry.GuideX(baseIndent, indentWidth, foldoutWidth, ancestor),
+                    color, dashed);
             }
 
             // Parent column: top half always, bottom half only when this row has a following sibling.
@@ -101,11 +105,11 @@ namespace Grow.Lens.Editor.Hierarchy {
             var hasNextSibling = HierarchyGuideGeometry.HasFollowingSibling(depths, row, depth);
             var parentLineX = PixelLineStartX(parentX);
             var armY = PixelLineStartY(midY);
-            DrawVertical(rect, parentX, rect.y, armY - rect.y, true);
+            DrawVertical(rect, parentX, rect.y, armY - rect.y, true, color, dashed);
             if (hasNextSibling) {
                 var bottomY = armY + LineWidth;
                 DrawVertical(rect, parentX, bottomY,
-                    rect.y + rect.height - bottomY, false);
+                    rect.y + rect.height - bottomY, false, color, dashed);
             }
 
             // Horizontal arm: stop at the foldout arrow for branches, reach the content for leaves.
@@ -116,7 +120,7 @@ namespace Grow.Lens.Editor.Hierarchy {
             // pixel. Starting at the vertical's left edge fills the corner without overdraw.
             var armStart = parentLineX;
             if (endX > armStart + 0.5f) {
-                DrawHorizontal(armY, armStart, endX);
+                DrawHorizontal(armY, armStart, endX, color, dashed);
             }
         }
 
@@ -128,19 +132,18 @@ namespace Grow.Lens.Editor.Hierarchy {
             return HierarchyGuideGeometry.PixelSnappedStart(center, LineWidth);
         }
 
-        private static void DrawVertical(Rect rowRect, float x) {
-            DrawVertical(rowRect, x, rowRect.y, rowRect.height, false);
+        private static void DrawVertical(Rect rowRect, float x, Color color, bool dashed) {
+            DrawVertical(rowRect, x, rowRect.y, rowRect.height, false, color, dashed);
         }
 
         private static void DrawVertical(Rect rowRect, float x, float y, float height,
-            bool anchorAtEnd) {
+            bool anchorAtEnd, Color color, bool dashed) {
             var lineX = PixelLineStartX(x);
             if (lineX + LineWidth <= 0f || lineX >= rowRect.xMax) {
                 return;
             }
 
-            var color = GrowLensSettings.HierarchyGuideColor;
-            if (!GrowLensSettings.HierarchyGuideDashed) {
+            if (!dashed) {
                 EditorGUI.DrawRect(new Rect(lineX, y, LineWidth, height), color);
                 return;
             }
@@ -161,9 +164,9 @@ namespace Grow.Lens.Editor.Hierarchy {
             }
         }
 
-        private static void DrawHorizontal(float lineY, float startX, float endX) {
-            var color = GrowLensSettings.HierarchyGuideColor;
-            if (!GrowLensSettings.HierarchyGuideDashed) {
+        private static void DrawHorizontal(float lineY, float startX, float endX, Color color,
+            bool dashed) {
+            if (!dashed) {
                 EditorGUI.DrawRect(new Rect(startX, lineY, endX - startX, LineWidth), color);
                 return;
             }
