@@ -166,15 +166,13 @@ namespace Grow.Lens.Editor.Toolbar {
             AddMenuItem(menu, "grow.lens.toolbar.inputDebugger", "Window/Analysis/Input Debugger");
             menu.AddSeparator("");
             AddMenuItem(menu, "grow.lens.toolbar.openCSharpProject", "Assets/Open C# Project");
-            menu.AddItem(new GUIContent(GrowLensLocalization.Get("grow.lens.menu.createSeparator")),
+            AddMenuItem(menu, "grow.lens.menu.createSeparator",
                 GrowLensSettings.HierarchySeparatorMenuEnabled &&
                 GrowMenuActions.CanCreateHierarchySeparator,
-                () => GrowLensGuard.RunAction("Toolbar separator",
-                    GrowMenuActions.OpenHierarchySeparatorWindow));
-            menu.AddItem(new GUIContent(GrowLensLocalization.Get("grow.lens.toolbar.takeScreenshot")),
-                false, () => GrowLensGuard.RunAction("Toolbar screenshot", TakeScreenshot));
-            menu.AddItem(new GUIContent(GrowLensLocalization.Get("grow.lens.toolbar.openScreenshotsFolder")),
-                false, () => GrowLensGuard.RunAction("Toolbar screenshots folder", OpenScreenshotsFolder));
+                GrowMenuActions.OpenHierarchySeparatorWindow);
+            AddMenuItem(menu, "grow.lens.toolbar.takeScreenshot", true, TakeScreenshot);
+            AddMenuItem(menu, "grow.lens.toolbar.openScreenshotsFolder", true,
+                OpenScreenshotsFolder);
             if (_button != null) {
                 menu.DropDown(_button.worldBound);
             } else {
@@ -183,10 +181,25 @@ namespace Grow.Lens.Editor.Toolbar {
         }
 
         private static void AddMenuItem(GenericMenu menu, string textKey, string menuPath) {
+            AddMenuItem(menu, textKey, true,
+                () => EditorApplication.ExecuteMenuItem(menuPath));
+        }
+
+        /// <summary>
+        /// Adds an action item, or a disabled placeholder when the action is unavailable. The
+        /// second <see cref="GenericMenu.AddItem(GUIContent, bool, GenericMenu.MenuFunction)"/>
+        /// argument is the checkmark state, not the enabled state.
+        /// </summary>
+        private static void AddMenuItem(GenericMenu menu, string textKey, bool enabled,
+            Action action) {
             var text = GrowLensLocalization.Get(textKey);
-            menu.AddItem(new GUIContent(text), false,
-                () => GrowLensGuard.RunAction($"Toolbar {text}",
-                    () => EditorApplication.ExecuteMenuItem(menuPath)));
+            var content = new GUIContent(text);
+            if (enabled) {
+                menu.AddItem(content, false,
+                    () => GrowLensGuard.RunAction($"Toolbar {text}", action));
+            } else {
+                menu.AddDisabledItem(content);
+            }
         }
 
         private static string ScreenshotsDirectory {
