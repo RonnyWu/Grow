@@ -114,8 +114,9 @@ namespace Grow.Lens.Editor.Menus {
                 () => GrowMenuActions.CreateEmpty("GameObject/Create Empty Child"));
             Add(menu, "grow.lens.menu.createEmptyParentReset",
                 () => GrowMenuActions.CreateEmpty("GameObject/Create Empty Parent"));
-            Add(menu, "grow.lens.menu.createSeparator", GrowMenuActions.CreateHierarchySeparator,
-                GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchySeparators) &&
+            Add(menu, "grow.lens.menu.createSeparator",
+                GrowMenuActions.OpenHierarchySeparatorWindow,
+                GrowLensSettings.HierarchySeparatorMenuEnabled &&
                 GrowMenuActions.CanCreateHierarchySeparator);
 
             menu.AddSeparator("");

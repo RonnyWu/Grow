@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Grow.Lens.Editor.Hierarchy;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -60,19 +61,25 @@ namespace Grow.Lens.Editor.Menus {
         internal static bool CanCreateHierarchySeparator =>
             PrefabStageUtility.GetCurrentPrefabStage() == null;
 
-        /// <summary>Creates a default separator GameObject after the active scene object.</summary>
-        internal static void CreateHierarchySeparator() {
+        /// <summary>Opens the separator editor for the current selection.</summary>
+        internal static void OpenHierarchySeparatorWindow() {
+            if (CanCreateHierarchySeparator) {
+                GrowSeparatorWindow.Show(Selection.activeGameObject);
+            }
+        }
+
+        /// <summary>Creates a formatted separator relative to a scene object.</summary>
+        internal static void CreateHierarchySeparator(string name, GameObject target, bool below) {
             if (!CanCreateHierarchySeparator) {
                 return;
             }
 
-            var active = Selection.activeGameObject;
-            var activeIsSceneObject = active != null && !EditorUtility.IsPersistent(active);
-            var parent = activeIsSceneObject ? active.transform.parent : null;
-            var targetScene = activeIsSceneObject && active.scene.IsValid()
-                ? active.scene
+            var targetIsSceneObject = target != null && !EditorUtility.IsPersistent(target);
+            var parent = targetIsSceneObject ? target.transform.parent : null;
+            var targetScene = targetIsSceneObject && target.scene.IsValid()
+                ? target.scene
                 : SceneManager.GetActiveScene();
-            var separator = new GameObject("##383838 Section");
+            var separator = new GameObject(name);
             Undo.RegisterCreatedObjectUndo(separator, "Create Hierarchy Separator");
             if (targetScene.IsValid() && separator.scene != targetScene) {
                 SceneManager.MoveGameObjectToScene(separator, targetScene);
@@ -82,8 +89,9 @@ namespace Grow.Lens.Editor.Menus {
                 separator.transform.SetParent(parent, false);
             }
 
-            if (activeIsSceneObject) {
-                separator.transform.SetSiblingIndex(active.transform.GetSiblingIndex() + 1);
+            if (targetIsSceneObject) {
+                separator.transform.SetSiblingIndex(
+                    target.transform.GetSiblingIndex() + (below ? 1 : 0));
             }
 
             Selection.activeGameObject = separator;

@@ -167,10 +167,10 @@ namespace Grow.Lens.Editor.Toolbar {
             menu.AddSeparator("");
             AddMenuItem(menu, "grow.lens.toolbar.openCSharpProject", "Assets/Open C# Project");
             menu.AddItem(new GUIContent(GrowLensLocalization.Get("grow.lens.menu.createSeparator")),
-                GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchySeparators) &&
+                GrowLensSettings.HierarchySeparatorMenuEnabled &&
                 GrowMenuActions.CanCreateHierarchySeparator,
                 () => GrowLensGuard.RunAction("Toolbar separator",
-                    GrowMenuActions.CreateHierarchySeparator));
+                    GrowMenuActions.OpenHierarchySeparatorWindow));
             menu.AddItem(new GUIContent(GrowLensLocalization.Get("grow.lens.toolbar.takeScreenshot")),
                 false, () => GrowLensGuard.RunAction("Toolbar screenshot", TakeScreenshot));
             menu.AddItem(new GUIContent(GrowLensLocalization.Get("grow.lens.toolbar.openScreenshotsFolder")),

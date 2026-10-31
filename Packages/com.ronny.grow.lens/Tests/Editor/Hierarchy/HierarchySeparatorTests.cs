@@ -25,6 +25,17 @@ namespace Grow.Lens.Tests.Editor.Hierarchy {
         }
 
         [Test]
+        public void BuildName_RoundTripsDialogValues() {
+            var background = new Color32(0x2E, 0x7D, 0x32, 0xFF);
+            var text = new Color32(0xFF, 0xFF, 0xFF, 0xFF);
+
+            Assert.AreEqual("##2E7D32#FFFFFF Level A",
+                HierarchySeparator.BuildName(" Level A ", background, text));
+            Assert.AreEqual("##2E7D32",
+                HierarchySeparator.BuildName(string.Empty, background));
+        }
+
+        [Test]
         public void SupportsThemeBackgroundAndEmptyText() {
             Assert.IsTrue(HierarchySeparator.TryParse("##- Note", out var theme));
             Assert.IsFalse(theme.Background.HasValue);
