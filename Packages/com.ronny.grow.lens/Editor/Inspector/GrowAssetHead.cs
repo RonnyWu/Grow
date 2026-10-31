@@ -62,11 +62,11 @@ namespace Grow.Lens.Editor.Inspector {
         }
 
         private static void DrawHeader(UnityEditor.Editor editor) {
-            if (editor.targets == null || editor.targets.Length > 1) {
+            if (editor.targets == null || editor.targets.Length != 1) {
                 return;
             }
 
-            var target = editor.targets.First();
+            var target = editor.targets[0];
             if (target == null) {
                 return;
             }
@@ -150,15 +150,15 @@ namespace Grow.Lens.Editor.Inspector {
         }
 
         private static void DrawRow(string label, Action action) {
-            EditorGUILayout.BeginHorizontal();
-            using (new EditorGUI.DisabledScope(true)) {
-                var maxWidth = Mathf.Max(60f, EditorGUIUtility.currentViewWidth - 136f);
-                GUILayout.Label(label, GUILayout.MaxWidth(maxWidth));
-            }
+            using (new EditorGUILayout.HorizontalScope()) {
+                using (new EditorGUI.DisabledScope(true)) {
+                    var maxWidth = Mathf.Max(60f, EditorGUIUtility.currentViewWidth - 136f);
+                    GUILayout.Label(label, GUILayout.MaxWidth(maxWidth));
+                }
 
-            GUILayout.FlexibleSpace();
-            action?.Invoke();
-            EditorGUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
+                action?.Invoke();
+            }
         }
 
         private static string Text(string key) {
