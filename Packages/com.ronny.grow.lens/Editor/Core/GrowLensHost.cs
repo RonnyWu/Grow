@@ -59,6 +59,13 @@ namespace Grow.Lens.Editor.Core {
                 GrowContextMenus.UnsubscribeHierarchy);
             Sync(ref _toolbarSubscribed, toolbar, "Toolbar subscribe",
                 GrowToolbar.Subscribe, GrowToolbar.Unsubscribe);
+
+            // A failed subscription can trip the guard and disable Lens in the middle of this
+            // method; drop anything that was attached after that point. The inactive path also
+            // unsubscribes unconditionally so no callback can survive a stale state flag.
+            if (!active || !GrowLensSettings.Enabled) {
+                UnsubscribeAll();
+            }
         }
 
         /// <summary>
@@ -111,12 +118,22 @@ namespace Grow.Lens.Editor.Core {
                 return;
             }
 
-            state = desired;
             if (desired) {
-                GrowLensGuard.Run(feature, subscribe);
-            } else {
-                unsubscribe();
+                // Mark the subsystem attached only after a successful subscribe. A failed
+                // subscribe must be retried by the next Apply, otherwise the three-failure
+                // guard could never reach its threshold.
+                if (GrowLensGuard.TryRun(feature, subscribe)) {
+                    state = true;
+                } else if (GrowLensSettings.Enabled) {
+                    EditorApplication.delayCall -= Apply;
+                    EditorApplication.delayCall += Apply;
+                }
+
+                return;
             }
+
+            unsubscribe();
+            state = false;
         }
 
         private static void UnsubscribeAll() {
@@ -141,13 +158,23 @@ namespace Grow.Lens.Editor.Core {
         private static readonly HashSet<string> Logged = new(StringComparer.Ordinal);
 
         internal static void Run(string feature, Action action) {
+            TryRun(feature, action);
+        }
+
+        /// <summary>
+        /// Runs a subscription action and returns false when it failed. The caller must leave its
+        /// attached flag unset so a later Apply can retry the subscription.
+        /// </summary>
+        internal static bool TryRun(string feature, Action action) {
             try {
                 action();
                 Failures.Remove(feature);
+                return true;
             } catch (ExitGUIException) {
                 throw;
             } catch (Exception exception) {
                 Report(feature, exception);
+                return false;
             }
         }
 
