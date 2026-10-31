@@ -480,11 +480,30 @@ namespace Grow.Lens.Editor.Core {
         }
 
         /// <summary>
+        /// The current editor theme's text color. Headless test runs have no GUISkin, so this
+        /// falls back to a neutral gray instead of throwing.
+        /// </summary>
+        internal static Color EditorTextColor {
+            get {
+                try {
+                    var label = EditorStyles.label;
+                    if (label != null) {
+                        return label.normal.textColor;
+                    }
+                } catch (Exception) {
+                    // EditorStyles can be unavailable during headless tests.
+                }
+
+                return new Color(0.65f, 0.65f, 0.65f);
+            }
+        }
+
+        /// <summary>
         /// The current editor theme's text color with the guide alpha. Reading the active style
         /// keeps the guides legible in both the light and dark editor skins.
         /// </summary>
         private static Color ThemeGuideColor() {
-            var color = EditorStyles.label.normal.textColor;
+            var color = EditorTextColor;
             color.a = DefaultGuideAlpha;
             return color;
         }

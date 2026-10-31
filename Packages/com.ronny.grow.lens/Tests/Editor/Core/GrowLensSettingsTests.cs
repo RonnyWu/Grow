@@ -7,7 +7,6 @@ using Grow.Editor.Settings;
 using Grow.Lens.Editor.Core;
 using Grow.Lens.Editor.Settings;
 using NUnit.Framework;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -174,7 +173,7 @@ namespace Grow.Lens.Tests.Editor.Core {
         [Test]
         public void GuideSettings_DefaultToDashedAndRoundTrip() {
             Assert.IsTrue(GrowLensSettings.HierarchyGuideDashed);
-            var theme = EditorStyles.label.normal.textColor;
+            var theme = GrowLensSettings.EditorTextColor;
             Assert.AreEqual(theme.r, GrowLensSettings.HierarchyGuideColor.r, 0.001f);
             Assert.AreEqual(theme.g, GrowLensSettings.HierarchyGuideColor.g, 0.001f);
             Assert.AreEqual(theme.b, GrowLensSettings.HierarchyGuideColor.b, 0.001f);
