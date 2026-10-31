@@ -79,12 +79,12 @@ namespace Grow.Lens.Tests.Editor.Core {
         public void PreferencesKeywords_FollowTheLanguage() {
             GrowLocalization.SetLanguage("en");
             var provider = GrowLensSettingsProvider.Create();
-            CollectionAssert.Contains(provider.keywords, "Hierarchy enhancements");
+            CollectionAssert.Contains(provider.keywords, "Restore defaults");
 
             GrowLocalization.SetLanguage("zh-Hans");
 
-            CollectionAssert.Contains(provider.keywords, "Hierarchy 增强");
-            CollectionAssert.DoesNotContain(provider.keywords, "Hierarchy enhancements");
+            CollectionAssert.Contains(provider.keywords, "恢复默认设置");
+            CollectionAssert.DoesNotContain(provider.keywords, "Restore defaults");
         }
     }
 }

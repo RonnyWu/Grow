@@ -35,6 +35,7 @@ namespace Grow.Lens.Editor.Hierarchy {
             }
 
             var icons = GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchyComponentIcons);
+            var componentInspector = GrowLensSettings.HierarchyComponentInspector;
             var separators = GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchySeparators);
             var guides = GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchyIndentGuides);
             var activeToggle =
@@ -58,7 +59,7 @@ namespace Grow.Lens.Editor.Hierarchy {
                         return;
                     }
 
-                    if (icons &&
+                    if (icons && componentInspector &&
                         ItemComponentIcon.TryHandleClick(instanceID, gameObject, rect, rightInset)) {
                         current.Use();
                     }

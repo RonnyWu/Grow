@@ -43,29 +43,6 @@ namespace Grow.Lens.Editor.Core {
     }
 
     /// <summary>
-    /// Edits the preferences page collected in one frame. Every member is optional: a null value
-    /// means "not touched", so a group command and its children cannot silently interleave.
-    /// </summary>
-    internal struct GrowLensPageEdits {
-        public bool? Master;
-        public bool? InspectorGroup;
-        public bool? ProjectGroup;
-        public bool? HierarchyGroup;
-        public bool? ToolbarGroup;
-        public bool? AssetHeader;
-        public bool? ProjectContextMenus;
-        public bool? HierarchyComponentIcons;
-        public bool? HierarchySeparators;
-        public bool? HierarchyIndentGuides;
-        public bool? HierarchyActiveToggle;
-        public bool? HierarchyContextMenus;
-        public bool? Toolbar;
-        public bool? GuideDashed;
-        public Color? GuideColor;
-        public bool ResetGuideColor;
-    }
-
-    /// <summary>
     /// Per-project Grow Lens settings. The file lives under <c>UserSettings/Grow/Lens.json</c>,
     /// outside the <c>Assets</c> folder and outside the package. This repository ignores
     /// <c>UserSettings/</c>; Unity itself does not ignore it.
@@ -75,7 +52,7 @@ namespace Grow.Lens.Editor.Core {
     /// running editor on the last committed values instead of a state the file never recorded.
     /// </remarks>
     internal static class GrowLensSettings {
-        private const int CurrentSchema = 4;
+        private const int CurrentSchema = 5;
 
         private const float DefaultGuideAlpha = 0.32f;
 
@@ -84,7 +61,9 @@ namespace Grow.Lens.Editor.Core {
             public int SchemaVersion;
             public bool Enabled;
             public bool HierarchyComponentIcons = true;
+            public bool HierarchyComponentInspector;
             public bool HierarchySeparators = true;
+            public bool HierarchySeparatorMenu = true;
             public bool HierarchyIndentGuides = true;
             public bool HierarchyGuideDashed = true;
             public bool HierarchyGuideCustomColor;
@@ -126,6 +105,12 @@ namespace Grow.Lens.Editor.Core {
                     HierarchyGuideCustomColor = false;
                     SchemaVersion = 4;
                 }
+
+                if (SchemaVersion < 5) {
+                    HierarchyComponentInspector = false;
+                    HierarchySeparatorMenu = true;
+                    SchemaVersion = 5;
+                }
             }
 
             /// <summary>Copies every persisted field, so a candidate can be edited before saving.</summary>
@@ -134,7 +119,9 @@ namespace Grow.Lens.Editor.Core {
                     SchemaVersion = SchemaVersion,
                     Enabled = Enabled,
                     HierarchyComponentIcons = HierarchyComponentIcons,
+                    HierarchyComponentInspector = HierarchyComponentInspector,
                     HierarchySeparators = HierarchySeparators,
+                    HierarchySeparatorMenu = HierarchySeparatorMenu,
                     HierarchyIndentGuides = HierarchyIndentGuides,
                     HierarchyGuideDashed = HierarchyGuideDashed,
                     HierarchyGuideCustomColor = HierarchyGuideCustomColor,
@@ -148,13 +135,35 @@ namespace Grow.Lens.Editor.Core {
                 };
             }
 
+            /// <summary>Copies every persisted field from another copy.</summary>
+            internal void CopyFrom(Data source) {
+                SchemaVersion = source.SchemaVersion;
+                Enabled = source.Enabled;
+                HierarchyComponentIcons = source.HierarchyComponentIcons;
+                HierarchyComponentInspector = source.HierarchyComponentInspector;
+                HierarchySeparators = source.HierarchySeparators;
+                HierarchySeparatorMenu = source.HierarchySeparatorMenu;
+                HierarchyIndentGuides = source.HierarchyIndentGuides;
+                HierarchyGuideDashed = source.HierarchyGuideDashed;
+                HierarchyGuideCustomColor = source.HierarchyGuideCustomColor;
+                HierarchyGuideColor = source.HierarchyGuideColor;
+                HierarchyActiveToggle = source.HierarchyActiveToggle;
+                HierarchyContextMenus = source.HierarchyContextMenus;
+                ProjectContextMenus = source.ProjectContextMenus;
+                AssetHeader = source.AssetHeader;
+                Toolbar = source.Toolbar;
+                ContextMenus = source.ContextMenus;
+            }
+
             /// <summary>True when both copies hold the same persisted values.</summary>
             internal bool Matches(Data other) {
                 return other != null &&
                     SchemaVersion == other.SchemaVersion &&
                     Enabled == other.Enabled &&
                     HierarchyComponentIcons == other.HierarchyComponentIcons &&
+                    HierarchyComponentInspector == other.HierarchyComponentInspector &&
                     HierarchySeparators == other.HierarchySeparators &&
+                    HierarchySeparatorMenu == other.HierarchySeparatorMenu &&
                     HierarchyIndentGuides == other.HierarchyIndentGuides &&
                     HierarchyGuideDashed == other.HierarchyGuideDashed &&
                     HierarchyGuideCustomColor == other.HierarchyGuideCustomColor &&
@@ -250,10 +259,19 @@ namespace Grow.Lens.Editor.Core {
             TryUpdate(data => WriteFeature(data, feature, value));
         }
 
-        /// <summary>True when every Hierarchy feature is enabled.</summary>
+        /// <summary>Whether clicking a component icon opens its focused Inspector.</summary>
+        internal static bool HierarchyComponentInspector =>
+            Load().Values.HierarchyComponentInspector;
+
+        /// <summary>Whether the Create Separator menu entries are available.</summary>
+        internal static bool HierarchySeparatorMenuEnabled =>
+            IsFeatureEnabled(GrowLensFeature.HierarchySeparators) &&
+            Load().Values.HierarchySeparatorMenu;
+
+        /// <summary>True when every regular-item Hierarchy feature is enabled.</summary>
         internal static bool AllHierarchyFeatures => AllHierarchy(Load().Values);
 
-        /// <summary>True when any Hierarchy feature is enabled.</summary>
+        /// <summary>True when any regular-item Hierarchy feature is enabled.</summary>
         internal static bool AnyHierarchyFeature => AnyHierarchy(Load().Values);
 
         /// <summary>True when a Hierarchy row decoration is enabled.</summary>
@@ -268,17 +286,19 @@ namespace Grow.Lens.Editor.Core {
         }
 
         /// <summary>
-        /// Applies one value to the five Hierarchy switches. This is one candidate, one save and
-        /// at most one host update, so a group click cannot leave a partially applied state.
+        /// Applies one value to the four regular-item Hierarchy switches. This is one candidate,
+        /// one save and at most one host update, so a group click cannot leave a partial state.
         /// </summary>
         internal static void SetHierarchyFeatures(bool value) {
-            TryUpdate(data => {
-                data.HierarchyComponentIcons = value;
-                data.HierarchySeparators = value;
-                data.HierarchyIndentGuides = value;
-                data.HierarchyActiveToggle = value;
-                data.HierarchyContextMenus = value;
-            });
+            TryUpdate(data => SetHierarchyFeatures(data, value));
+        }
+
+        /// <summary>Writes all regular-item Hierarchy switches into a data copy before it is committed.</summary>
+        internal static void SetHierarchyFeatures(Data data, bool value) {
+            data.HierarchyComponentIcons = value;
+            data.HierarchyIndentGuides = value;
+            data.HierarchyActiveToggle = value;
+            data.HierarchyContextMenus = value;
         }
 
         /// <summary>Whether indent guides use dashed instead of solid lines.</summary>
@@ -292,7 +312,7 @@ namespace Grow.Lens.Editor.Core {
             get => Load().Values.HierarchyGuideCustomColor;
         }
 
-        /// <summary>Effective indent-guide color: custom when set, otherwise the theme color.</summary>
+        /// <summary>Effective indent-guide color: custom when set, otherwise the theme text color.</summary>
         internal static Color HierarchyGuideColor {
             get {
                 var data = Load().Values;
@@ -319,93 +339,19 @@ namespace Grow.Lens.Editor.Core {
             TryUpdate(data => data.HierarchyGuideCustomColor = false);
         }
 
-        /// <summary>
-        /// Reduces a page frame to one candidate. A group command wins over that group's children,
-        /// children of untouched groups still apply, and a color reset wins over a color edit.
-        /// </summary>
-        internal static Data Reduce(Data current, GrowLensPageEdits edits) {
-            var next = current.Clone();
-
-            if (edits.Master.HasValue) {
-                next.Enabled = edits.Master.Value;
+        /// <summary>Applies the native settings page's data copy with one atomic commit.</summary>
+        internal static void Apply(Data values) {
+            if (values.Enabled && !Load().Values.Enabled) {
+                _sessionDisabled = false;
+                GrowLensHost.ClearSessionDisable();
             }
 
-            if (edits.InspectorGroup.HasValue) {
-                next.AssetHeader = edits.InspectorGroup.Value;
-            }
-
-            if (edits.ProjectGroup.HasValue) {
-                next.ProjectContextMenus = edits.ProjectGroup.Value;
-            }
-
-            if (edits.HierarchyGroup.HasValue) {
-                next.HierarchyComponentIcons = edits.HierarchyGroup.Value;
-                next.HierarchySeparators = edits.HierarchyGroup.Value;
-                next.HierarchyIndentGuides = edits.HierarchyGroup.Value;
-                next.HierarchyActiveToggle = edits.HierarchyGroup.Value;
-                next.HierarchyContextMenus = edits.HierarchyGroup.Value;
-            }
-
-            if (edits.ToolbarGroup.HasValue) {
-                next.Toolbar = edits.ToolbarGroup.Value;
-            }
-
-            if (!edits.InspectorGroup.HasValue && edits.AssetHeader.HasValue) {
-                next.AssetHeader = edits.AssetHeader.Value;
-            }
-
-            if (!edits.ProjectGroup.HasValue && edits.ProjectContextMenus.HasValue) {
-                next.ProjectContextMenus = edits.ProjectContextMenus.Value;
-            }
-
-            if (!edits.HierarchyGroup.HasValue) {
-                if (edits.HierarchyComponentIcons.HasValue) {
-                    next.HierarchyComponentIcons = edits.HierarchyComponentIcons.Value;
-                }
-
-                if (edits.HierarchySeparators.HasValue) {
-                    next.HierarchySeparators = edits.HierarchySeparators.Value;
-                }
-
-                if (edits.HierarchyIndentGuides.HasValue) {
-                    next.HierarchyIndentGuides = edits.HierarchyIndentGuides.Value;
-                }
-
-                if (edits.HierarchyActiveToggle.HasValue) {
-                    next.HierarchyActiveToggle = edits.HierarchyActiveToggle.Value;
-                }
-
-                if (edits.HierarchyContextMenus.HasValue) {
-                    next.HierarchyContextMenus = edits.HierarchyContextMenus.Value;
-                }
-            }
-
-            if (!edits.ToolbarGroup.HasValue && edits.Toolbar.HasValue) {
-                next.Toolbar = edits.Toolbar.Value;
-            }
-
-            if (edits.ResetGuideColor) {
-                next.HierarchyGuideCustomColor = false;
-            } else if (edits.GuideColor.HasValue) {
-                next.HierarchyGuideCustomColor = true;
-                next.HierarchyGuideColor = edits.GuideColor.Value;
-            }
-
-            if (edits.GuideDashed.HasValue) {
-                next.HierarchyGuideDashed = edits.GuideDashed.Value;
-            }
-
-            return next;
+            TryUpdate(data => data.CopyFrom(values));
         }
 
-        /// <summary>Commits one page frame: one candidate, one save, at most one host update.</summary>
-        internal static bool TryApply(GrowLensPageEdits edits) {
-            var current = Load();
-            if (!CanSave) {
-                return false;
-            }
-
-            return Commit(current.Values, Reduce(current.Values, edits));
+        /// <summary>Restores every persisted value to its default; the page confirms first.</summary>
+        internal static void ResetToDefaults() {
+            TryUpdate(data => data.CopyFrom(new Data { SchemaVersion = CurrentSchema }));
         }
 
         /// <summary>Turns the in-memory switch off without writing the saved preference.</summary>
@@ -500,7 +446,7 @@ namespace Grow.Lens.Editor.Core {
                     if (loaded == null) {
                         _status = GrowLensSettingsStatus.Corrupted;
                     } else if (loaded.SchemaVersion > CurrentSchema) {
-                        // Keep the values visible, but never write this file back as schema 4.
+                        // Keep the values visible, but never write this file back.
                         values = loaded;
                         _status = GrowLensSettingsStatus.NewerSchema;
                     } else {
@@ -533,17 +479,12 @@ namespace Grow.Lens.Editor.Core {
             }
         }
 
+        /// <summary>
+        /// The current editor theme's text color with the guide alpha. Reading the active style
+        /// keeps the guides legible in both the light and dark editor skins.
+        /// </summary>
         private static Color ThemeGuideColor() {
-            var color = new Color(0.65f, 0.65f, 0.65f, DefaultGuideAlpha);
-            try {
-                var label = EditorStyles.label;
-                if (label != null) {
-                    color = label.normal.textColor;
-                }
-            } catch (Exception) {
-                // EditorStyles can be unavailable during headless tests.
-            }
-
+            var color = EditorStyles.label.normal.textColor;
             color.a = DefaultGuideAlpha;
             return color;
         }
@@ -591,19 +532,17 @@ namespace Grow.Lens.Editor.Core {
             }
         }
 
-        /// <summary>True when a data copy has every Hierarchy feature enabled.</summary>
+        /// <summary>True when a data copy has every regular-item Hierarchy feature enabled.</summary>
         internal static bool AllHierarchy(Data data) {
             return data.HierarchyComponentIcons &&
-                data.HierarchySeparators &&
                 data.HierarchyIndentGuides &&
                 data.HierarchyActiveToggle &&
                 data.HierarchyContextMenus;
         }
 
-        /// <summary>True when a data copy has any Hierarchy feature enabled.</summary>
+        /// <summary>True when a data copy has any regular-item Hierarchy feature enabled.</summary>
         internal static bool AnyHierarchy(Data data) {
             return data.HierarchyComponentIcons ||
-                data.HierarchySeparators ||
                 data.HierarchyIndentGuides ||
                 data.HierarchyActiveToggle ||
                 data.HierarchyContextMenus;

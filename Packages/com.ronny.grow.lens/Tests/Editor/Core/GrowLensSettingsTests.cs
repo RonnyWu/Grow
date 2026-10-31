@@ -7,6 +7,7 @@ using Grow.Editor.Settings;
 using Grow.Lens.Editor.Core;
 using Grow.Lens.Editor.Settings;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -116,7 +117,7 @@ namespace Grow.Lens.Tests.Editor.Core {
             GrowLensSettings.ReloadForTests();
 
             Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.HierarchyComponentIcons));
-            Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.HierarchySeparators));
+            Assert.IsTrue(GrowLensSettings.GetFeature(GrowLensFeature.HierarchySeparators));
             Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.HierarchyIndentGuides));
             Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.HierarchyActiveToggle));
             Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.HierarchyContextMenus));
@@ -134,6 +135,20 @@ namespace Grow.Lens.Tests.Editor.Core {
             Assert.IsTrue(GrowLensSettings.GetFeature(GrowLensFeature.HierarchyContextMenus));
             Assert.IsTrue(GrowLensSettings.AnyHierarchyFeature);
             Assert.IsTrue(GrowLensSettings.AllHierarchyFeatures);
+        }
+
+        [Test]
+        public void Schema4_AddsTheClickAndMenuDefaults() {
+            Directory.CreateDirectory(_directory);
+            File.WriteAllText(_path, "{\"SchemaVersion\":4,\"Enabled\":true,\"HierarchySeparators\":false}");
+            GrowLensSettings.ReloadForTests();
+
+            Assert.IsFalse(GrowLensSettings.HierarchyComponentInspector);
+            Assert.IsFalse(GrowLensSettings.HierarchySeparatorMenuEnabled);
+
+            GrowLensSettings.SetFeature(GrowLensFeature.HierarchySeparators, true);
+            Assert.IsTrue(GrowLensSettings.HierarchySeparatorMenuEnabled);
+            StringAssert.Contains("\"SchemaVersion\": 5", File.ReadAllText(_path));
         }
 
         [Test]
@@ -157,18 +172,12 @@ namespace Grow.Lens.Tests.Editor.Core {
         }
 
         [Test]
-        public void SettingsProxy_IsEditable() {
-            var proxy = GrowLensSettingsProxy.CreateTransient();
-            try {
-                Assert.IsFalse((proxy.hideFlags & HideFlags.NotEditable) != 0);
-            } finally {
-                UnityEngine.Object.DestroyImmediate(proxy);
-            }
-        }
-
-        [Test]
         public void GuideSettings_DefaultToDashedAndRoundTrip() {
             Assert.IsTrue(GrowLensSettings.HierarchyGuideDashed);
+            var theme = EditorStyles.label.normal.textColor;
+            Assert.AreEqual(theme.r, GrowLensSettings.HierarchyGuideColor.r, 0.001f);
+            Assert.AreEqual(theme.g, GrowLensSettings.HierarchyGuideColor.g, 0.001f);
+            Assert.AreEqual(theme.b, GrowLensSettings.HierarchyGuideColor.b, 0.001f);
             Assert.AreEqual(0.32f, GrowLensSettings.HierarchyGuideColor.a, 0.001f);
 
             var custom = new Color(0.8f, 0.2f, 0.1f, 0.6f);
@@ -185,6 +194,7 @@ namespace Grow.Lens.Tests.Editor.Core {
             GrowLensSettings.ResetHierarchyGuideColor();
             GrowLensSettings.ReloadForTests();
 
+            Assert.AreEqual(theme.r, GrowLensSettings.HierarchyGuideColor.r, 0.001f);
             Assert.AreEqual(0.32f, GrowLensSettings.HierarchyGuideColor.a, 0.001f);
         }
 
@@ -234,74 +244,23 @@ namespace Grow.Lens.Tests.Editor.Core {
 
             Assert.AreEqual(GrowLensSettingsStatus.Ok, GrowLensSettings.Status);
             Assert.IsTrue(File.Exists(_path));
-            StringAssert.Contains("\"SchemaVersion\": 4", File.ReadAllText(_path));
+            StringAssert.Contains("\"SchemaVersion\": 5", File.ReadAllText(_path));
         }
 
         [Test]
-        public void TryApply_WritesOnceForAMultiEditFrame() {
-            GrowLensSettings.Enabled = true;
-            GrowLensSettings.ReloadForTests();
+        public void Apply_CommitsTheNativePageDataOnce() {
             var before = GrowLensSettings.SaveCountForTests;
+            var candidate = GrowLensSettings.Snapshot;
+            candidate.Enabled = true;
+            candidate.Toolbar = false;
+            candidate.HierarchyGuideDashed = false;
 
-            var applied = GrowLensSettings.TryApply(new GrowLensPageEdits {
-                Master = true,
-                HierarchyGroup = false,
-                Toolbar = false,
-                GuideDashed = false
-            });
+            GrowLensSettings.Apply(candidate);
 
-            Assert.IsTrue(applied);
             Assert.AreEqual(before + 1, GrowLensSettings.SaveCountForTests);
-            Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.HierarchySeparators));
+            Assert.IsTrue(GrowLensSettings.Enabled);
             Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.Toolbar));
             Assert.IsFalse(GrowLensSettings.HierarchyGuideDashed);
-        }
-
-        [Test]
-        public void TryApply_WithoutAChangeDoesNotWrite() {
-            GrowLensSettings.Enabled = true;
-            var before = GrowLensSettings.SaveCountForTests;
-
-            var applied = GrowLensSettings.TryApply(new GrowLensPageEdits());
-
-            Assert.IsTrue(applied);
-            Assert.AreEqual(before, GrowLensSettings.SaveCountForTests);
-        }
-
-        [Test]
-        public void Reduce_GroupWinsOverItsChildrenAndKeepsOtherGroups() {
-            var current = GrowLensSettings.Snapshot;
-            current.HierarchyComponentIcons = false;
-            current.AssetHeader = false;
-
-            var next = GrowLensSettings.Reduce(current, new GrowLensPageEdits {
-                HierarchyGroup = false,
-                HierarchyComponentIcons = true,
-                AssetHeader = true
-            });
-
-            // The group command owns its five children, so the child edit inside it is ignored.
-            Assert.IsFalse(next.HierarchyComponentIcons);
-            Assert.IsFalse(next.HierarchySeparators);
-            Assert.IsFalse(next.HierarchyIndentGuides);
-            Assert.IsFalse(next.HierarchyActiveToggle);
-            Assert.IsFalse(next.HierarchyContextMenus);
-            // A different group's child edit still applies.
-            Assert.IsTrue(next.AssetHeader);
-        }
-
-        [Test]
-        public void Reduce_ResetColorWinsOverAColorEdit() {
-            var current = GrowLensSettings.Snapshot;
-            current.HierarchyGuideCustomColor = true;
-            current.HierarchyGuideColor = new Color(1f, 0f, 0f, 1f);
-
-            var next = GrowLensSettings.Reduce(current, new GrowLensPageEdits {
-                GuideColor = new Color(0f, 1f, 0f, 1f),
-                ResetGuideColor = true
-            });
-
-            Assert.IsFalse(next.HierarchyGuideCustomColor);
         }
 
         [Test]
@@ -351,6 +310,37 @@ namespace Grow.Lens.Tests.Editor.Core {
             } finally {
                 File.SetAttributes(_path, attributes);
             }
+        }
+
+        [Test]
+        public void ResetToDefaults_RestoresEveryValueInOneWrite() {
+            GrowLensSettings.Enabled = true;
+            GrowLensSettings.SetHierarchyFeatures(false);
+            GrowLensSettings.HierarchyGuideDashed = false;
+            GrowLensSettings.SetHierarchyGuideColor(new Color(1f, 0f, 0f, 1f));
+            var before = GrowLensSettings.SaveCountForTests;
+
+            GrowLensSettings.ResetToDefaults();
+
+            Assert.AreEqual(before + 1, GrowLensSettings.SaveCountForTests);
+            Assert.IsFalse(GrowLensSettings.Enabled);
+            Assert.IsTrue(GrowLensSettings.GetFeature(GrowLensFeature.HierarchySeparators));
+            Assert.IsTrue(GrowLensSettings.HierarchyGuideDashed);
+            Assert.IsFalse(GrowLensSettings.HierarchyGuideColorCustomized);
+        }
+
+        [Test]
+        public void ResetToDefaults_DoesNothingWhenTheFileCannotBeSaved() {
+            Directory.CreateDirectory(_directory);
+            File.WriteAllText(_path, "{ not json");
+            LogAssert.Expect(LogType.Warning, new Regex("Could not read"));
+            GrowLensSettings.ReloadForTests();
+            var before = GrowLensSettings.SaveCountForTests;
+
+            GrowLensSettings.ResetToDefaults();
+
+            Assert.AreEqual(before, GrowLensSettings.SaveCountForTests);
+            Assert.AreEqual("{ not json", File.ReadAllText(_path));
         }
 
         [Test]
