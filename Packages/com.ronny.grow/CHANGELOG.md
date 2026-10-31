@@ -123,6 +123,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Preferences > Grow > General** keeps the session-only minimum log level editable when the
+  language preferences file is damaged or read-only.
 - `PlayerLoopProfile.Install` now removes partially inserted systems when an install throws,
   and `Uninstall` still cleans up when the owner was never recorded. `PlayerLoopManager`
   records a system before applying it, so cleanup can find it even when `SetPlayerLoop`

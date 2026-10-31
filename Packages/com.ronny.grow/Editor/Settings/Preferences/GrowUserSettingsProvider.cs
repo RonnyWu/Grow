@@ -72,19 +72,21 @@ namespace Grow.Editor.Settings.Preferences {
 
             using (new EditorGUI.DisabledScope(!loadResult.CanSave)) {
                 DrawLanguage();
+            }
 
-                EditorGUILayout.Space(4);
-                var current = GrowLog.MinimumLevel;
-                var next = (LogLevel)EditorGUILayout.EnumPopup(
-                    new GUIContent(
-                        GrowLocalization.Get(GrowSettingsKeys.PreferencesMinimumLogLevel),
-                        GrowLocalization.Get(
-                            GrowSettingsKeys.PreferencesMinimumLogLevelTooltip)),
-                    current);
+            // The log level is session-only and does not touch the language file, so an
+            // unreadable or read-only preferences file must not disable it.
+            EditorGUILayout.Space(4);
+            var current = GrowLog.MinimumLevel;
+            var next = (LogLevel)EditorGUILayout.EnumPopup(
+                new GUIContent(
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesMinimumLogLevel),
+                    GrowLocalization.Get(
+                        GrowSettingsKeys.PreferencesMinimumLogLevelTooltip)),
+                current);
 
-                if (next != current) {
-                    GrowLog.MinimumLevel = next;
-                }
+            if (next != current) {
+                GrowLog.MinimumLevel = next;
             }
 
             if (loadResult.Status == GrowSettingsLoadStatus.Corrupted &&
