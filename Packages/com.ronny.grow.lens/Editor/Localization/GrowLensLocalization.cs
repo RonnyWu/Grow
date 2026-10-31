@@ -77,18 +77,6 @@ namespace Grow.Lens.Editor.Localization {
             return key;
         }
 
-        /// <summary>Formats a translated template with invariant culture.</summary>
-        internal static string Format(string key, params object[] args) {
-            var template = Get(key);
-
-            try {
-                return string.Format(System.Globalization.CultureInfo.InvariantCulture, template,
-                    args);
-            } catch (FormatException) {
-                return template;
-            }
-        }
-
         /// <summary>Clears the Lens locale catalog; tests only.</summary>
         internal static void ResetForTests() {
             Translations.Clear();
