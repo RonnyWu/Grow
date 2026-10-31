@@ -13,36 +13,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   active toggle, Inspector header actions, Project/Hierarchy context menus and the toolbar menu.
   Only the subsystems with an enabled feature are subscribed; the master switch still disables
   everything.
+- Component icons have a separate **Open Inspector on icon click** option, off by default. While
+  off, clicking an icon selects the GameObject normally instead of opening the component Inspector.
+- Separators are a dedicated group. A separate **Create Separator menu** option controls the
+  Hierarchy, toolbar and GameObject menu entries.
+- Create Separator opens a small editor for the title, background color, automatic or custom text
+  color, insertion above/below the selection, and a live preview. The previous hard-coded
+  one-click object is gone.
 - A Hierarchy active toggle pinned to the right edge of each row, with Undo support and space
   reserved before the component icons.
+- Preferences rows use native `EditorGUILayout.PropertyField` controls in Unity's default
+  label/control columns.
+- Group labels include a visible state (All on / Partial / All off); a click turns the group on
+  unless it is fully on.
+- Hierarchy item rows follow the visual order of the tree row: indent guides, component icons, active
+  toggle and context menus.
+- The guide color also uses a `PropertyField`, with an `#RRGGBBAA` readout and a non-expanding Reset
+  button.
+- Footer buttons use their natural widths instead of stretching across the window.
+- The master switch shows a status line; while it is off, every feature row is disabled.
+- The guide color row shows an `#RRGGBBAA` readout and keeps **Reset** disabled until the color is
+  customized.
+- The page footer opens the language page, reveals the settings file and restores the defaults
+  behind a confirmation dialog that also turns Grow Lens off.
+- Simplified Chinese uses Unity's window names in the group titles with the English name in
+  parentheses, and the two context-menu switches name their window and shortcut.
 - Indent-guide style settings: dashed/solid and a custom color with a Reset button. The dash pattern
   and 1 px line width stay fixed so the connectors remain centered on the foldout triangle.
 - English and Simplified Chinese UI text. Lens follows Grow's user-global
   **Preferences > Grow > General** language.
-- Hierarchy component icons are now clickable: a plain left-click opens a focused Inspector
-  window for that component, matching the component's **Properties...** menu item. Selection
-  and Ctrl/Shift/Alt/Command/right-click stay with the Hierarchy.
+- Hierarchy component icons stay display-only by default. With **Open Inspector on icon click**
+  enabled, a plain left-click opens that component's focused Inspector; modifier and right clicks
+  stay with the Hierarchy.
 - Formatted Hierarchy separators: `##RRGGBB[#RRGGBB]Text` (3/6-digit colors, `##-` for the
-  theme background), with child objects left in place and `GameObject/Grow/Create Separator`.
+  theme background), with child objects left in place and `GameObject/Grow/Create Separator...`.
   Rendering is read-only; it never reparents children.
-- `Grow` toolbar menu includes **Create Separator**.
+- `Grow` toolbar menu includes **Create Separator...**.
 
 ### Changed
 
 - The Preferences page is **Grow > Lens** instead of **Grow > Grow Lens**. The settings file is
-  schema 4; older files are migrated in memory. The old shared context-menu switch is copied to the
+  schema 5; older files are migrated in memory. The old shared context-menu switch is copied to the
   new Project and Hierarchy switches, the active toggle starts enabled, and the guide style defaults
-  to dashed with the theme-derived color.
+  to dashed with the current editor theme's text color at alpha 0.32.
 - Lens now depends on `com.ronny.grow` and derives its Preferences page from the shared
   `GrowSettingsPageBase`, so margin, label width and failure containment match the built-in pages.
-- The Preferences page is drawn with a transient `SerializedObject` and
-  `EditorGUILayout.PropertyField` for native label/control rows. The master switch gates the feature
-  list but leaves the feature switches editable while off, so they can be prepared before enabling;
-  details moved into tooltips.
-- Settings are grouped into Inspector, Project, Hierarchy and Toolbar enhancements. Each group row is
-  a derived batch switch; Hierarchy shows all-on/all-off/mixed and updates its five children with one
-  save and one host update. The guide style and color controls are indented one extra level under
-  Indent guides and remain visible but disabled when that feature is off.
+- A minimal transient serialized view feeds the native `PropertyField` rows; each frame commits one
+  data candidate and applies the host at most once. Turning the master switch off cascades the
+  native disabled state to every feature row.
+- Settings are grouped into Hierarchy, Separators, Inspector, Project and Toolbar. The Hierarchy
+  group shows all-on/all-off/mixed across its four regular-item switches; Separators is independent
+  because a separator is its own row rather than a decoration on a normal item. The guide style and
+  color controls are indented one extra level under Indent guides and remain visible but disabled
+  when that feature is off.
 - Project and Hierarchy context menus are separate switches, so they can be enabled independently.
 - Context menus and the toolbar menu use the selected language.
 
@@ -54,10 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   unresolved layouts draw nothing.
 - The Preferences page now updates when the shared Grow language changes instead of staying in
   English.
-- The Lens Preferences page now uses the same left/top margin and label width as the built-in Grow
-  settings pages.
-- The transient `SerializedObject` proxy no longer inherits `NotEditable` from
-  `HideFlags.HideAndDontSave`, so its PropertyFields are interactive instead of permanently grayed.
+- The Lens Preferences page now uses the shared page margin and label width with native serialized
+  fields, matching Unity's default Preferences form instead of overlapping custom toggle rows.
 - Guide lines are pixel-snapped and offset one pixel on X to match Unity 2022.3's foldout arrow
   visual center. The parent vertical breaks around the arm's pixel row and the arm starts at the
   vertical's left edge, so the arm owns the corner pixel without overlap or a gap.

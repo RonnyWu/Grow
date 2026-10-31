@@ -20,26 +20,36 @@ Open **Edit > Preferences > Grow > Lens** and turn on **Enable Grow Lens**. The 
 and the page label is **Lens**, so the tree reads Grow > Lens rather than repeating the product
 prefix.
 
-- The master switch is off by default. Settings are grouped into **Inspector enhancements**,
-  **Project enhancements**, **Hierarchy enhancements** and **Toolbar enhancements**. Each group row
-  is a derived batch switch for its children; **Hierarchy enhancements** shows all-on, all-off or
-  the mixed marker. Children keep their own switches.
-- Hierarchy includes an optional **Active toggle** drawn at the right edge of every row. It toggles
-  the GameObject's `activeSelf` with Undo and reserves space before the component icons.
+- The master switch is off by default. Under it, a status line names the settings file. While the
+  switch is off, every feature row is visually disabled; the master switch stays editable so Lens can
+  be turned back on. Settings are grouped into **Hierarchy**, **Separators**, **Inspector**,
+  **Project** and **Toolbar**. Rows use native `EditorGUILayout.PropertyField` controls in Unity's
+  default label/control columns. A group label includes its visible state (All on / Partial /
+  All off), and clicking it turns the whole group on or off. Children step in by one indent level.
+- Hierarchy rows follow the visual order of the tree row: indent guides, component icons, then the
+  optional **Active toggle** at the right edge. Component icons have their own **Open Inspector on
+  icon click** sub-option, off by default. While off, clicking an icon behaves like a normal row
+  click and selects the GameObject.
+- **Separators** is a separate group because a separator is its own item row, not a decoration on
+  a normal row. Its **Create Separator menu** option controls the Hierarchy, toolbar and GameObject
+  menu entries.
+- The guide color also uses a `PropertyField`; its label includes the `#RRGGBBAA` readout, and a
+  non-expanding Reset button follows the field.
+- The footer links to the language page, reveals the settings file and restores the defaults behind a
+  confirmation dialog. Its buttons use their natural widths. Restoring also turns Lens off, so the
+  dialog says so.
 - The settings are per project and stored in `UserSettings/Grow/Lens.json`, outside `Assets/`, so
   they are not imported into the project and do not ship in a build. This repository also ignores
   `UserSettings/`, so the file is not committed here.
 - The default is off. A missing or unreadable file also reads as off. A file written by the older
   single-switch format keeps all features enabled when the master switch is on.
-- Feature switches remain editable while the master switch is off; their saved values apply as soon
-  as Lens is enabled again.
 - The change applies immediately; no domain reload is needed.
 - Batch mode never subscribes, so a headless test run installs no editor callbacks.
 
 Turning the master switch off removes every callback and the toolbar entry. Turning an individual
 feature off removes only that feature; for example, separators can be disabled while component icons
-and indent guides stay on. The `GameObject > Grow > Create Separator` item is disabled while
-separators are off.
+and indent guides stay on. The Create Separator entries stay disabled while separators or their menu
+option are off.
 
 ## Language
 
@@ -96,12 +106,12 @@ display-only: Lens never reparents children or edits the GameObject.
   stay visible so the object can be renamed. The separator text survives a rename only if the name
   keeps the format.
 - Hierarchy search skips separator rendering, so search results show the raw GameObject names.
-- Creating one: **GameObject > Grow > Create Separator**, **Create Separator** in the Hierarchy
-  context menu, or **Create Separator** in the toolbar menu. The new object is named
-  `##383838 Section`, becomes a sibling after the active object (or a root object when no scene
-  object is active), and is selected and pinged. The command is disabled while a Prefab Stage is
-  open, because a separator is scene content and must not be written into a prefab asset. When
-  several scenes are loaded, the separator is created in the active object's scene.
+- Creating one: **GameObject > Grow > Create Separator...**, the Hierarchy context menu, or the
+  toolbar menu. A small editor asks for the title, background color, automatic or custom text color,
+  and whether to insert above or below the selection, with a live preview. With no scene object
+  selected it appends to the active scene. The new object is selected and pinged. The command is
+  disabled while a Prefab Stage is open, because a separator is scene content and must not be
+  written into a prefab asset.
 - A separator is a normal GameObject with only a Transform. It is saved with the scene and is
   present at runtime and in a build; remove it from the scene or strip it in a build step if that
   matters.
@@ -114,7 +124,7 @@ geometry and the visible row depths:
 - A T shape means the branch continues through a following sibling; an L shape marks the last child.
 - The current row's own foldout column is never used as a vertical guide.
 - **Dashed guides** switches between the fixed dashed pattern and a solid line. **Guide color**
-  selects a custom color; **Reset** restores the theme-derived color. The controls appear while
+  selects a custom color; **Reset** restores the current editor theme's text color at alpha 0.32. The controls appear while
   indent guides are enabled.
 - Horizontal arms start at the vertical line's left edge, and the vertical is split around the arm's
   pixel row, so the arm owns the corner pixel while avoiding overlap or a missing corner.
@@ -165,7 +175,7 @@ The copy, reveal and delete items are disabled when the clicked item has no asse
 - `Copy Name`, `Copy Path` (root-to-leaf path, e.g. `Root/Child/Leaf`), `Copy GUID`
 - `Create Empty And Reset`, `Create Empty Child And Reset`, `Create Empty Parent And Reset` — run
   Unity's own create command and then reset the new object's local position, rotation and scale
-- `Create Separator`
+- `Create Separator...` (opens the separator editor)
 - `Delete`
 
 `Copy GUID` is disabled for a plain scene object, which has no asset identity; on a prefab instance
@@ -182,7 +192,7 @@ Lens adds one **Grow** entry to the left side of the main toolbar. It opens a me
 - `Preferences`, `Project Settings`, `Build Settings`
 - `Package Manager`, `Console`, `Profiler`, `Memory Profiler`, `Frame Debugger`, `Input Debugger`
 - `Open C# Project`
-- `Create Separator`
+- `Create Separator...`
 - `Take Screenshot`, `Open Screenshots Folder`
 
 `Take Screenshot` writes `screenshot_HHmmss_fff.png` to the project root's `Screenshots/` folder,
@@ -230,10 +240,11 @@ with a clean failure count. Menu actions log their own errors but never disable 
 2. Open the **Grow** toolbar menu and run `Preferences`, `Console` and `Take Screenshot`.
 3. Select a material or texture and confirm the Inspector header actions.
 4. Select a Hierarchy object and confirm the component icons and tree connectors.
-5. Click a component icon with a plain left click; the focused Inspector opens and the selection does
-   not change. Ctrl-click and right-click still belong to the Hierarchy.
-6. Add a separator with **GameObject > Grow > Create Separator**, rename it to
-   `##2E7D32#FFFFFF Section`, and confirm the row, then select it and confirm the native row returns.
+5. With **Open Inspector on icon click** off, clicking a component icon selects the GameObject. Turn
+   it on and click the icon; the focused Inspector opens. Ctrl-click and right-click stay native.
+6. Turn **Create Separator menu** off and confirm all creation entries are unavailable. Turn it on,
+   create a separator with **GameObject > Grow > Create Separator...**, set the title and colors,
+   insert above the selection, and confirm the preview, row and native selected state.
 7. Press Ctrl+right-click on a Project item and on a Hierarchy row; confirm the menus act on the
    clicked item.
 8. Search the Hierarchy and confirm separators and connectors disappear while the results are shown.

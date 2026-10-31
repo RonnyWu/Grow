@@ -39,37 +39,39 @@ the runtime kernel, so the package graph stays acyclic. The `Grow.Editor` friend
 
 ## Settings
 
-`UserSettings/Grow/Lens.json` is a small per-project JSON file. Schema 4 stores the master
-`Enabled` switch, one boolean for each feature, and the indent-guide style settings:
-`HierarchyComponentIcons`, `HierarchySeparators`, `HierarchyIndentGuides`, `HierarchyActiveToggle`,
-`HierarchyContextMenus`, `ProjectContextMenus`, `AssetHeader`, `Toolbar`, `HierarchyGuideDashed`,
-`HierarchyGuideCustomColor` and `HierarchyGuideColor`. It lives outside `Assets/`, so Unity does not
-import it and it does not ship in a build; this repository also ignores `UserSettings/`. The master
-switch defaults to `false`; a missing or unreadable file also resolves to `false`. Feature switches
-default to `true`, so enabling the master switch preserves the all-features-on behaviour.
+`UserSettings/Grow/Lens.json` is a small per-project JSON file. Schema 5 stores the master
+`Enabled` switch, one boolean for each feature, the component-icon click option, the separator-menu
+option and the indent-guide style settings: `HierarchyComponentIcons`,
+`HierarchyComponentInspector`, `HierarchySeparators`, `HierarchySeparatorMenu`,
+`HierarchyIndentGuides`, `HierarchyActiveToggle`, `HierarchyContextMenus`, `ProjectContextMenus`,
+`AssetHeader`, `Toolbar`, `HierarchyGuideDashed`, `HierarchyGuideCustomColor` and
+`HierarchyGuideColor`. It lives outside `Assets/`, so Unity does not import it and it does not ship
+in a build; this repository also ignores `UserSettings/`. The master switch defaults to `false`; a
+missing or unreadable file also resolves to `false`. Feature switches default to `true`, while
+opening a component Inspector on icon click defaults to `false`.
 
-Schema 1 contains only `Enabled`; schema 2 stored the old shared `ContextMenus` switch. Loading either
-file normalizes it in memory to schema 4 with every missing feature enabled and copies the old
-context-menu value to both `ProjectContextMenus` and `HierarchyContextMenus`. Schema 3 added those
-two switches and `HierarchyActiveToggle`; schema 4 adds the dashed/solid guide style and custom
-guide color, defaulting to dashed with the theme-derived color. An existing user therefore keeps the
-same result.
+Schema 1 contains only `Enabled`; schema 2 stored the old shared `ContextMenus` switch. Loading an
+older file normalizes it in memory to schema 5 and copies the old context-menu value to both
+`ProjectContextMenus` and `HierarchyContextMenus`. Schema 3 added those two switches and
+`HierarchyActiveToggle`; schema 4 added the dashed/solid guide style and custom guide color; schema 5
+adds the component-icon click option and the separate separator-menu option. The default guide style
+is dashed with the current editor theme's text color at alpha 0.32.
 
-The page groups settings into **Inspector enhancements**, **Project enhancements**, **Hierarchy
-enhancements** and **Toolbar enhancements**. Each group row is a derived batch switch, not another
-stored boolean. Hierarchy shows all-on, all-off or the mixed marker from its five children; clicking
-a group sets its children through one save and one host update. Children stay individually
-switchable, including when their group row is off. Feature switches remain editable while the master
-switch is off; only the host subscriptions are gated, so the values can be prepared before enabling
-Lens again.
+The page groups settings into **Hierarchy**, **Separators**, **Inspector**, **Project** and
+**Toolbar**. The Hierarchy group batch-switches the four regular-item features and shows all-on,
+all-off or mixed. Separators are a separate group because a separator is an independent item row,
+not a decoration on a normal row; its child switch controls the Create Separator menu. Turning the
+master switch off cascades the native disabled state to every feature row; the master switch itself
+stays editable so Lens can be turned back on.
 
 The settings page is **Preferences > Grow > Lens**: the category is **Grow** and the page label is
 **Lens**, not **Grow Lens**, so the tree does not repeat the product prefix. It derives from the
 shared `GrowSettingsPageBase`, which supplies the same margin, label width and failure containment as
-the built-in Grow pages. The page draws a transient `SerializedObject` proxy through
-`EditorGUILayout.PropertyField` for native label/control rendering; the JSON file remains the source
-of truth. Changing the master or a feature toggle applies the host immediately and requests a
-repaint; no domain reload is required. There is no menu or toolbar shortcut for changing settings.
+the built-in Grow pages. A 12-line transient `ScriptableObject` exposes the existing serializable
+settings data to `SerializedObject`; ordinary rows are native `EditorGUILayout.PropertyField`
+controls. The JSON file remains the source of truth. One frame produces one data candidate and one
+atomic commit, which applies the host immediately and requests a repaint; no domain reload is
+required. There is no menu or toolbar shortcut for changing settings.
 
 The page treats the file as the single source of truth and never lies about a write. One page
 interaction produces at most one file write and at most one host update, and the in-memory values
@@ -78,6 +80,18 @@ committed values and shows an error instead. A damaged file, a file written by a
 a read-only file are shown as warnings and make the page read-only: they are never overwritten or
 downgraded to the current schema. Style-only changes (dashed guides, guide color) repaint without
 touching the host subscriptions.
+
+The page follows Unity's default Preferences form: labels occupy the shared label column and native
+`PropertyField` controls occupy the control column. Single-feature groups reuse the same serialized
+property for their group and child rows. Only the derived Hierarchy group needs an extra Boolean so
+`EditorGUI.showMixedValue` can display its partial state; its visible state text (All on / Partial /
+All off) is appended to the label. A mixed group turns fully on when clicked, and a fully on group
+turns off. The master switch adds a status line; while it is off, every feature row is disabled.
+Hierarchy children follow the visual order of the row: indent guides, component icons (with the
+nested click option), the active toggle, then context menus. Separators form their own group with
+the Create Separator menu as a child. The guide color is also a `PropertyField`, with an
+`#RRGGBBAA` readout and a non-expanding **Reset** button. Footer buttons use their natural widths
+instead of stretching across the window.
 
 ## Language
 
@@ -120,8 +134,8 @@ The host also treats batch mode as disabled, so a headless test run never instal
 
 | Feature | Implementation | Notes |
 | --- | --- | --- |
-| Hierarchy component icons | `ItemComponentIcon` | Right-aligned icons packed in component order; plain left-click opens a focused Inspector, matching the component's **Properties...** action |
-| Hierarchy separators | `HierarchySeparator` | Read-only `##RRGGBB[#RRGGBB]Text` headers; create through **GameObject > Grow > Create Separator**; search mode skips them |
+| Hierarchy component icons | `ItemComponentIcon` | Right-aligned icons packed in component order; clicking opens a focused Inspector only while its click option is on, otherwise the row selects normally |
+| Hierarchy separators | `HierarchySeparator` | Read-only `##RRGGBB[#RRGGBB]Text` headers with a separate Create Separator menu switch; search mode skips them |
 | Hierarchy tree connectors | `ItemIndentLine` | T/L connectors on ancestor columns plus horizontal arms, from the live `TreeViewGUI` geometry and visible row depths |
 | Hierarchy active toggle | `ItemActiveToggle` | Pinned checkbox at the row's right edge; toggles `activeSelf` with Undo and reserves space before component icons |
 | Asset header actions | `GrowAssetHead` | Copy full path, asset path and GUID; Rider actions are optional and the row is hidden for excluded types |
@@ -136,12 +150,12 @@ from the right edge of the row in component order, and the visible count is limi
 object name; a narrow Hierarchy shows fewer icons. The icon set is cached per object and rebuilt on
 `hierarchyChanged`.
 
-A plain left click on a visible icon opens Unity's focused Inspector for that component
-(`PropertyEditor.OpenPropertyEditor`) through a delayed call, after the row's IMGUI event, and
-consumes the event so the Hierarchy does not also select the row. Any modifier, a right click or a
-click outside the icon rect leaves the event to the Hierarchy. If the internal entry point cannot be
-resolved, the fallback selects the component and opens the Inspector window, which does change the
-selection.
+With **Open Inspector on icon click** off, icons are display-only and an icon click behaves like a
+normal row click. With the option on, a plain left click opens Unity's focused Inspector for that
+component (`PropertyEditor.OpenPropertyEditor`) through a delayed call and consumes the event. Any
+modifier, a right click or a click outside the icon rect leaves the event to the Hierarchy. If the
+internal entry point cannot be resolved, the fallback selects the component and opens the Inspector
+window.
 
 ### Hierarchy active toggle
 
@@ -164,11 +178,13 @@ anything that does not match is an ordinary name, including the single-`#` form 
 
 A selected separator yields to the native row — Lens adds a thin selection marker and draws no band —
 so the selection highlight and the rename field remain usable. Search mode skips separator drawing
-entirely. Creation uses `GameObject > Grow > Create Separator`, the Hierarchy context menu or the
-toolbar menu; the created object is named `##383838 Section`, is placed as a sibling after the active
-scene object (or at the root) and is selected. The command is disabled while a Prefab Stage is open,
-because a separator is scene content and must not be written into a prefab asset. With multiple
-scenes loaded, the object is created in the active object's scene.
+entirely. Creation uses `GameObject > Grow > Create Separator...`, the Hierarchy context menu or the
+toolbar menu while both the separator feature and its Create Separator menu switch are on. A small
+modal window edits the title, background, automatic/custom text color and insertion above or below
+the selection, with a live preview. With no scene selection it appends to the active scene. The new
+object is selected and pinged. The command is disabled while a Prefab Stage is open, because a
+separator is scene content and must not be written into a prefab asset. With multiple scenes loaded,
+the object is created in the selected object's scene.
 
 ### Hierarchy tree connectors
 
@@ -185,7 +201,7 @@ unresolved geometry draw nothing; the unresolved case logs once.
 
 The line style is configurable while indent guides are enabled: `Dashed guides` selects the fixed
 dashed pattern or a solid line. `Guide color` selects a custom color and `Reset` restores the
-theme-derived color. Line width, dash length and gap stay fixed so the connector column remains
+current editor theme's text color at alpha 0.32. Line width, dash length and gap stay fixed so the connector column remains
 aligned with the foldout triangle. Vertical lines are pixel-snapped around the guide X. The parent
 vertical is split around the arm's pixel row, and the horizontal arm starts at the vertical's left
 edge, so the arm owns the corner pixel: a T/L joint neither overlaps by half a line nor leaves a
@@ -274,12 +290,13 @@ Manual smoke checklist for Unity 2022.3:
 2. Open the **Grow** toolbar menu and check Preferences, Console and Take Screenshot.
 3. Select a material or texture and confirm the Inspector header actions; select a Hierarchy object
    and confirm component icons, the right-edge active toggle and tree connectors.
-4. Click a component icon with a plain left click; the focused Inspector opens and the selection does
-   not change. Click the active toggle and confirm Undo restores the previous state. Modifier clicks
-   and right-clicks still belong to the Hierarchy.
+4. Turn **Open Inspector on icon click** off and click a component icon; the GameObject is selected
+   as usual. Turn it on and click the icon; the focused Inspector opens. Confirm Undo on the active
+   toggle, and that modifier/right clicks still belong to the Hierarchy.
 5. Ctrl+right-click a Project item and a Hierarchy row; confirm the menus act on the clicked item.
-6. Create a separator with **GameObject > Grow > Create Separator**, rename it to
-   `##2E7D32#FFFFFF Section`, then select it and confirm the native row returns.
+6. Turn **Create Separator menu** off and confirm all three creation entries are unavailable; turn it
+   on, open the separator editor, set a title and colors, insert above the selection and confirm the
+   preview, row and native selected state.
 7. Search the Hierarchy and confirm separators and connectors disappear.
 8. Turn individual feature switches off and confirm only that subsystem disappears; turn the master
    switch off and confirm the Grow entry and every decoration disappear.

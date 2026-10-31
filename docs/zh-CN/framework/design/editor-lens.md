@@ -1,4 +1,4 @@
-<!-- source: docs/en/framework/design/editor-lens.md @ blob:3f6b265a2991970f0a7a5658e6274e5e7dbeb67d -->
+<!-- source: docs/en/framework/design/editor-lens.md @ blob:41f7a123a3985a3991e435be5f303436531b083a -->
 <!-- 中文译文；以英文 docs/en/framework/design/editor-lens.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/framework/design/editor-lens.md 核验。 -->
 
 # 编辑器 Lens
@@ -35,15 +35,17 @@ Lens 引用 `Grow.Editor` 以复用共享设置页基类和语言服务，并在
 
 ## 设置
 
-`UserSettings/Grow/Lens.json` 是每项目一个小 JSON 文件。schema 4 保存主开关 `Enabled`、每个功能一个布尔值，以及缩进引导线设置：`HierarchyComponentIcons`、`HierarchySeparators`、`HierarchyIndentGuides`、`HierarchyActiveToggle`、`HierarchyContextMenus`、`ProjectContextMenus`、`AssetHeader`、`Toolbar`、`HierarchyGuideDashed`、`HierarchyGuideCustomColor`、`HierarchyGuideColor`。它位于 `Assets/` 之外，因此 Unity 不会导入它，也不会进入构建；本仓库同时忽略 `UserSettings/`。主开关默认 `false`；文件缺失或不可读也解析为 `false`。功能开关默认 `true`，因此打开主开关时保持“全部启用”的行为。
+`UserSettings/Grow/Lens.json` 是每项目一个小 JSON 文件。schema 5 保存主开关 `Enabled`、每个功能一个布尔值、组件图标点击选项、分隔符菜单选项，以及缩进引导线设置：`HierarchyComponentIcons`、`HierarchyComponentInspector`、`HierarchySeparators`、`HierarchySeparatorMenu`、`HierarchyIndentGuides`、`HierarchyActiveToggle`、`HierarchyContextMenus`、`ProjectContextMenus`、`AssetHeader`、`Toolbar`、`HierarchyGuideDashed`、`HierarchyGuideCustomColor`、`HierarchyGuideColor`。它位于 `Assets/` 之外，因此 Unity 不会导入它，也不会进入构建；本仓库同时忽略 `UserSettings/`。主开关默认 `false`；文件缺失或不可读也解析为 `false`。功能开关默认 `true`，点击图标打开检查器默认 `false`。
 
-schema 1 只有 `Enabled`；schema 2 使用一个共享的 `ContextMenus` 开关。加载时会规范化为 schema 4，并启用缺失的功能，同时把旧上下文菜单值复制到 `ProjectContextMenus` 和 `HierarchyContextMenus`。schema 3 增加了这两个开关和 `HierarchyActiveToggle`；schema 4 增加虚线/实线样式和自定义引导线颜色，默认虚线并使用主题颜色。已有用户的结果不变。
+schema 1 只有 `Enabled`；schema 2 使用一个共享的 `ContextMenus` 开关。加载旧文件时会规范化为 schema 5，并把旧上下文菜单值复制到 `ProjectContextMenus` 和 `HierarchyContextMenus`。schema 3 增加了这两个开关和 `HierarchyActiveToggle`；schema 4 增加虚线/实线样式和自定义引导线颜色；schema 5 增加组件图标点击选项和独立的分隔符菜单选项。默认引导线为虚线，颜色取当前编辑器主题文字色、不透明度 0.32。
 
-设置页按 **Inspector 增强**、**Project 增强**、**Hierarchy 增强**、**Toolbar 增强** 四类分组。每个分组行都是派生的批量开关，不是额外持久化字段。Hierarchy 根据五个子项显示全开、全关或混合标记；点击分组会通过一次保存和一次宿主更新设置子项。子项始终可以单独切换，包括分组行关闭时。主开关关闭时功能开关仍可编辑，只是不订阅宿主，因此可以先配置再重新启用 Lens。
+设置页按 **Hierarchy**、**Separators**、**Inspector**、**Project**、**Toolbar** 五组排列。Hierarchy 组批量控制四个常规 Item 功能，并显示全开、全关或混合。分隔符单独成组，因为它是独立的 Item 行，不是常规行上的装饰；其子开关控制“创建分隔符”菜单。关闭主开关会把原生禁用态级联到所有功能行；主开关本身保持可编辑，以便重新启用 Lens。
 
-设置页在 **Preferences > Grow > Lens**：分类是 **Grow**，页面标签是 **Lens** 而不是 **Grow Lens**，因此树中不会重复产品前缀。页面继承共享的 `GrowSettingsPageBase`，与内置 Grow 页面使用相同的边距、label 宽度和失败隔离。页面通过临时 `SerializedObject` 代理和 `EditorGUILayout.PropertyField` 绘制原生 label/控件，JSON 文件仍是唯一真源。切换主开关或功能开关会立即应用宿主并请求重绘，无需域重载。没有用于修改设置的菜单或工具栏快捷入口。
+设置页在 **Preferences > Grow > Lens**：分类是 **Grow**，页面标签是 **Lens** 而不是 **Grow Lens**，因此树中不会重复产品前缀。页面继承共享的 `GrowSettingsPageBase`，与内置 Grow 页面使用相同的边距、label 宽度和失败隔离。一个 12 行的临时 `ScriptableObject` 把现有可序列化设置数据暴露给 `SerializedObject`，普通行全部使用原生 `EditorGUILayout.PropertyField`。JSON 文件仍是唯一真源；每帧生成一个数据候选并原子提交一次，随后立即应用宿主并请求重绘，无需域重载。没有用于修改设置的菜单或工具栏快捷入口。
 
 页面把文件当作唯一真源，并且不会谎报写入结果。一次页面交互至多产生一次写盘和一次宿主更新；内存中的值只在写盘成功后替换，因此保存失败时编辑器仍使用上一次成功提交的值，并在页面上显示错误。损坏的文件、由更新版本写入的文件以及只读文件会显示警告并让页面只读：它们永远不会被覆盖，也不会被降写为当前 schema。仅样式类的修改（虚线引导线、引导线颜色）只重绘，不触碰宿主订阅。
+
+页面遵循 Unity 默认 Preferences 表单：标签位于共享标签列，原生 `PropertyField` 控件位于控件列。单功能分组的组行与子行复用同一个序列化属性；只有派生的层级组需要额外一个布尔值，用 `EditorGUI.showMixedValue` 显示部分状态，可见状态文字（全开 / 部分 / 全关）附在组标签后。混合组点击后全开，全关组点击后全开，全开组点击后全关。主开关下方有状态行；关闭时所有功能行级联禁用。层级子项按行的视觉顺序排列：缩进引导线、组件图标（含嵌套的点击选项）、Active 开关、上下文菜单。分隔符单独成组，创建菜单是其子开关。引导线颜色同样使用 `PropertyField`，附 `#RRGGBBAA` 读数和不拉伸的“重置”按钮；页脚按钮也按自然宽度排列，不再撑满窗口。
 
 ## 语言
 
@@ -75,8 +77,8 @@ Lens 在 `Editor/Localization/Locales` 下自带英文和简体中文文案。�
 
 | 功能 | 实现 | 说明 |
 | --- | --- | --- |
-| Hierarchy 组件图标 | `ItemComponentIcon` | 右对齐图标，按组件顺序排列；普通左键打开聚焦 Inspector，与组件 **Properties...** 行为一致 |
-| Hierarchy 分隔符 | `HierarchySeparator` | 只读渲染 `##RRGGBB[#RRGGBB]Text` 标题；通过 **GameObject > Grow > Create Separator** 创建；搜索模式跳过 |
+| Hierarchy 组件图标 | `ItemComponentIcon` | 右对齐图标，按组件顺序排列；只有点击选项开启时左键才打开聚焦 Inspector，否则按普通行选中 |
+| Hierarchy 分隔符 | `HierarchySeparator` | 只读渲染 `##RRGGBB[#RRGGBB]Text` 标题；创建菜单有独立开关；搜索模式跳过 |
 | Hierarchy 树连接线 | `ItemIndentLine` | 读取真实 `TreeViewGUI` 几何与可见行 depth，在祖先列绘制 T/L 连接线及横向臂 |
 | Hierarchy Active 开关 | `ItemActiveToggle` | 固定在最右侧的复选框；通过 Undo 切换 `activeSelf`，并为组件图标预留空间 |
 | 资产头部动作 | `GrowAssetHead` | 复制完整路径、资产路径与 GUID；Rider 动作可选，且被排除的类型不显示该行 |
@@ -88,7 +90,7 @@ Lens 在 `Editor/Localization/Locales` 下自带英文和简体中文文案。�
 
 行回调只拿到行矩形，因此图标不依赖树内部结构。图标从行右边缘开始按组件顺序排列，可见数量受对象名结尾限制；Hierarchy 越窄，能显示的图标越少。图标集合按对象缓存，在 `hierarchyChanged` 时重建。
 
-在可见图标上普通左键点击，会在该行的 IMGUI 事件结束后通过延迟调用打开 Unity 的聚焦 Inspector（`PropertyEditor.OpenPropertyEditor`），并消费事件，因此 Hierarchy 不会再选中该行。带修饰键的点击、右键或点击图标矩形之外，事件仍交给 Hierarchy。如果无法解析该内部入口，回退路径会选中组件并打开 Inspector 窗口，这会改变当前选择。
+“点击图标打开检查器”关闭时，组件图标只负责显示，点击图标与普通行点击一样选中 GameObject。开启后，在可见图标上普通左键点击会在该行的 IMGUI 事件结束后通过延迟调用打开 Unity 的聚焦 Inspector（`PropertyEditor.OpenPropertyEditor`）并消费事件。带修饰键的点击、右键或点击图标矩形之外，事件仍交给 Hierarchy。如果无法解析该内部入口，回退路径会选中组件并打开 Inspector 窗口。
 
 ### Hierarchy Active 开关
 
@@ -100,7 +102,7 @@ Lens 在 `Editor/Localization/Locales` 下自带英文和简体中文文案。�
 
 格式为 `##` + 3 位或 6 位背景色、或 `-` 表示主题背景，随后可选 `#` + 3 位或 6 位文字色，再是显示文本。例如 `##2E7D32 Level A`、`##F00#FFF Title`、`##-#FFD54F Note`、`##383838`。颜色没有 alpha 通道。文本会去除首尾空白；不匹配格式的名字就是普通名字，包括旧的单 `#` 形式与 5 位颜色。
 
-选中的分隔符让出原生行——Lens 只画一条细选中标记，不画色带——因此选中高亮与重命名输入框仍然可用。搜索模式完全跳过分隔符绘制。创建入口有三个：`GameObject > Grow > Create Separator`、Hierarchy 上下文菜单或工具栏菜单；新建对象名为 `##383838 Section`，作为当前场景对象的兄弟节点放在其后（没有当前场景对象时放在根级），并被选中与 ping。Prefab Stage 中该命令禁用，因为分隔符是场景内容，不应写入预制体资产；多场景同时加载时，对象创建在当前对象所属场景。
+选中的分隔符让出原生行——Lens 只画一条细选中标记，不画色带——因此选中高亮与重命名输入框仍然可用。搜索模式完全跳过分隔符绘制。只有分隔符功能与“创建分隔符菜单”开关同时开启时，三个创建入口才可用：`GameObject > Grow > Create Separator...`、Hierarchy 上下文菜单或工具栏菜单。入口会打开一个小型模态编辑器，可设置标题、背景色、自动或自定义文字色、插入到选中对象之上或之下，并实时预览；没有选中场景对象时追加到当前场景末尾。新建对象会被选中并 ping。Prefab Stage 中该命令禁用，因为分隔符是场景内容，不应写入预制体资产；多场景同时加载时，对象创建在选中对象所属场景。
 
 ### Hierarchy 树连接线
 
@@ -108,7 +110,7 @@ Lens 在 `Editor/Localization/Locales` 下自带英文和简体中文文案。�
 
 每个祖先列在分支继续时画竖段；父列在有后续兄弟时画整行，末子时画半行，并画横向臂：分支停到 foldout 箭头，叶子延伸到内容。当前行自己的 foldout 列永不使用。depth 为 0（场景标题）、搜索中的树以及无法解析的几何一律不画；无法解析的情况只记录一次警告。
 
-缩进引导线启用时可以配置线型：`Dashed guides` 选择固定虚线样式或实线；`Guide color` 设置自定义颜色，`Reset` 恢复主题默认颜色。线宽、虚线长度和间隔保持固定，确保连接线列始终与 foldout 三角形对齐。垂直线按像素对齐到引导列 X；父级垂直线在水平臂所在像素行处断开，水平臂从垂直线左边缘开始，因此转角像素由水平臂独占：T/L 转角既不会重复半个线宽，也不会缺角。
+缩进引导线启用时可以配置线型：`Dashed guides` 选择固定虚线样式或实线；`Guide color` 设置自定义颜色，`Reset` 恢复当前编辑器主题文字色、不透明度 0.32。线宽、虚线长度和间隔保持固定，确保连接线列始终与 foldout 三角形对齐。垂直线按像素对齐到引导列 X；父级垂直线在水平臂所在像素行处断开，水平臂从垂直线左边缘开始，因此转角像素由水平臂独占：T/L 转角既不会重复半个线宽，也不会缺角。
 
 ## 资产头部
 
@@ -139,7 +141,7 @@ Lens 在 `Editor/Localization/Locales` 下自带英文和简体中文文案。�
 - 树连接线由当前窗口的 `TreeViewGUI` 与可见行推导 depth、兄弟与末子状态；搜索模式、场景标题与无法解析的内部布局一律不画（fail closed），不用固定像素猜。
 - 组件图标绘制在 GameObject 行上，不绘制在分隔符行上；Project 窗口里的资产图标不受影响。
 - 所有装饰都由 `hierarchyWindowItemOnGUI` 绘制，因此 Lens 只装饰 Hierarchy 行；它没有 Stage 视图或 Project 窗口的覆盖层。
-- 组件图标点击使用普通左键，打开聚焦 Inspector 窗口且不改变当前选择；修饰键点击与右键交回 Hierarchy。回退路径会选中组件。
+- 组件图标点击开关关闭时，图标点击只选中 GameObject；开启后普通左键打开聚焦 Inspector 窗口。修饰键点击与右键始终交回 Hierarchy。
 - 分隔符使用 `##RRGGBB`、3 位 `##RGB` 或 `##-`；不识别单 `#` 形式。选中时让出原生行；搜索模式跳过分隔符渲染。
 - Hierarchy 图标只在 `hierarchyChanged` 时清除，不是每次组件编辑都清；不触发该事件的组件变化可能保留旧图标，直到下一次变化。
 - 上下文菜单需要 Ctrl+右键。复制与定位作用于点击行；Delete 作用于当前选择；创建类命令调用 Unity 内置的资产/GameObject 命令。
@@ -155,9 +157,9 @@ Unity 2022.3 人工冒烟清单：
 1. 在 **Preferences > Grow > Lens** 启用 Grow Lens；工具栏入口应出现，且无需重启编辑器。
 2. 打开 **Grow** 工具栏菜单，检查 Preferences、Console 与 Take Screenshot。
 3. 选中材质或贴图确认资产头部动作；选中 Hierarchy 对象确认组件图标、最右侧 Active 开关与树连接线。
-4. 用普通左键点击组件图标；聚焦 Inspector 打开且当前选择不变。点击 Active 开关并用 Undo 确认恢复。修饰键点击与右键仍属于 Hierarchy。
+4. 先关闭“点击图标打开检查器”，点击组件图标应只选中 GameObject；开启后再点图标，聚焦 Inspector 打开。点击 Active 开关并用 Undo 确认恢复。
 5. 在 Project 项与 Hierarchy 行上 Ctrl+右键，确认菜单作用于点击项。
-6. 用 **GameObject > Grow > Create Separator** 创建分隔符，重命名为 `##2E7D32#FFFFFF Section`，再选中它确认原生行恢复。
+6. 关闭再打开“创建分隔符菜单”，确认三个入口的可用性；打开编辑器设置标题、颜色和插入到选中对象之上，确认预览、生成行与选中后的原生行恢复。
 7. 搜索 Hierarchy，确认分隔符与连接线消失。
 8. 逐个关闭功能开关，确认只有对应子系统消失；再关闭主开关，确认 Grow 入口与所有装饰消失。
 9. 在 **Preferences > Grow > General** 切换语言，确认 Lens 页面、上下文菜单、工具栏菜单与资产头部无需重启即可更新。
