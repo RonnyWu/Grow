@@ -574,6 +574,11 @@ namespace Grow.Lens.Editor.Core {
             _sessionDisabled = false;
         }
 
+        /// <summary>Drops the cached values so the next read reloads the file and its status.</summary>
+        internal static void ReloadFromDisk() {
+            _data = null;
+        }
+
         /// <summary>Redirects the settings file to a temporary path; tests only.</summary>
         internal static void SetPathForTests(string path) {
             _pathOverride = path;

@@ -8,6 +8,7 @@ using Grow.Lens.Editor.Core;
 using Grow.Lens.Editor.Localization;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Grow.Lens.Editor.Settings {
     /// <summary>Lens preferences drawn with Unity's native serialized fields.</summary>
@@ -52,9 +53,26 @@ namespace Grow.Lens.Editor.Settings {
         }
 
         /// <inheritdoc />
+        public override void OnActivate(string searchContext, VisualElement rootElement) {
+            // Pick up an external fix (permissions, a removed or replaced file) without a domain
+            // reload; every committed change is already on disk, so nothing unsaved is lost.
+            GrowLensSettings.ReloadFromDisk();
+            GrowLensHost.Apply();
+            GrowLensHost.RequestRepaint();
+            base.OnActivate(searchContext, rootElement);
+        }
+
+        /// <inheritdoc />
         public override void OnDeactivate() {
+            _resetGuideColor = false;
+            if (_serialized != null) {
+                _serialized.Dispose();
+                _serialized = null;
+            }
+
             if (_proxy != null) {
                 Object.DestroyImmediate(_proxy);
+                _proxy = null;
             }
 
             base.OnDeactivate();
@@ -248,8 +266,17 @@ namespace Grow.Lens.Editor.Settings {
         }
 
         private void EnsureProxy() {
-            if (_proxy != null) {
+            if (_proxy != null && _serialized != null) {
                 return;
+            }
+
+            if (_serialized != null) {
+                _serialized.Dispose();
+                _serialized = null;
+            }
+
+            if (_proxy != null) {
+                Object.DestroyImmediate(_proxy);
             }
 
             _proxy = ScriptableObject.CreateInstance<GrowLensSettingsProxy>();

@@ -7,8 +7,11 @@ using Grow.Editor.Settings;
 using Grow.Lens.Editor.Core;
 using Grow.Lens.Editor.Settings;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 namespace Grow.Lens.Tests.Editor.Core {
     /// <summary>Tests for the per-project settings file.</summary>
@@ -206,6 +209,34 @@ namespace Grow.Lens.Tests.Editor.Core {
         }
 
         [Test]
+        public void SettingsProxy_ExposesEveryFieldToSerializedObject() {
+            var proxy = ScriptableObject.CreateInstance<GrowLensSettingsProxy>();
+            try {
+                proxy.Data = GrowLensSettings.Snapshot;
+                using var serialized = new SerializedObject(proxy);
+
+                Assert.IsNotNull(serialized.FindProperty("Data.Enabled"));
+                Assert.IsNotNull(serialized.FindProperty("Data.HierarchyComponentInspector"));
+                Assert.IsNotNull(serialized.FindProperty("Data.HierarchySeparatorMenu"));
+                Assert.IsNotNull(serialized.FindProperty("Data.HierarchyGuideDashed"));
+                Assert.IsNotNull(serialized.FindProperty("Data.HierarchyGuideColor"));
+                Assert.IsNotNull(serialized.FindProperty("HierarchyGroup"));
+
+                var enabled = serialized.FindProperty("Data.Enabled");
+                enabled.boolValue = true;
+                Assert.IsTrue(serialized.ApplyModifiedPropertiesWithoutUndo());
+                Assert.IsTrue(proxy.Data.Enabled);
+
+                // The page replaces the transient data object every frame and then calls Update.
+                proxy.Data = GrowLensSettings.Snapshot;
+                serialized.Update();
+                Assert.IsFalse(serialized.FindProperty("Data.Enabled").boolValue);
+            } finally {
+                Object.DestroyImmediate(proxy);
+            }
+        }
+
+        [Test]
         public void IsFeatureEnabled_RequiresTheMasterSwitch() {
             GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, false);
             Assert.IsFalse(GrowLensSettings.IsFeatureEnabled(GrowLensFeature.Toolbar));
@@ -309,6 +340,50 @@ namespace Grow.Lens.Tests.Editor.Core {
             } finally {
                 File.SetAttributes(_path, attributes);
             }
+        }
+
+        [Test]
+        public void ReloadFromDisk_ClearsAStaleReadOnlyStatus() {
+            Directory.CreateDirectory(_directory);
+            File.WriteAllText(_path, "{\"SchemaVersion\":5,\"Enabled\":true}");
+            var attributes = File.GetAttributes(_path);
+            File.SetAttributes(_path, attributes | FileAttributes.ReadOnly);
+            try {
+                GrowLensSettings.ReloadForTests();
+                Assert.AreEqual(GrowLensSettingsStatus.ReadOnly, GrowLensSettings.Status);
+
+                File.SetAttributes(_path, attributes);
+                GrowLensSettings.ReloadFromDisk();
+
+                Assert.AreEqual(GrowLensSettingsStatus.Ok, GrowLensSettings.Status);
+                Assert.IsTrue(GrowLensSettings.Enabled);
+            } finally {
+                File.SetAttributes(_path, attributes);
+            }
+        }
+
+        [Test]
+        public void ReloadFromDisk_PicksUpAnExternalChange() {
+            GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, false);
+            Assert.IsFalse(GrowLensSettings.GetFeature(GrowLensFeature.Toolbar));
+
+            File.WriteAllText(_path, "{\"SchemaVersion\":5,\"Enabled\":true,\"Toolbar\":true}");
+            GrowLensSettings.ReloadFromDisk();
+
+            Assert.IsTrue(GrowLensSettings.Enabled);
+            Assert.IsTrue(GrowLensSettings.GetFeature(GrowLensFeature.Toolbar));
+        }
+
+        [Test]
+        public void PageActivation_ReloadsTheSettingsFile() {
+            GrowLensSettings.SetFeature(GrowLensFeature.Toolbar, false);
+            File.WriteAllText(_path, "{\"SchemaVersion\":5,\"Enabled\":true,\"Toolbar\":true}");
+
+            var provider = GrowLensSettingsProvider.Create();
+            provider.OnActivate(string.Empty, new VisualElement());
+
+            Assert.IsTrue(GrowLensSettings.Enabled);
+            Assert.IsTrue(GrowLensSettings.GetFeature(GrowLensFeature.Toolbar));
         }
 
         [Test]
