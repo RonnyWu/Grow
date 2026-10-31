@@ -180,7 +180,7 @@ if (!(editor.includePlatforms ?? []).includes("Editor")) {
 }
 
 const lens = asmdef("Packages/com.ronny.grow.lens/Editor/Grow.Lens.Editor.asmdef");
-const lensAllowed = new Set();
+const lensAllowed = new Set(["Grow.Editor"]);
 for (const reference of lens.references ?? []) {
     if (!lensAllowed.has(reference)) {
         fail(`Grow.Lens.Editor has an unexpected reference: ${reference}`);

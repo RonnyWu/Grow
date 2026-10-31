@@ -3,6 +3,9 @@
   "displayName": "Grow Lens",
   "version": "3.0.0-exp.1",
   "unity": "2022.3",
+  "dependencies": {
+    "com.ronny.grow": "3.0.0-exp.1"
+  },
   "description": "Optional editor productivity tools for Grow: Hierarchy component icons, formatted separators and tree connectors, asset header actions, context menus and a toolbar menu.",
   "keywords": [
     "grow",

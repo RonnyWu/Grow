@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-using System.Collections;
+using Grow.Lens.Editor.Core;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,12 +10,16 @@ namespace Grow.Lens.Editor.Hierarchy {
     /// row is the last child. The current row's own foldout column is never used as a vertical guide.
     /// </summary>
     internal static class ItemIndentLine {
-        private const int DashTextureHeight = 16;
-        private const int DashTextureWidth = 16;
         private const float LineWidth = 1f;
 
-        private static Texture2D _verticalDash;
-        private static Texture2D _horizontalDash;
+        private const float DashLength = 2f;
+
+        private const float DashGap = 2f;
+
+        // Unity 2022.3's foldout arrow visual center sits one pixel right of the calculated
+        // foldout center; the offset is constant across depths.
+        private const float LineXOffset = 1f;
+
         private static bool _warned;
 
         internal static void OnHierarchyChanged() {
@@ -78,7 +82,9 @@ namespace Grow.Lens.Editor.Hierarchy {
                 return;
             }
 
-            EnsureDashTextures();
+            // Read the style once per row instead of once per segment.
+            var color = GrowLensSettings.HierarchyGuideColor;
+            var dashed = GrowLensSettings.HierarchyGuideDashed;
             var midY = rect.y + rect.height * 0.5f;
 
             // Higher ancestors: their path child must have a following sibling for the vertical
@@ -89,77 +95,86 @@ namespace Grow.Lens.Editor.Hierarchy {
                 }
 
                 DrawVertical(rect,
-                    HierarchyGuideGeometry.GuideX(baseIndent, indentWidth, foldoutWidth, ancestor));
+                    HierarchyGuideGeometry.GuideX(baseIndent, indentWidth, foldoutWidth, ancestor),
+                    color, dashed);
             }
 
             // Parent column: top half always, bottom half only when this row has a following sibling.
             var parentX = HierarchyGuideGeometry.GuideX(baseIndent, indentWidth, foldoutWidth,
                 depth - 1);
             var hasNextSibling = HierarchyGuideGeometry.HasFollowingSibling(depths, row, depth);
-            DrawVertical(rect, parentX, hasNextSibling ? rect.height : rect.height * 0.5f);
+            var parentLineX = PixelLineStartX(parentX);
+            var armY = PixelLineStartY(midY);
+            DrawVertical(rect, parentX, rect.y, armY - rect.y, true, color, dashed);
+            if (hasNextSibling) {
+                var bottomY = armY + LineWidth;
+                DrawVertical(rect, parentX, bottomY,
+                    rect.y + rect.height - bottomY, false, color, dashed);
+            }
 
             // Horizontal arm: stop at the foldout arrow for branches, reach the content for leaves.
             var endX = context.IsExpandable(item)
                 ? parentX + indentWidth - foldoutWidth * 0.5f
                 : rect.x - marginLeft;
-            if (endX > parentX + 0.5f) {
-                DrawHorizontal(midY, parentX, endX);
+            // The vertical is split around the arm's pixel row, so the arm owns that corner
+            // pixel. Starting at the vertical's left edge fills the corner without overdraw.
+            var armStart = parentLineX;
+            if (endX > armStart + 0.5f) {
+                DrawHorizontal(armY, armStart, endX, color, dashed);
             }
         }
 
-        private static void DrawVertical(Rect rowRect, float x) {
-            DrawVertical(rowRect, x, rowRect.height);
+        private static float PixelLineStartX(float center) {
+            return HierarchyGuideGeometry.PixelSnappedStart(center, LineWidth) + LineXOffset;
         }
 
-        private static void DrawVertical(Rect rowRect, float x, float height) {
-            var lineRect = new Rect(x, rowRect.y, LineWidth, height);
-            if (lineRect.x >= 0f && lineRect.x < rowRect.xMax) {
-                GUI.DrawTexture(lineRect, _verticalDash, ScaleMode.StretchToFill);
-            }
+        private static float PixelLineStartY(float center) {
+            return HierarchyGuideGeometry.PixelSnappedStart(center, LineWidth);
         }
 
-        private static void DrawHorizontal(float y, float startX, float endX) {
-            var lineRect = new Rect(startX, y, endX - startX, LineWidth);
-            GUI.DrawTexture(lineRect, _horizontalDash, ScaleMode.StretchToFill);
+        private static void DrawVertical(Rect rowRect, float x, Color color, bool dashed) {
+            DrawVertical(rowRect, x, rowRect.y, rowRect.height, false, color, dashed);
         }
 
-        private static void EnsureDashTextures() {
-            if (_verticalDash != null && _horizontalDash != null) {
+        private static void DrawVertical(Rect rowRect, float x, float y, float height,
+            bool anchorAtEnd, Color color, bool dashed) {
+            var lineX = PixelLineStartX(x);
+            if (lineX + LineWidth <= 0f || lineX >= rowRect.xMax) {
                 return;
             }
 
-            var color = EditorStyles.label.normal.textColor;
-            color.a = 0.32f;
-            var clear = new Color(0, 0, 0, 0);
-
-            if (_verticalDash == null) {
-                var pixels = new Color[DashTextureHeight];
-                for (var y = 0; y < DashTextureHeight; y++) {
-                    pixels[y] = y / 2 % 2 == 0 ? color : clear;
-                }
-
-                _verticalDash = new Texture2D(1, DashTextureHeight, TextureFormat.RGBA32, false) {
-                    wrapMode = TextureWrapMode.Clamp,
-                    filterMode = FilterMode.Point,
-                    hideFlags = HideFlags.HideAndDontSave
-                };
-                _verticalDash.SetPixels(pixels);
-                _verticalDash.Apply();
+            if (!dashed) {
+                EditorGUI.DrawRect(new Rect(lineX, y, LineWidth, height), color);
+                return;
             }
 
-            if (_horizontalDash == null) {
-                var pixels = new Color[DashTextureWidth];
-                for (var x = 0; x < DashTextureWidth; x++) {
-                    pixels[x] = x / 2 % 2 == 0 ? color : clear;
+            if (anchorAtEnd) {
+                for (var end = height; end > 0f; end -= DashLength + DashGap) {
+                    var start = Mathf.Max(0f, end - DashLength);
+                    EditorGUI.DrawRect(
+                        new Rect(lineX, y + start, LineWidth, end - start), color);
                 }
 
-                _horizontalDash = new Texture2D(DashTextureWidth, 1, TextureFormat.RGBA32, false) {
-                    wrapMode = TextureWrapMode.Clamp,
-                    filterMode = FilterMode.Point,
-                    hideFlags = HideFlags.HideAndDontSave
-                };
-                _horizontalDash.SetPixels(pixels);
-                _horizontalDash.Apply();
+                return;
+            }
+
+            for (var offset = 0f; offset < height; offset += DashLength + DashGap) {
+                var segment = Mathf.Min(DashLength, height - offset);
+                EditorGUI.DrawRect(new Rect(lineX, y + offset, LineWidth, segment), color);
+            }
+        }
+
+        private static void DrawHorizontal(float lineY, float startX, float endX, Color color,
+            bool dashed) {
+            if (!dashed) {
+                EditorGUI.DrawRect(new Rect(startX, lineY, endX - startX, LineWidth), color);
+                return;
+            }
+
+            for (var offset = 0f; offset < endX - startX; offset += DashLength + DashGap) {
+                var segment = Mathf.Min(DashLength, endX - startX - offset);
+                EditorGUI.DrawRect(
+                    new Rect(startX + offset, lineY, segment, LineWidth), color);
             }
         }
 

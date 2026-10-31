@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using Grow.Lens.Editor.Core;
+using Grow.Lens.Editor.Localization;
 using Grow.Lens.Editor.Menus;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -125,7 +126,7 @@ namespace Grow.Lens.Editor.Toolbar {
         private static ToolbarButton CreateButton() {
             var button = new ToolbarButton(() => GrowLensGuard.Run("Toolbar menu", ShowMenu)) {
                 text = "Grow",
-                tooltip = "Grow Lens editor tools",
+                tooltip = GrowLensLocalization.Get("grow.lens.toolbar.tooltip"),
                 style = {
                     height = 20,
                     marginLeft = 2,
@@ -153,25 +154,25 @@ namespace Grow.Lens.Editor.Toolbar {
             var preferences = Application.platform == RuntimePlatform.OSXEditor
                 ? "Unity/Preferences..."
                 : "Edit/Preferences...";
-            AddMenuItem(menu, "Preferences", preferences);
-            AddMenuItem(menu, "Project Settings", "Edit/Project Settings...");
-            AddMenuItem(menu, "Build Settings", "File/Build Settings...");
+            AddMenuItem(menu, "grow.lens.toolbar.preferences", preferences);
+            AddMenuItem(menu, "grow.lens.toolbar.projectSettings", "Edit/Project Settings...");
+            AddMenuItem(menu, "grow.lens.toolbar.buildSettings", "File/Build Settings...");
             menu.AddSeparator("");
-            AddMenuItem(menu, "Package Manager", "Window/Package Manager");
-            AddMenuItem(menu, "Console", "Window/General/Console");
-            AddMenuItem(menu, "Profiler", "Window/Analysis/Profiler");
-            AddMenuItem(menu, "Memory Profiler", "Window/Analysis/Memory Profiler");
-            AddMenuItem(menu, "Frame Debugger", "Window/Analysis/Frame Debugger");
-            AddMenuItem(menu, "Input Debugger", "Window/Analysis/Input Debugger");
+            AddMenuItem(menu, "grow.lens.toolbar.packageManager", "Window/Package Manager");
+            AddMenuItem(menu, "grow.lens.toolbar.console", "Window/General/Console");
+            AddMenuItem(menu, "grow.lens.toolbar.profiler", "Window/Analysis/Profiler");
+            AddMenuItem(menu, "grow.lens.toolbar.memoryProfiler", "Window/Analysis/Memory Profiler");
+            AddMenuItem(menu, "grow.lens.toolbar.frameDebugger", "Window/Analysis/Frame Debugger");
+            AddMenuItem(menu, "grow.lens.toolbar.inputDebugger", "Window/Analysis/Input Debugger");
             menu.AddSeparator("");
-            AddMenuItem(menu, "Open C# Project", "Assets/Open C# Project");
-            menu.AddItem(new GUIContent("Create Separator"), GrowMenuActions.CanCreateHierarchySeparator,
-                () => GrowLensGuard.RunAction("Toolbar separator",
-                    GrowMenuActions.CreateHierarchySeparator));
-            menu.AddItem(new GUIContent("Take Screenshot"), false,
-                () => GrowLensGuard.RunAction("Toolbar screenshot", TakeScreenshot));
-            menu.AddItem(new GUIContent("Open Screenshots Folder"), false,
-                () => GrowLensGuard.RunAction("Toolbar screenshots folder", OpenScreenshotsFolder));
+            AddMenuItem(menu, "grow.lens.toolbar.openCSharpProject", "Assets/Open C# Project");
+            AddMenuItem(menu, "grow.lens.menu.createSeparator",
+                GrowLensSettings.HierarchySeparatorMenuEnabled &&
+                GrowMenuActions.CanCreateHierarchySeparator,
+                GrowMenuActions.OpenHierarchySeparatorWindow);
+            AddMenuItem(menu, "grow.lens.toolbar.takeScreenshot", true, TakeScreenshot);
+            AddMenuItem(menu, "grow.lens.toolbar.openScreenshotsFolder", true,
+                OpenScreenshotsFolder);
             if (_button != null) {
                 menu.DropDown(_button.worldBound);
             } else {
@@ -179,9 +180,26 @@ namespace Grow.Lens.Editor.Toolbar {
             }
         }
 
-        private static void AddMenuItem(GenericMenu menu, string text, string menuPath) {
-            menu.AddItem(new GUIContent(text), false,
-                () => GrowLensGuard.RunAction($"Toolbar {text}", () => EditorApplication.ExecuteMenuItem(menuPath)));
+        private static void AddMenuItem(GenericMenu menu, string textKey, string menuPath) {
+            AddMenuItem(menu, textKey, true,
+                () => EditorApplication.ExecuteMenuItem(menuPath));
+        }
+
+        /// <summary>
+        /// Adds an action item, or a disabled placeholder when the action is unavailable. The
+        /// second <see cref="GenericMenu.AddItem(GUIContent, bool, GenericMenu.MenuFunction)"/>
+        /// argument is the checkmark state, not the enabled state.
+        /// </summary>
+        private static void AddMenuItem(GenericMenu menu, string textKey, bool enabled,
+            Action action) {
+            var text = GrowLensLocalization.Get(textKey);
+            var content = new GUIContent(text);
+            if (enabled) {
+                menu.AddItem(content, false,
+                    () => GrowLensGuard.RunAction($"Toolbar {text}", action));
+            } else {
+                menu.AddDisabledItem(content);
+            }
         }
 
         private static string ScreenshotsDirectory {

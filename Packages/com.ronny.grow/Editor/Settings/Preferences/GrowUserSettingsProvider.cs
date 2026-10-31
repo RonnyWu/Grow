@@ -16,7 +16,7 @@ namespace Grow.Editor.Settings.Preferences {
     /// The page owns two kinds of state: a persisted user-global language preference and a
     /// session-only log level. The language file is only written after an explicit change.
     /// </remarks>
-    internal sealed class GrowUserSettingsProvider : GrowSettingsProviderBase {
+    internal sealed class GrowUserSettingsProvider : GrowSettingsPageBase {
         internal const string ProviderPath = "Preferences/Grow/General";
 
         private GrowUserSettingsProvider(string path, SettingsScope scope) : base(path, scope) {
@@ -49,10 +49,6 @@ namespace Grow.Editor.Settings.Preferences {
         protected override void DrawContent(string searchContext) {
             var loadResult = GrowEditorPreferencesStore.Store.LoadResult;
 
-            EditorGUILayout.LabelField("Grow", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                GrowLocalization.Get(GrowSettingsKeys.PreferencesGeneralHelp), MessageType.Info);
-
             if (loadResult.Status == GrowSettingsLoadStatus.Corrupted) {
                 EditorGUILayout.HelpBox(
                     GrowLocalization.Get(GrowSettingsKeys.PreferencesCorrupted),
@@ -72,27 +68,15 @@ namespace Grow.Editor.Settings.Preferences {
                     MessageType.Warning);
             }
 
-            EditorGUILayout.Space(8);
+            EditorGUILayout.Space(4);
 
             using (new EditorGUI.DisabledScope(!loadResult.CanSave)) {
                 DrawLanguage();
             }
 
-            if (loadResult.Status == GrowSettingsLoadStatus.Corrupted &&
-                GUILayout.Button(GrowLocalization.Get(GrowSettingsKeys.PreferencesReset))) {
-                ConfirmReset(loadResult);
-            }
-
-            if (loadResult.Status == GrowSettingsLoadStatus.Conflict &&
-                GUILayout.Button(GrowLocalization.Get(GrowSettingsKeys.PreferencesReload))) {
-                GrowEditorPreferencesStore.Store.ReloadFromDisk();
-            }
-
-            EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField(
-                GrowLocalization.Get(GrowSettingsKeys.PreferencesSession),
-                EditorStyles.boldLabel);
-
+            // The log level is session-only and does not touch the language file, so an
+            // unreadable or read-only preferences file must not disable it.
+            EditorGUILayout.Space(4);
             var current = GrowLog.MinimumLevel;
             var next = (LogLevel)EditorGUILayout.EnumPopup(
                 new GUIContent(
@@ -105,19 +89,15 @@ namespace Grow.Editor.Settings.Preferences {
                 GrowLog.MinimumLevel = next;
             }
 
-            GrowSettingsUi.DrawValue(
-                GrowLocalization.Get(GrowSettingsKeys.PreferencesLogSink),
-                GrowLog.Sink.GetType().Name);
-
-            if (GUILayout.Button(
-                GrowLocalization.Get(GrowSettingsKeys.PreferencesResetToInfo))) {
-                GrowLog.MinimumLevel = LogLevel.Info;
+            if (loadResult.Status == GrowSettingsLoadStatus.Corrupted &&
+                GUILayout.Button(GrowLocalization.Get(GrowSettingsKeys.PreferencesReset))) {
+                ConfirmReset(loadResult);
             }
 
-            EditorGUILayout.Space(8);
-            EditorGUILayout.HelpBox(
-                GrowLocalization.Get(GrowSettingsKeys.PreferencesSessionNote),
-                MessageType.None);
+            if (loadResult.Status == GrowSettingsLoadStatus.Conflict &&
+                GUILayout.Button(GrowLocalization.Get(GrowSettingsKeys.PreferencesReload))) {
+                GrowEditorPreferencesStore.Store.ReloadFromDisk();
+            }
         }
 
         private static void DrawLanguage() {
@@ -141,7 +121,9 @@ namespace Grow.Editor.Settings.Preferences {
             }
 
             var next = EditorGUILayout.Popup(
-                GrowLocalization.Get(GrowSettingsKeys.PreferencesLanguage),
+                new GUIContent(
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesLanguage),
+                    GrowLocalization.Get(GrowSettingsKeys.PreferencesLanguageTooltip)),
                 selected,
                 options.ToArray());
 

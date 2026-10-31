@@ -92,6 +92,17 @@ namespace Grow.Lens.Editor.Hierarchy {
             return true;
         }
 
+        /// <summary>Builds the persisted GameObject name from dialog values.</summary>
+        internal static string BuildName(string text, Color background, Color? textColor = null) {
+            var name = "##" + ColorUtility.ToHtmlStringRGB(background);
+            if (textColor.HasValue) {
+                name += "#" + ColorUtility.ToHtmlStringRGB(textColor.Value);
+            }
+
+            var trimmed = text?.Trim();
+            return string.IsNullOrEmpty(trimmed) ? name : name + " " + trimmed;
+        }
+
         internal static bool TryParse(string name, out SeparatorSpec spec) {
             spec = default;
             if (string.IsNullOrEmpty(name) || !name.StartsWith("##", StringComparison.Ordinal)) {
@@ -170,6 +181,8 @@ namespace Grow.Lens.Editor.Hierarchy {
             return value - 'A' + 10;
         }
 
+        internal static Color DefaultBackground => ThemeBackground;
+
         private static Color ThemeBackground {
             get {
                 return EditorGUIUtility.isProSkin
@@ -178,7 +191,7 @@ namespace Grow.Lens.Editor.Hierarchy {
             }
         }
 
-        private static Color PickTextColor(Color background) {
+        internal static Color PickTextColor(Color background) {
             var luminance = 0.2126f * ToLinear(background.r) + 0.7152f * ToLinear(background.g) +
                 0.0722f * ToLinear(background.b);
             return luminance > 0.18f ? DarkText : LightText;

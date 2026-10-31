@@ -7,16 +7,24 @@ using Grow.Lens.Editor.Inspector;
 using Grow.Lens.Editor.Menus;
 using Grow.Lens.Editor.Toolbar;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 namespace Grow.Lens.Editor.Core {
     /// <summary>
     /// Single owner of every Grow Lens editor subscription. Features never subscribe themselves;
-    /// turning the setting off removes every callback instead of leaving callbacks that return early.
+    /// each subsystem is attached only while its feature is enabled, and turning Grow Lens off
+    /// removes every callback instead of leaving callbacks that return early.
     /// </summary>
     internal static class GrowLensHost {
         private const string SessionDisabledKey = "Grow.Lens.SessionDisabled";
-        private static bool _subscribed;
+        private static bool _active;
+        private static bool _hierarchySubscribed;
+        private static bool _assetHeaderSubscribed;
+        private static bool _projectContextMenusSubscribed;
+        private static bool _hierarchyContextMenusSubscribed;
+        private static bool _toolbarSubscribed;
+        private static bool _repaintScheduled;
 
         [InitializeOnLoadMethod]
         private static void Initialize() {
@@ -25,26 +33,57 @@ namespace Grow.Lens.Editor.Core {
 
         /// <summary>Applies the current setting; safe to call repeatedly and after domain reload.</summary>
         internal static void Apply() {
-            var enabled = GrowLensSettings.Enabled && !Application.isBatchMode &&
+            var active = GrowLensSettings.Enabled && !Application.isBatchMode &&
                 !SessionState.GetBool(SessionDisabledKey, false);
-            if (enabled == _subscribed) {
-                return;
-            }
-
-            _subscribed = enabled;
-            if (enabled) {
+            if (active && !_active) {
                 GrowLensGuard.Reset();
-                GrowLensGuard.Run("Hierarchy subscribe", GrowHierarchyEnhance.Subscribe);
-                GrowLensGuard.Run("Asset header subscribe", GrowAssetHead.Subscribe);
-                GrowLensGuard.Run("Context menus subscribe", GrowContextMenus.Subscribe);
-                GrowLensGuard.Run("Toolbar subscribe", GrowToolbar.Subscribe);
+            }
+
+            _active = active;
+            var hierarchy = active && GrowLensSettings.AnyHierarchyDecoration;
+            var assetHeader = active && GrowLensSettings.GetFeature(GrowLensFeature.AssetHeader);
+            var projectMenus =
+                active && GrowLensSettings.GetFeature(GrowLensFeature.ProjectContextMenus);
+            var hierarchyMenus =
+                active && GrowLensSettings.GetFeature(GrowLensFeature.HierarchyContextMenus);
+            var toolbar = active && GrowLensSettings.GetFeature(GrowLensFeature.Toolbar);
+
+            Sync(ref _hierarchySubscribed, hierarchy, "Hierarchy subscribe",
+                GrowHierarchyEnhance.Subscribe, GrowHierarchyEnhance.Unsubscribe);
+            Sync(ref _assetHeaderSubscribed, assetHeader, "Asset header subscribe",
+                GrowAssetHead.Subscribe, GrowAssetHead.Unsubscribe);
+            Sync(ref _projectContextMenusSubscribed, projectMenus, "Project context menus subscribe",
+                GrowContextMenus.SubscribeProject, GrowContextMenus.UnsubscribeProject);
+            Sync(ref _hierarchyContextMenusSubscribed, hierarchyMenus,
+                "Hierarchy context menus subscribe", GrowContextMenus.SubscribeHierarchy,
+                GrowContextMenus.UnsubscribeHierarchy);
+            Sync(ref _toolbarSubscribed, toolbar, "Toolbar subscribe",
+                GrowToolbar.Subscribe, GrowToolbar.Unsubscribe);
+
+            // A failed subscription can trip the guard and disable Lens in the middle of this
+            // method; drop anything that was attached after that point. The inactive path also
+            // unsubscribes unconditionally so no callback can survive a stale state flag.
+            if (!active || !GrowLensSettings.Enabled) {
+                UnsubscribeAll();
+            }
+        }
+
+        /// <summary>
+        /// Requests one deferred repaint of the Settings window and every editor view. The
+        /// settings controls run inside IMGUI, so changing subscriptions or drawing flags must
+        /// not repaint synchronously; without this the toggle looks inert until the mouse moves.
+        /// </summary>
+        internal static void RequestRepaint() {
+            if (Application.isBatchMode || _repaintScheduled) {
                 return;
             }
 
-            GrowHierarchyEnhance.Unsubscribe();
-            GrowAssetHead.Unsubscribe();
-            GrowContextMenus.Unsubscribe();
-            GrowToolbar.Unsubscribe();
+            _repaintScheduled = true;
+            EditorApplication.delayCall += () => {
+                _repaintScheduled = false;
+                SettingsService.RepaintAllSettingsWindow();
+                InternalEditorUtility.RepaintAllViews();
+            };
         }
 
         /// <summary>
@@ -56,13 +95,8 @@ namespace Grow.Lens.Editor.Core {
                 $"[Grow Lens] Disabling editor enhancements for this session (saved preference unchanged): {reason}");
             SessionState.SetBool(SessionDisabledKey, true);
             GrowLensSettings.DisableForSession();
-            if (_subscribed) {
-                _subscribed = false;
-                GrowHierarchyEnhance.Unsubscribe();
-                GrowAssetHead.Unsubscribe();
-                GrowContextMenus.Unsubscribe();
-                GrowToolbar.Unsubscribe();
-            }
+            UnsubscribeAll();
+            RequestRepaint();
         }
 
         /// <summary>Clears a session-level failure disable before an explicit re-enable.</summary>
@@ -73,15 +107,47 @@ namespace Grow.Lens.Editor.Core {
         /// <summary>Clears subscriptions and session state without reading project settings; tests only.</summary>
         internal static void ResetForTests() {
             SessionState.SetBool(SessionDisabledKey, false);
-            if (_subscribed) {
-                _subscribed = false;
-                GrowHierarchyEnhance.Unsubscribe();
-                GrowAssetHead.Unsubscribe();
-                GrowContextMenus.Unsubscribe();
-                GrowToolbar.Unsubscribe();
+            GrowLensSettings.ResetSessionDisable();
+            UnsubscribeAll();
+            GrowLensGuard.ResetForTests();
+        }
+
+        private static void Sync(ref bool state, bool desired, string feature, Action subscribe,
+            Action unsubscribe) {
+            if (state == desired) {
+                return;
             }
 
-            GrowLensGuard.ResetForTests();
+            if (desired) {
+                // Mark the subsystem attached only after a successful subscribe. A failed
+                // subscribe must be retried by the next Apply, otherwise the three-failure
+                // guard could never reach its threshold.
+                if (GrowLensGuard.TryRun(feature, subscribe)) {
+                    state = true;
+                } else if (GrowLensSettings.Enabled) {
+                    EditorApplication.delayCall -= Apply;
+                    EditorApplication.delayCall += Apply;
+                }
+
+                return;
+            }
+
+            unsubscribe();
+            state = false;
+        }
+
+        private static void UnsubscribeAll() {
+            _active = false;
+            _hierarchySubscribed = false;
+            _assetHeaderSubscribed = false;
+            _projectContextMenusSubscribed = false;
+            _hierarchyContextMenusSubscribed = false;
+            _toolbarSubscribed = false;
+            GrowHierarchyEnhance.Unsubscribe();
+            GrowAssetHead.Unsubscribe();
+            GrowContextMenus.UnsubscribeProject();
+            GrowContextMenus.UnsubscribeHierarchy();
+            GrowToolbar.Unsubscribe();
         }
     }
 
@@ -92,13 +158,23 @@ namespace Grow.Lens.Editor.Core {
         private static readonly HashSet<string> Logged = new(StringComparer.Ordinal);
 
         internal static void Run(string feature, Action action) {
+            TryRun(feature, action);
+        }
+
+        /// <summary>
+        /// Runs a subscription action and returns false when it failed. The caller must leave its
+        /// attached flag unset so a later Apply can retry the subscription.
+        /// </summary>
+        internal static bool TryRun(string feature, Action action) {
             try {
                 action();
                 Failures.Remove(feature);
+                return true;
             } catch (ExitGUIException) {
                 throw;
             } catch (Exception exception) {
                 Report(feature, exception);
+                return false;
             }
         }
 

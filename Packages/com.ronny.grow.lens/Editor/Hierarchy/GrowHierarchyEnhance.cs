@@ -8,13 +8,14 @@ using UnityEngine;
 
 namespace Grow.Lens.Editor.Hierarchy {
     /// <summary>
-    /// Draws Grow Lens decorations on Hierarchy rows: component icons and indent guides.
-    /// The host owns the subscriptions; this class only draws.
+    /// Draws Grow Lens decorations on Hierarchy rows: component icons, separators and indent
+    /// guides. The host owns the subscriptions; this class only draws the enabled features.
     /// </summary>
     internal static class GrowHierarchyEnhance {
         private static readonly Dictionary<int, GameObject> GameObjectCache = new();
 
         internal static void Subscribe() {
+            InvalidateCaches();
             EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyGUI;
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
             EditorApplication.hierarchyChanged -= OnHierarchyChanged;
@@ -33,35 +34,75 @@ namespace Grow.Lens.Editor.Hierarchy {
                 return;
             }
 
+            var icons = GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchyComponentIcons);
+            var componentInspector = GrowLensSettings.HierarchyComponentInspector;
+            var separators = GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchySeparators);
+            var guides = GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchyIndentGuides);
+            var activeToggle =
+                GrowLensSettings.IsFeatureEnabled(GrowLensFeature.HierarchyActiveToggle);
+            if (!icons && !separators && !guides && !activeToggle) {
+                return;
+            }
+
+            var rightInset = activeToggle ? ItemActiveToggle.ReservedWidth : 0f;
             GrowLensGuard.Run("Hierarchy decorations", () => {
                 if (!TryGetGameObject(instanceID, out var gameObject)) {
                     return;
                 }
 
-                var isSearching = HierarchyGuideProbe.TryGetContext()?.IsSearching == true;
                 if (current.type == EventType.MouseDown) {
-                    if (!isSearching && HierarchySeparator.IsSeparator(gameObject.name)) {
+                    if (activeToggle && ItemActiveToggle.TryHandleClick(gameObject, rect)) {
                         return;
                     }
 
-                    if (ItemComponentIcon.TryHandleClick(instanceID, gameObject, rect)) {
+                    if (separators && !IsSearching() && HierarchySeparator.IsSeparator(gameObject.name)) {
+                        return;
+                    }
+
+                    if (icons && componentInspector &&
+                        ItemComponentIcon.TryHandleClick(instanceID, gameObject, rect, rightInset)) {
                         current.Use();
                     }
 
                     return;
                 }
 
-                if (!isSearching && HierarchySeparator.TryDraw(instanceID, gameObject, rect)) {
-                    ItemIndentLine.OnGameObjectGUI(instanceID, rect);
+                if (separators && !IsSearching() &&
+                    HierarchySeparator.TryDraw(instanceID, gameObject, rect)) {
+                    if (guides) {
+                        ItemIndentLine.OnGameObjectGUI(instanceID, rect);
+                    }
+
+                    if (activeToggle) {
+                        ItemActiveToggle.OnGameObjectGUI(gameObject, rect);
+                    }
+
                     return;
                 }
 
-                ItemComponentIcon.OnGameObjectGUI(instanceID, gameObject, rect);
-                ItemIndentLine.OnGameObjectGUI(instanceID, rect);
+                if (icons) {
+                    ItemComponentIcon.OnGameObjectGUI(instanceID, gameObject, rect, rightInset);
+                }
+
+                if (guides) {
+                    ItemIndentLine.OnGameObjectGUI(instanceID, rect);
+                }
+
+                if (activeToggle) {
+                    ItemActiveToggle.OnGameObjectGUI(gameObject, rect);
+                }
             });
         }
 
+        private static bool IsSearching() {
+            return HierarchyGuideProbe.TryGetContext()?.IsSearching == true;
+        }
+
         private static void OnHierarchyChanged() {
+            InvalidateCaches();
+        }
+
+        private static void InvalidateCaches() {
             GameObjectCache.Clear();
             ItemComponentIcon.OnHierarchyChanged();
             HierarchySeparator.OnHierarchyChanged();

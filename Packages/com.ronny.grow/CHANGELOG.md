@@ -116,9 +116,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Installed` observes a fully composed kernel.
 - `GrowModules.Reset()` is now a public explicit reset: it shuts down started modules before
   replacing the registry, and a failed initialization also resets the registry.
+- **Preferences > Grow > General** now shows only the actionable fields: language and the
+  session-only minimum log level. The redundant page heading, help box, session heading, log-sink
+  row, reset-to-Info button and session note were removed; their essential details live in
+  tooltips.
 
 ### Fixed
 
+- **Preferences > Grow > General** keeps the session-only minimum log level editable when the
+  language preferences file is damaged or read-only.
 - `PlayerLoopProfile.Install` now removes partially inserted systems when an install throws,
   and `Uninstall` still cleans up when the owner was never recorded. `PlayerLoopManager`
   records a system before applying it, so cleanup can find it even when `SetPlayerLoop`

@@ -15,8 +15,8 @@ namespace Grow.Editor.Settings {
     /// <c>SettingsWindow.GUIScope</c> and contains page failures instead of letting them escape
     /// into the Settings window.
     /// </remarks>
-    internal abstract class GrowSettingsProviderBase : SettingsProvider {
-        protected GrowSettingsProviderBase(string path, SettingsScope scope) : base(path, scope) {
+    internal abstract class GrowSettingsPageBase : SettingsProvider {
+        protected GrowSettingsPageBase(string path, SettingsScope scope) : base(path, scope) {
         }
 
         /// <inheritdoc />
@@ -28,13 +28,15 @@ namespace Grow.Editor.Settings {
                     throw;
                 } catch (Exception exception) {
                     UnityEngine.Debug.LogException(exception);
-                    EditorGUILayout.HelpBox(
-                        "The Grow settings page failed to draw. See the Console for details.",
-                        MessageType.Error);
+                    EditorGUILayout.HelpBox(FailureMessage, MessageType.Error);
                     GUIUtility.ExitGUI();
                 }
             }
         }
+
+        /// <summary>Message shown when the page body throws; pages may localize it.</summary>
+        protected virtual string FailureMessage =>
+            "The Grow settings page failed to draw. See the Console for details.";
 
         /// <summary>Draws the page body inside the standard margin wrapper.</summary>
         protected abstract void DrawContent(string searchContext);

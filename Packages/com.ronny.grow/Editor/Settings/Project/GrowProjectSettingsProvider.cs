@@ -16,7 +16,7 @@ namespace Grow.Editor.Settings.Project {
     /// The page deliberately exposes no project-level switch yet. A setting is added only when a
     /// feature consumes it; until then the page reports the installed package identity.
     /// </remarks>
-    internal sealed class GrowProjectSettingsProvider : GrowSettingsProviderBase {
+    internal sealed class GrowProjectSettingsProvider : GrowSettingsPageBase {
         internal const string ProviderPath = "Project/Grow/General";
 
         internal const string PackageName = "com.ronny.grow";

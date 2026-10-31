@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Grow.Lens.Editor.Core;
+using Grow.Lens.Editor.Localization;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -61,11 +62,11 @@ namespace Grow.Lens.Editor.Inspector {
         }
 
         private static void DrawHeader(UnityEditor.Editor editor) {
-            if (editor.targets == null || editor.targets.Length > 1) {
+            if (editor.targets == null || editor.targets.Length != 1) {
                 return;
             }
 
-            var target = editor.targets.First();
+            var target = editor.targets[0];
             if (target == null) {
                 return;
             }
@@ -102,21 +103,21 @@ namespace Grow.Lens.Editor.Inspector {
             GUILayout.Space(6);
 
             DrawRow(fullPath, () => {
-                var content = new GUIContent("Copy Full Path", fullPath);
+                var content = new GUIContent(Text("grow.lens.asset.copyFullPath"), fullPath);
                 if (GUILayout.Button(content, buttonStyle, buttonWidth)) {
                     EditorGUIUtility.systemCopyBuffer = fullPath;
                 }
             });
 
             DrawRow(assetPath, () => {
-                var content = new GUIContent("Copy Asset Path", assetPath);
+                var content = new GUIContent(Text("grow.lens.asset.copyAssetPath"), assetPath);
                 if (GUILayout.Button(content, buttonStyle, buttonWidth)) {
                     EditorGUIUtility.systemCopyBuffer = assetPath;
                 }
             });
 
             DrawRow(guid, () => {
-                var content = new GUIContent("Copy GUID", guid);
+                var content = new GUIContent(Text("grow.lens.asset.copyGuid"), guid);
                 if (GUILayout.Button(content, buttonStyle, buttonWidth)) {
                     EditorGUIUtility.systemCopyBuffer = guid;
                 }
@@ -126,14 +127,14 @@ namespace Grow.Lens.Editor.Inspector {
                 return;
             }
 
-            DrawRow("Open In Rider", () => {
-                if (GUILayout.Button("Meta", buttonStyle, halfButtonWidth)) {
+            DrawRow(Text("grow.lens.asset.openInRider"), () => {
+                if (GUILayout.Button(Text("grow.lens.asset.meta"), buttonStyle, halfButtonWidth)) {
                     SyncIfNeededMethod.Invoke(null, new object[] { false });
                     OpenFileMethod.Invoke(null, new object[] { $"{fullPath}.meta", -1, -1 });
                 }
 
                 using (new EditorGUI.DisabledScope(target is DefaultAsset)) {
-                    if (GUILayout.Button("File", buttonStyle, halfButtonWidth)) {
+                    if (GUILayout.Button(Text("grow.lens.asset.file"), buttonStyle, halfButtonWidth)) {
                         SyncIfNeededMethod.Invoke(null, new object[] { false });
                         OpenFileMethod.Invoke(null, new object[] { fullPath, -1, -1 });
                     }
@@ -149,15 +150,19 @@ namespace Grow.Lens.Editor.Inspector {
         }
 
         private static void DrawRow(string label, Action action) {
-            EditorGUILayout.BeginHorizontal();
-            using (new EditorGUI.DisabledScope(true)) {
-                var maxWidth = Mathf.Max(60f, EditorGUIUtility.currentViewWidth - 136f);
-                GUILayout.Label(label, GUILayout.MaxWidth(maxWidth));
-            }
+            using (new EditorGUILayout.HorizontalScope()) {
+                using (new EditorGUI.DisabledScope(true)) {
+                    var maxWidth = Mathf.Max(60f, EditorGUIUtility.currentViewWidth - 136f);
+                    GUILayout.Label(label, GUILayout.MaxWidth(maxWidth));
+                }
 
-            GUILayout.FlexibleSpace();
-            action?.Invoke();
-            EditorGUILayout.EndHorizontal();
+                GUILayout.FlexibleSpace();
+                action?.Invoke();
+            }
+        }
+
+        private static string Text(string key) {
+            return GrowLensLocalization.Get(key);
         }
     }
 }
