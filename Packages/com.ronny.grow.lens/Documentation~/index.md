@@ -66,9 +66,10 @@ the end of the object name are drawn, so a long name or a narrow window shows fe
 an icon sets the row tooltip to the component type; a missing script uses the warning icon and the
 `Missing Script` tooltip.
 
-- A plain left click opens a focused Inspector window for that component, the same window the
-  component's **Properties...** menu item opens. The event is consumed, so the clicked object is not
-  selected and the current selection stays as it was.
+- With **Open Inspector on icon click** enabled, a plain left click opens a focused Inspector window
+  for that component, the same window the component's **Properties...** menu item opens. The event
+  is consumed, so the clicked object is not selected and the current selection stays as it was.
+  With the option off (the default), an icon click selects the GameObject normally.
 - Ctrl, Shift, Alt and Command clicks, and right clicks, are left to the Hierarchy; they select,
   multi-select or open the Hierarchy context menu as usual.
 - If Unity's internal focused-Inspector API cannot be resolved, the click falls back to selecting the
@@ -131,8 +132,9 @@ geometry and the visible row depths:
 - Search results draw nothing, and neither does a layout whose geometry cannot be resolved; that case
   logs one warning instead of guessing pixels.
 
-Connectors are the only feature that needs the Hierarchy tree geometry. Component icons and
-separators depend only on the row rectangle and the object.
+Connectors are the only feature that needs the Hierarchy tree geometry. Component icons depend only
+on the row rectangle and the object; separators additionally suppress themselves while the Hierarchy
+is searching.
 
 ## Asset header actions
 

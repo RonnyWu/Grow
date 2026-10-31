@@ -32,8 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   button.
 - Footer buttons use their natural widths instead of stretching across the window.
 - The master switch shows a status line; while it is off, every feature row is disabled.
-- The guide color row shows an `#RRGGBBAA` readout and keeps **Reset** disabled until the color is
-  customized.
 - The page footer opens the language page, reveals the settings file and restores the defaults
   behind a confirmation dialog that also turns Grow Lens off.
 - Simplified Chinese uses Unity's window names in the group titles with the English name in
@@ -42,9 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and 1 px line width stay fixed so the connectors remain centered on the foldout triangle.
 - English and Simplified Chinese UI text. Lens follows Grow's user-global
   **Preferences > Grow > General** language.
-- Hierarchy component icons stay display-only by default. With **Open Inspector on icon click**
-  enabled, a plain left-click opens that component's focused Inspector; modifier and right clicks
-  stay with the Hierarchy.
 - Formatted Hierarchy separators: `##RRGGBB[#RRGGBB]Text` (3/6-digit colors, `##-` for the
   theme background), with child objects left in place and `GameObject/Grow/Create Separator...`.
   Rendering is read-only; it never reparents children.
@@ -94,6 +89,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   style-only change repaints without touching the host subscriptions.
 - A session-level disable after a feature failure is no longer written to disk by a later change,
   so Grow Lens comes back after a restart.
+- The Lens page reloads its settings file when it is activated, so a fixed, replaced or removed file
+  is recognized without a domain reload.
+- The toolbar's Create Separator entry is disabled instead of merely unchecked while the separator
+  feature or its menu option is off.
 
 ## [3.0.0-exp.1] - 2026-10-19
 
