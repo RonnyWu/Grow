@@ -240,7 +240,11 @@ namespace Grow.Lens.Editor.Core {
                     GrowLensHost.ClearSessionDisable();
                 }
 
-                TryUpdate(data => data.Enabled = value);
+                if (TryUpdate(data => data.Enabled = value) && value) {
+                    // Re-enabling after a session-level disable may not change the file, so the
+                    // commit path does not necessarily apply the host on its own.
+                    GrowLensHost.Apply();
+                }
             }
         }
 
