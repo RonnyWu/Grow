@@ -2,10 +2,13 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Grow.Kernel.Entry;
 using Grow.Kernel.Modules;
 using Grow.Samples.VerticalSlice;
 using Grow.Scenes;
+using Grow.Store;
+using Grow.Store.Contracts;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
@@ -20,10 +23,12 @@ namespace Grow.Tests.PlayMode {
     /// uses the same public surface a game would.
     /// </remarks>
     public class VerticalSliceTests {
+        private readonly List<string> _storeNames = new List<string>();
+
         [UnityTest]
         public IEnumerator Slice_BootsThroughLoadingToReady() {
             ResetComposition();
-            var host = SliceEntry.Start(UniqueStoreName());
+            var host = SliceEntry.Start(NewStoreName());
             try {
                 Assert.AreEqual(GrowState.Loading, host.State);
                 Assert.IsFalse(host.IsReady);
@@ -50,7 +55,7 @@ namespace Grow.Tests.PlayMode {
         [UnityTest]
         public IEnumerator Slice_PersistsCoinsAcrossARestart() {
             ResetComposition();
-            var storeName = UniqueStoreName();
+            var storeName = NewStoreName();
 
             var first = SliceEntry.Start(storeName);
             try {
@@ -80,10 +85,30 @@ namespace Grow.Tests.PlayMode {
         [UnityTearDown]
         public IEnumerator RestoreTheDefaultComposition() {
             GrowApp.Shutdown();
+            DeleteStores();
             GrowModules.Reset();
             GrowApp.AutoInitialize = true;
             GrowApp.Initialize();
             yield return null;
+        }
+
+        /// <summary>Removes the stores this test opened; the names are unique per run.</summary>
+        private void DeleteStores() {
+            if (_storeNames.Count == 0) {
+                return;
+            }
+
+            GrowModules.Reset();
+            GrowModules.Register(new StoreModule());
+            GrowModules.Bootstrap();
+
+            var provider = GrowModules.GetRequiredService<IStoreProvider>();
+            for (var i = 0; i < _storeNames.Count; i++) {
+                provider.DeleteStore(_storeNames[i], StoreType.Runtime);
+            }
+
+            _storeNames.Clear();
+            GrowModules.Reset();
         }
 
         private static void ResetComposition() {
@@ -99,8 +124,10 @@ namespace Grow.Tests.PlayMode {
             Assert.IsTrue(host.IsReady, "the boot barrier must finish");
         }
 
-        private static string UniqueStoreName() {
-            return "slice-" + Guid.NewGuid().ToString("N");
+        private string NewStoreName() {
+            var name = "slice-" + Guid.NewGuid().ToString("N");
+            _storeNames.Add(name);
+            return name;
         }
     }
 }
