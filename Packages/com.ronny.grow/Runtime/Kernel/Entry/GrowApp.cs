@@ -184,7 +184,9 @@ namespace Grow.Kernel.Entry {
             try {
                 Step("pump", StopBootPump);
                 Step("modules", GrowModules.Shutdown);
-                Step("scheduler", GrowScheduler.Detach);
+                // Reset, not Detach: a stopped composition must not run timers or posted actions
+                // queued by the previous cycle when a later Initialize starts a new one.
+                Step("scheduler", GrowScheduler.ResetStaticState);
                 Step("manager", MonoManager.Instance.Unbind);
                 Step("loop", GrowLoop.Uninstall);
                 Step("boot", GrowBoot.Shutdown);
@@ -276,7 +278,7 @@ namespace Grow.Kernel.Entry {
         private static void Rollback() {
             StopBootPump();
             Step("modules", GrowModules.Shutdown);
-            Step("scheduler", GrowScheduler.Detach);
+            Step("scheduler", GrowScheduler.ResetStaticState);
             Step("manager", MonoManager.Instance.Unbind);
             Step("loop", GrowLoop.Uninstall);
             Step("boot", GrowBoot.Shutdown);
