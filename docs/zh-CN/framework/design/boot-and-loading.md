@@ -1,4 +1,4 @@
-<!-- source: docs/en/framework/design/boot-and-loading.md @ blob:9807d9c993e60fdbad98b24ab34d1282d42b5f85 -->
+<!-- source: docs/en/framework/design/boot-and-loading.md @ blob:bd88a1c9654b266fbdf8acc8bd42f8b5db213c80 -->
 <!-- 中文译文；以英文 docs/en/framework/design/boot-and-loading.md 为准，译文可能滞后于原文。blob 是英文文件的内容 sha，可用 git hash-object docs/en/framework/design/boot-and-loading.md 核验。 -->
 
 # 启动与加载
@@ -81,6 +81,10 @@ var host = new GrowBuilder()
 `Build` 占用进程级唯一槽位、注册模块，并在宿主存活期间关掉 `GrowApp.AutoInitialize`，避免自动的
 `BeforeSceneLoad` 启动与它抢时序。`GrowHost` 暴露状态、就绪、进度和服务注册表，`Dispose` 时释放槽位。
 一个会话只允许一个宿主；第二次 `Build` 直接抛，而不是悄悄共享全局状态。
+
+宿主在 `AfterAssembliesLoaded` 阶段构建。内核用自己的 `SubsystemRegistration` 钩子复位静态状态，而
+Unity 不保证这个钩子与游戏钩子的顺序；在 `SubsystemRegistration` 里构建，刚建好的宿主会被复位释放。
+`AfterAssembliesLoaded` 晚于所有 `SubsystemRegistration` 钩子、早于 `BeforeSceneLoad`。
 
 Builder 只认识内核类型。`UseStore()` 与 `UseScenes()` 是各自能力包里的扩展方法——这正是内核不需要知道
 任何能力的原因。
