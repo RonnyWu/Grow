@@ -105,7 +105,14 @@ namespace Grow.Kernel.Entry {
             }
 
             if (_options.AutoStart) {
-                host.Start();
+                try {
+                    host.Start();
+                } catch {
+                    // A failed start must not keep the slot, the AutoInitialize capture or a host the
+                    // caller never received; Dispose releases both and rolls back best-effort.
+                    host.Dispose();
+                    throw;
+                }
             }
 
             return host;
