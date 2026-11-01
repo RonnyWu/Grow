@@ -48,6 +48,10 @@ namespace Grow.Scenes {
         SceneRequest Unload(SceneRequest request);
 
         /// <summary>Makes a finished additive scene the active one; false when it is not ready.</summary>
+        /// <remarks>
+        /// Scenes are looked up by name, so two loaded additive scenes with the same name are
+        /// ambiguous; keep scene names unique when using additive loads.
+        /// </remarks>
         bool SetActive(SceneRequest request);
     }
 }

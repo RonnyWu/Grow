@@ -20,9 +20,10 @@ features are added as replaceable capabilities.
 
 - **Kernel** — mechanisms only: the runtime plumbing that starts a game and drives its per-frame
   updates. It never owns or wraps any game feature.
-- **Capability** — a game feature such as assets, saves, UI, or audio. Each one ships as a contract
-  package plus a replaceable implementation package; no third-party type appears in the contract, so
-  the implementation can be replaced wholesale without touching the caller.
+- **Capability** — a game feature such as assets, saves, UI, or audio. A capability with more than
+  one interchangeable backend splits into a contract package plus implementation packages, and no
+  third-party type appears in the contract, so the implementation can be replaced without touching
+  the caller. A capability with a single backend (such as scene flow) stays one package.
 
 Each layer depends only on the layers below it:
 
@@ -30,7 +31,7 @@ Each layer depends only on the layers below it:
 |---|---|---|
 | Game | Your own game / application code | — |
 | Framework | Meta package: assembles a recommended set of capabilities | Planned |
-| Capabilities | Contract + implementation (implementations wrap third-party libraries) | In progress |
+| Capabilities | Implementation, plus a contract when a capability has more than one backend | In progress |
 | Kernel | Mechanisms — entry, modules, service registry, lifetime, loop, scheduling | In progress |
 | Core | Passive primitives (e.g. logging); no third-party dependencies | In progress |
 

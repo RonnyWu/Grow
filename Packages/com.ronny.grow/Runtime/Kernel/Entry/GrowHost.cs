@@ -57,6 +57,13 @@ namespace Grow.Kernel.Entry {
         }
 
         /// <summary>Starts the composition; idempotent and safe to repeat after a shutdown.</summary>
+        /// <remarks>
+        /// A boot that fails during a module load does not throw: <see cref="GrowBoot.State"/>
+        /// reports <see cref="GrowState.Failed"/> once, the composition rolls back, and
+        /// <see cref="GrowBoot.FailureMessage"/> keeps the cause. Check <see cref="IsReady"/> before
+        /// using the kernel. Dispose does this for you; calling <see cref="Shutdown"/> early is
+        /// allowed and keeps the host.
+        /// </remarks>
         /// <exception cref="ObjectDisposedException">The host was disposed.</exception>
         public void Start() {
             if (_disposed) {

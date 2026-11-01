@@ -12,9 +12,10 @@ Grow separates *what runs a game* from *what a game is made of*.
 
 - **Kernel** — mechanisms only: startup, lifetime, per-frame updates, module
   registration, and scheduling. The kernel owns no game feature and never wraps one.
-- **Capability** — a game feature such as assets, saves, UI, or audio. Each capability
-  ships as its own package behind a stable contract; no third-party type appears in that
-  contract, so the implementation can be replaced without touching callers.
+- **Capability** — a game feature such as assets, saves, UI, or audio. A capability with more than
+  one interchangeable backend splits into a contract package plus implementation packages, and no
+  third-party type appears in the contract; a single-backend capability (such as scene flow) stays
+  one package.
 
 Each layer depends only on the layers below it:
 
