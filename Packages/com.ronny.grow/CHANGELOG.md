@@ -104,6 +104,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `GrowBoot.Progress`, `GrowBoot.LoadingModule` and `GrowBoot.FailureMessage` — read-only boot
   observation for the asynchronous barrier. Progress is clamped to 0..1 and monotonic; the failure
   message survives the rollback until the next initialization.
+- `Grow.Kernel.Entry.GrowBuilder`, `GrowHost` and `GrowBootOptions` — the composition root as a
+  usable object. `new GrowBuilder().AddModule(...).Build()` registers the modules, turns off
+  `GrowApp.AutoInitialize` while the host lives and starts the kernel (or waits, with
+  `AutoStart = false`). `GrowHost` exposes `State` / `IsReady` / `Progress` / `StateChanged`,
+  resolves services, and releases the process-wide slot on `Dispose`. The builder knows only kernel
+  types; capability sugar such as `UseStore()` stays an extension method in the capability package.
 - `Grow.Kernel.Entry.GrowSession` — the kernel-side `SubsystemRegistration` entry. It resets
   `GrowApp`, `GrowRuntime`, `IOC`, `MonoManager`, `LifecycleSession`, `GrowLoop`,
   `GrowScheduler`, `PlayerLoopManager`, `GrowLog` and `StringBuilderPool` in a fixed order; Core
