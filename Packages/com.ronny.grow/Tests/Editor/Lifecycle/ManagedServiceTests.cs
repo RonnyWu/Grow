@@ -5,6 +5,7 @@ using System.Threading;
 using Grow.Core.Log;
 using Grow.Kernel.Lifecycle;
 using Grow.Kernel.Lifecycle.Impl;
+using Grow.Kernel.Scheduling;
 using NUnit.Framework;
 
 namespace Grow.Tests.Editor.Lifecycle {
@@ -14,6 +15,7 @@ namespace Grow.Tests.Editor.Lifecycle {
         [SetUp]
         public void SetUp() {
             MonoManager.ResetStaticState();
+            GrowScheduler.ResetStaticState();
             GrowLog.SetSink(new NullLogSink());
             _executor = new FakeMonoExecutor();
             MonoManager.Instance.Bind(_executor);
@@ -34,6 +36,7 @@ namespace Grow.Tests.Editor.Lifecycle {
             CountingService.ResetStaticState();
             RetryService.ResetStaticState();
             MonoManager.ResetStaticState();
+            GrowScheduler.ResetStaticState();
             _executor?.Dispose();
             GrowLog.Reset();
         }
@@ -163,7 +166,7 @@ namespace Grow.Tests.Editor.Lifecycle {
         }
 
         [Test]
-        public void PostToMain_FromWorker_WithoutUpdateFlag_IsRejected() {
+        public void PostToMain_FromWorker_WithoutUpdateFlag_IsQueuedAndRunsOnFlush() {
             LifecycleSession.ResetForSession();
             var service = new NoUpdateService();
             var ran = false;
@@ -172,7 +175,10 @@ namespace Grow.Tests.Editor.Lifecycle {
             worker.Start();
             worker.Join();
 
-            Assert.IsFalse(ran, "a service without UpdateFlag.Update must not execute worker actions inline");
+            Assert.IsFalse(ran, "a worker action must never run inline");
+            GrowScheduler.FlushPosted();
+            Assert.IsTrue(ran,
+                "PostToMain is a scheduler-wide queue now and no longer needs UpdateFlag.Update");
             service.Dispose();
         }
 

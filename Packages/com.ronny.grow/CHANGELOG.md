@@ -89,10 +89,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   modules in a fixed order, and shuts them down in reverse ownership order.
   Initialize / shutdown are idempotent; a failed initialization performs best-effort
   cleanup and rethrows.
+- `Grow.Kernel.Scheduling` — `GrowScheduler`, the kernel's single time mechanism: `NextFrame`,
+  `DelayFrames`, `Delay`, `Repeat`, `RepeatFrames`, `Cancel` and a thread-safe `Post` drained on
+  `PreUpdate`. It is driven by the existing loop host, starts no thread and creates no GameObject.
+  Frame delays, scaled time and unscaled time use separate queues; callback faults are logged and
+  isolated, and scheduling or cancelling from a callback defers the new entry to the next tick.
+  `TimeKind` selects the clock and `TimerHandle` carries a generation so a stale cancel is a no-op.
 - `Grow.Kernel.Entry.GrowSession` — the kernel-side `SubsystemRegistration` entry. It resets
   `GrowApp`, `GrowRuntime`, `IOC`, `MonoManager`, `LifecycleSession`, `GrowLoop`,
-  `PlayerLoopManager`, `GrowLog` and `StringBuilderPool` in a fixed order; Core primitives may
-  keep their own hooks because they cannot depend on the kernel.
+  `GrowScheduler`, `PlayerLoopManager`, `GrowLog` and `StringBuilderPool` in a fixed order; Core
+  primitives may keep their own hooks because they cannot depend on the kernel.
 - EditMode tests for both assemblies and PlayMode coverage for automatic startup and a
   same-frame restart.
 
@@ -111,6 +117,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   internal. `GrowApp` is the only boot-state writer; call `GrowApp.Initialize` /
   `Shutdown` instead of driving the state machine directly. `MonoManager.Bind` / `Unbind`
   were internal from their introduction and are not part of this change.
+- `UnifiedClassService<T>.PostToMain` posts through `GrowScheduler.Post` instead of a private
+  per-service queue and no longer requires `UpdateFlag.Update`. Actions still run inline on the
+  main thread; queued actions run on the next `PreUpdate`, or from `OnUpdate` when no loop host
+  is attached.
 - `GrowApp.Initialize` now publishes `GrowState.Installed` after `GrowModules.Bootstrap()`.
   Module hooks therefore observe `GrowState.Reset`, and a `StateChanged` handler for
   `Installed` observes a fully composed kernel.
