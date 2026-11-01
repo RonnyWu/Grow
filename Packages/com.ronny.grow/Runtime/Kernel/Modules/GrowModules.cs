@@ -14,6 +14,12 @@ namespace Grow.Kernel.Modules {
     /// would share the same unspecified <c>SubsystemRegistration</c> order. The composition root
     /// settles an old registry before bootstrapping; tests and hosts can call <see cref="Reset"/>.
     /// The registry shares the IOC root service table.
+    /// <para>
+    /// A module that implements <see cref="IBootLoadable"/> turns <see cref="Bootstrap"/> into the
+    /// first half of a boot: the call stops in <see cref="ModulePhase.Load"/> and the composition
+    /// root drives the load pass and <see cref="FinishStart"/>. Without such a module the call
+    /// still ends in <see cref="ModulePhase.Running"/>.
+    /// </para>
     /// </remarks>
     public static class GrowModules {
         private static Impl.ModuleRegistry _registry = new(IOC.Root);
@@ -63,6 +69,31 @@ namespace Grow.Kernel.Modules {
         /// <summary>Resolves a service; throws when it is not registered.</summary>
         public static T GetRequiredService<T>() where T : class {
             return _registry.GetRequiredService<T>();
+        }
+
+        /// <summary>True while an asynchronous module load is still ahead.</summary>
+        internal static bool HasPendingLoad => _registry.HasPendingLoad;
+
+        /// <summary>True when the latest bootstrap aborted in the load pass.</summary>
+        internal static bool LoadFailed => _registry.LoadFailed;
+
+        /// <summary>Message of the first load failure, or <c>null</c>.</summary>
+        internal static string LoadFailureMessage => _registry.LoadFailureMessage;
+
+        /// <summary>Overall load progress, 1 when there is nothing to load.</summary>
+        internal static float LoadProgress => _registry.LoadProgress;
+
+        /// <summary>Name of the module currently loading, or <c>null</c> between loads.</summary>
+        internal static string LoadingModuleName => _registry.LoadingModuleName;
+
+        /// <summary>Advances the asynchronous load pass by one step.</summary>
+        internal static LoadStepResult AdvanceLoad() {
+            return _registry.AdvanceLoad();
+        }
+
+        /// <summary>Runs the start pass after every load finished.</summary>
+        internal static void FinishStart() {
+            _registry.FinishStart();
         }
 
         /// <summary>

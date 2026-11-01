@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Grow.Core.Log;
 using Grow.Kernel.Ioc;
 using Grow.Kernel.Ioc.Interface;
+using UnityEngine;
 
 namespace Grow.Kernel.Modules.Impl {
     /// <summary>
@@ -29,11 +31,24 @@ namespace Grow.Kernel.Modules.Impl {
         private readonly List<IModule> _modules = new List<IModule>();
         private readonly ModuleContext _context;
         private readonly List<IModule> _started = new List<IModule>();
+        private readonly List<IModule> _startupOrder = new List<IModule>();
 
         private readonly List<string> _failed = new List<string>();
         private readonly HashSet<string> _failedSet = new HashSet<string>(StringComparer.Ordinal);
         private readonly List<ModuleFailure> _failures = new List<ModuleFailure>();
         private readonly HashSet<IModule> _initializeFailed = new HashSet<IModule>();
+        private readonly HashSet<IModule> _yieldWarned = new HashSet<IModule>();
+
+        private IEnumerator _loadRoutine;
+        private IModule _loadModule;
+        private IBootLoadable _loadable;
+        private AsyncOperation _loadWait;
+        private int _loadCursor;
+        private int _loadTotal;
+        private int _loadCompleted;
+        private float _loadProgress;
+        private bool _loadFailed;
+        private string _loadFailureMessage;
 
         private bool _ready;
         private bool _bootstrapping;
@@ -85,6 +100,51 @@ namespace Grow.Kernel.Modules.Impl {
             get {
                 lock (_gate) {
                     return _failed.Count == 0;
+                }
+            }
+        }
+
+        /// <summary>True while an asynchronous load routine or an unvisited loadable module remains.</summary>
+        internal bool HasPendingLoad {
+            get {
+                lock (_gate) {
+                    return _loadRoutine != null || _loadWait != null || HasRemainingLoadable();
+                }
+            }
+        }
+
+        /// <summary>True when the latest bootstrap aborted in the load pass.</summary>
+        internal bool LoadFailed {
+            get {
+                lock (_gate) {
+                    return _loadFailed;
+                }
+            }
+        }
+
+        /// <summary>Message of the first load failure, or <c>null</c> when the boot is healthy.</summary>
+        internal string LoadFailureMessage {
+            get {
+                lock (_gate) {
+                    return _loadFailureMessage;
+                }
+            }
+        }
+
+        /// <summary>Overall load progress, 1 when there is nothing to load.</summary>
+        internal float LoadProgress {
+            get {
+                lock (_gate) {
+                    return _loadTotal <= 0 ? 1f : _loadProgress;
+                }
+            }
+        }
+
+        /// <summary>Name of the module currently loading, or <c>null</c> between loads.</summary>
+        internal string LoadingModuleName {
+            get {
+                lock (_gate) {
+                    return _loadModule?.Name;
                 }
             }
         }
@@ -148,7 +208,15 @@ namespace Grow.Kernel.Modules.Impl {
             }
         }
 
-        /// <summary>Boots all modules in dependency order; idempotent.</summary>
+        /// <summary>
+        /// Boots all modules in dependency order; idempotent.
+        /// </summary>
+        /// <remarks>
+        /// When no module implements <see cref="IBootLoadable"/> — or every load finishes without
+        /// yielding — the call runs the whole sequence and ends in <see cref="ModulePhase.Running"/>.
+        /// Otherwise it stops in <see cref="ModulePhase.Load"/> and the composition root drives
+        /// <see cref="AdvanceLoad"/> and <see cref="FinishStart"/>.
+        /// </remarks>
         public void Bootstrap() {
             lock (_gate) {
                 if (_ready || _bootstrapping) {
@@ -158,9 +226,12 @@ namespace Grow.Kernel.Modules.Impl {
                 _bootstrapping = true;
                 try {
                     ClearFailures();
+                    ResetLoadState();
 
                     _context.Phase = ModulePhase.Register;
                     var order = BuildStartupOrder();
+                    _startupOrder.Clear();
+                    _startupOrder.AddRange(order);
 
                     _initializeFailed.Clear();
                     for (var i = 0; i < order.Count; i++) {
@@ -176,25 +247,41 @@ namespace Grow.Kernel.Modules.Impl {
                         }
                     }
 
-                    _context.Phase = ModulePhase.Start;
-                    for (var i = 0; i < order.Count; i++) {
-                        if (_initializeFailed.Contains(order[i])) {
-                            continue;
-                        }
-
-                        InvokeStart(order[i]);
+                    CountLoadableModules();
+                    if (AdvanceLoadCore() == LoadStepResult.Completed) {
+                        FinishStartCore();
                     }
-
-                    _started.Clear();
-                    _started.AddRange(order);
-
-                    DriveManaged(_context.DriveManagedStart());
-
-                    _context.Phase = ModulePhase.Running;
-                    _ready = true;
                 } finally {
                     _bootstrapping = false;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Advances the asynchronous load pass by one step; the composition root calls it per frame.
+        /// </summary>
+        internal LoadStepResult AdvanceLoad() {
+            lock (_gate) {
+                return AdvanceLoadCore();
+            }
+        }
+
+        /// <summary>Runs the start pass after every load finished; idempotent.</summary>
+        internal void FinishStart() {
+            lock (_gate) {
+                if (_ready || _context.Phase != ModulePhase.Load) {
+                    return;
+                }
+
+                FinishStartCore();
+            }
+        }
+
+        /// <summary>Drops the active load routine without running any remaining module.</summary>
+        internal void AbortLoad() {
+            lock (_gate) {
+                ClearCurrentLoad();
+                _loadCursor = _startupOrder.Count;
             }
         }
 
@@ -212,6 +299,7 @@ namespace Grow.Kernel.Modules.Impl {
                 _shuttingDown = true;
                 try {
                     ClearFailures();
+                    ClearCurrentLoad();
 
                     _context.Phase = ModulePhase.Stop;
                     for (var i = _started.Count - 1; i >= 0; i--) {
@@ -241,6 +329,8 @@ namespace Grow.Kernel.Modules.Impl {
 
                     _context.Phase = ModulePhase.None;
                     _ready = false;
+                    ResetLoadState();
+                    _startupOrder.Clear();
                 } finally {
                     _shuttingDown = false;
                 }
@@ -255,6 +345,208 @@ namespace Grow.Kernel.Modules.Impl {
         /// <summary>Resolves a service; throws when it is not registered.</summary>
         public T GetRequiredService<T>() where T : class {
             return _context.GetRequiredService<T>();
+        }
+
+        private void CountLoadableModules() {
+            _loadTotal = 0;
+            for (var i = 0; i < _startupOrder.Count; i++) {
+                var module = _startupOrder[i];
+                if (!_initializeFailed.Contains(module) && module is IBootLoadable) {
+                    _loadTotal++;
+                }
+            }
+        }
+
+        private bool HasRemainingLoadable() {
+            for (var i = _loadCursor; i < _startupOrder.Count; i++) {
+                var module = _startupOrder[i];
+                if (!_initializeFailed.Contains(module) && module is IBootLoadable) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private LoadStepResult AdvanceLoadCore() {
+            while (true) {
+                if (_loadWait != null) {
+                    if (!_loadWait.isDone) {
+                        UpdateLoadProgress();
+                        return LoadStepResult.Pending;
+                    }
+
+                    _loadWait = null;
+                }
+
+                if (_loadRoutine == null) {
+                    var started = StartNextLoad();
+                    if (started != LoadStepResult.Pending) {
+                        return started;
+                    }
+                }
+
+                bool moved;
+                try {
+                    moved = _loadRoutine.MoveNext();
+                } catch (Exception exception) {
+                    var module = _loadModule;
+                    ClearCurrentLoad();
+                    return FailLoad(module, exception);
+                }
+
+                if (!moved) {
+                    ClearCurrentLoad();
+                    _loadCompleted++;
+                    UpdateLoadProgress();
+                    continue;
+                }
+
+                var yielded = _loadRoutine.Current;
+                if (yielded == null) {
+                    UpdateLoadProgress();
+                    return LoadStepResult.Pending;
+                }
+
+                if (yielded is AsyncOperation operation) {
+                    if (!operation.isDone) {
+                        _loadWait = operation;
+                    }
+
+                    UpdateLoadProgress();
+                    return LoadStepResult.Pending;
+                }
+
+                WarnUnsupportedYield(_loadModule, yielded);
+                UpdateLoadProgress();
+                return LoadStepResult.Pending;
+            }
+        }
+
+        private LoadStepResult StartNextLoad() {
+            while (_loadCursor < _startupOrder.Count) {
+                var module = _startupOrder[_loadCursor++];
+                if (_initializeFailed.Contains(module)) {
+                    continue;
+                }
+
+                if (!(module is IBootLoadable loadable)) {
+                    continue;
+                }
+
+                // Only a module that opted into the load phase observes it, so a synchronous graph
+                // keeps the Register → Initialize → Start sequence.
+                _context.Phase = ModulePhase.Load;
+
+                IEnumerator routine;
+                try {
+                    routine = loadable.Load(_context);
+                } catch (Exception exception) {
+                    return FailLoad(module, exception);
+                }
+
+                if (routine == null) {
+                    _loadCompleted++;
+                    UpdateLoadProgress();
+                    continue;
+                }
+
+                _loadRoutine = routine;
+                _loadModule = module;
+                _loadable = loadable;
+                return LoadStepResult.Pending;
+            }
+
+            return LoadStepResult.Completed;
+        }
+
+        private void FinishStartCore() {
+            _context.Phase = ModulePhase.Start;
+            for (var i = 0; i < _startupOrder.Count; i++) {
+                if (_initializeFailed.Contains(_startupOrder[i])) {
+                    continue;
+                }
+
+                InvokeStart(_startupOrder[i]);
+            }
+
+            _started.Clear();
+            _started.AddRange(_startupOrder);
+
+            DriveManaged(_context.DriveManagedStart());
+
+            _context.Phase = ModulePhase.Running;
+            _ready = true;
+        }
+
+        private LoadStepResult FailLoad(IModule module, Exception exception) {
+            var name = module != null ? module.Name : "(unknown)";
+            GrowLog.Error(
+                $"[Modules] Module {name}.Load threw and aborted the boot: {exception}",
+                LogCategory);
+            RecordFailure(name, ModuleFailureKind.LoadException,
+                "Load threw; the boot fails and the composition rolls back.");
+
+            if (!_loadFailed) {
+                _loadFailed = true;
+                _loadFailureMessage = $"Module {name} failed to load: {exception.Message}";
+            }
+
+            ClearCurrentLoad();
+            _loadCursor = _startupOrder.Count;
+            return LoadStepResult.Faulted;
+        }
+
+        private void ClearCurrentLoad() {
+            _loadRoutine = null;
+            _loadModule = null;
+            _loadable = null;
+            _loadWait = null;
+        }
+
+        private void ResetLoadState() {
+            ClearCurrentLoad();
+            _loadCursor = 0;
+            _loadTotal = 0;
+            _loadCompleted = 0;
+            _loadProgress = 0f;
+            _loadFailed = false;
+            _loadFailureMessage = null;
+            _yieldWarned.Clear();
+        }
+
+        private void UpdateLoadProgress() {
+            var current = 0f;
+            if (_loadable != null) {
+                try {
+                    current = Math.Clamp(_loadable.LoadProgress, 0f, 1f);
+                } catch (Exception exception) {
+                    GrowLog.Error(
+                        $"[Modules] Module {_loadModule?.Name}.LoadProgress threw: {exception}",
+                        LogCategory);
+                    _loadable = null;
+                }
+            }
+
+            var value = _loadTotal <= 0
+                ? 1f
+                : Math.Clamp((_loadCompleted + current) / _loadTotal, 0f, 1f);
+            if (value > _loadProgress) {
+                _loadProgress = value;
+            }
+        }
+
+        private void WarnUnsupportedYield(IModule module, object value) {
+#if UNITY_EDITOR
+            if (module == null || !_yieldWarned.Add(module)) {
+                return;
+            }
+
+            GrowLog.Warning(
+                $"[Modules] Module {module.Name}.Load yielded a {value.GetType().Name}; only null " +
+                "and AsyncOperation are supported, so it is treated as one frame.",
+                LogCategory);
+#endif
         }
 
         private void ClearFailures() {

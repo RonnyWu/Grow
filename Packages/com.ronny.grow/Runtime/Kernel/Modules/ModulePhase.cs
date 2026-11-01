@@ -5,7 +5,9 @@ namespace Grow.Kernel.Modules {
     /// Module system phase, advanced by <see cref="GrowModules"/>.
     /// </summary>
     /// <remarks>
-    /// Order: None → Register → Initialize → Start → Running → Stop → Dispose → None.
+    /// Order: None → Register → Initialize → Load → Start → Running → Stop → Dispose → None.
+    /// <see cref="Load"/> is entered only when at least one module implements
+    /// <see cref="IBootLoadable"/>, so a synchronous graph keeps the shorter sequence.
     /// </remarks>
     public enum ModulePhase {
         /// <summary>Not started; also the terminal state after shutdown.</summary>
@@ -16,6 +18,9 @@ namespace Grow.Kernel.Modules {
 
         /// <summary>Initialize pass.</summary>
         Initialize,
+
+        /// <summary>Asynchronous load pass, driven across frames.</summary>
+        Load,
 
         /// <summary>Start pass.</summary>
         Start,
