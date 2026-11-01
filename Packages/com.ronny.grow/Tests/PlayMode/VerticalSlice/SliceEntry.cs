@@ -64,6 +64,7 @@ namespace Grow.Samples.VerticalSlice {
         }
 
         public IEnumerator Load(IModuleContext context) {
+            _frames = 0;
             for (var i = 0; i < LoadFrames; i++) {
                 _frames++;
                 yield return null;

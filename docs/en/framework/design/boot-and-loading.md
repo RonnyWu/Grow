@@ -90,6 +90,11 @@ while the host lives, so the automatic `BeforeSceneLoad` start cannot race it. `
 state, readiness, progress and the service registry, and releases the slot when disposed. Only one
 host may exist per session; a second build throws instead of silently sharing global state.
 
+The host is built in `AfterAssembliesLoaded`. The kernel resets its static state from its own
+`SubsystemRegistration` hook, and Unity does not order that hook against a game's, so building in
+`SubsystemRegistration` would let the reset release the host that was just created.
+`AfterAssembliesLoaded` runs after every `SubsystemRegistration` hook and before `BeforeSceneLoad`.
+
 The builder knows only kernel types. `UseStore()` and `UseScenes()` are extension methods in their
 own capability packages, which is what keeps the kernel free of capability knowledge.
 

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace Grow.Kernel.Modules {
     /// <summary>
@@ -36,6 +34,12 @@ namespace Grow.Kernel.Modules {
     /// module that wants to degrade instead of failing must catch its own exception and report the
     /// degraded state through its own surface; the kernel does not decide which modules are
     /// optional.
+    /// </para>
+    /// <para>
+    /// <see cref="Load"/> runs on the main thread inside the module registry's lock. Do not call
+    /// <see cref="GrowModules.Register"/>, <see cref="GrowModules.Reset"/> or
+    /// <see cref="GrowModules.Shutdown"/> from it, and do not expect another thread to observe
+    /// services registered mid-load.
     /// </para>
     /// </remarks>
     public interface IBootLoadable {

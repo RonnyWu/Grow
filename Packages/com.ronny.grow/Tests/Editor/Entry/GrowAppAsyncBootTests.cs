@@ -179,6 +179,18 @@ namespace Grow.Tests.Editor.Entry {
             Assert.AreEqual(GrowState.Ready, GrowBoot.State);
         }
 
+        [Test]
+        public void Progress_IsZeroOutsideTheBootAndNotOneAfterAFailure() {
+            Assert.AreEqual(0f, GrowBoot.Progress, "nothing has booted yet");
+
+            var module = new AsyncProbeModule("Broken", ThrowAfterYield);
+            GrowApp.Initialize(new IModule[] { module });
+            DrivePump();
+
+            Assert.AreEqual(GrowState.Shutdown, GrowBoot.State);
+            Assert.AreEqual(0f, GrowBoot.Progress, "a rolled-back boot must not report 100%");
+        }
+
         private static void DrivePump() {
             for (var i = 0; i < 64 && GrowBoot.State == GrowState.Loading; i++) {
                 GrowApp.PumpBoot();

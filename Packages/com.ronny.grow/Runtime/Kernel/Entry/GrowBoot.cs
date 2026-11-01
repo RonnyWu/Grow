@@ -23,10 +23,23 @@ namespace Grow.Kernel.Entry {
         public static bool IsReady => GrowRuntime.IsReady;
 
         /// <summary>
-        /// Overall load progress in the 0..1 range; monotonically non-decreasing, and 1 when there
-        /// is nothing to load.
+        /// Overall load progress: 1 when ready, 0 before the boot starts or after it ended,
+        /// otherwise the monotonic module progress in the 0..1 range.
         /// </summary>
-        public static float Progress => GrowModules.LoadProgress;
+        public static float Progress {
+            get {
+                switch (GrowRuntime.State) {
+                    case GrowState.Ready:
+                        return 1f;
+                    case GrowState.Booted:
+                    case GrowState.Loading:
+                    case GrowState.Failed:
+                        return GrowModules.LoadProgress;
+                    default:
+                        return 0f;
+                }
+            }
+        }
 
         /// <summary>Name of the module currently loading, or <c>null</c> between loads.</summary>
         public static string LoadingModule => GrowModules.LoadingModuleName;

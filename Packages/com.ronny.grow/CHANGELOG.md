@@ -135,7 +135,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UnifiedClassService<T>.PostToMain` posts through `GrowScheduler.Post` instead of a private
   per-service queue and no longer requires `UpdateFlag.Update`. Actions still run inline on the
   main thread; queued actions run on the next `PreUpdate`, or from `OnUpdate` when no loop host
-  is attached.
+  is attached. `FlushMainThreadQueue` now drains that shared queue, so any service's update can
+  run another service's posted action.
 - **Boot barrier:** `GrowState` gains `Loading` (a state that may span frames) and `Failed` (a
   terminal state observed before the composition rolls back), and `GrowState.Shutdown` moved to
   the end of the enum. `GrowModules.Bootstrap` now stops in the new `ModulePhase.Load` when a module
@@ -144,6 +145,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   load and every `OnStart` finished. A graph without `IBootLoadable` still reaches `Ready` before
   `Initialize()` returns, and `GrowModules.Bootstrap()` called directly still ends in
   `ModulePhase.Running`.
+- **Breaking (enum values):** `GrowState` gains `Loading` and `Failed`, and `GrowState.Shutdown` moved
+  to the end of the enum; `ModulePhase.Load` was inserted after `Initialize`, so `Start`, `Running`,
+  `Stop` and `Dispose` also shifted. Do not persist either enum as an integer.
 - `GrowApp.Initialize` now publishes `GrowState.Installed` after `GrowModules.Bootstrap()`.
   Module hooks therefore observe `GrowState.Reset`, and a `StateChanged` handler for
   `Installed` observes a fully composed kernel.

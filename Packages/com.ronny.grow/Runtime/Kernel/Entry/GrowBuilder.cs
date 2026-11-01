@@ -11,18 +11,25 @@ namespace Grow.Kernel.Entry {
     /// </summary>
     /// <remarks>
     /// This is the assembly point a game uses instead of calling <see cref="GrowApp.RegisterModule"/>
-    /// and <see cref="GrowApp.Initialize()"/> by hand. Build it once, in the earliest manual
-    /// initialization (for example <c>RuntimeInitializeLoadType.SubsystemRegistration</c>):
+    /// and <see cref="GrowApp.Initialize()"/> by hand. Build it once, after
+    /// <c>RuntimeInitializeLoadType.SubsystemRegistration</c> has finished — for example in
+    /// <c>AfterAssembliesLoaded</c>:
     /// <code>
     /// private static GrowHost _host;
     ///
-    /// [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    /// [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
     /// private static void Main() {
     ///     _host = new GrowBuilder()
     ///         .AddModule(new GameModule())
     ///         .Build();
     /// }
     /// </code>
+    /// <para>
+    /// The load type matters. The kernel resets its static state from its own
+    /// <c>SubsystemRegistration</c> hook, and Unity does not order that hook against a game's. A host
+    /// built too early would be released by the reset; <c>AfterAssembliesLoaded</c> runs after every
+    /// <c>SubsystemRegistration</c> hook and before the automatic <c>BeforeSceneLoad</c> start.
+    /// </para>
     /// <para>
     /// The builder knows only kernel types: capability convenience such as <c>UseStore()</c> is an
     /// extension method in that capability's package, so the kernel never learns about a capability.
@@ -98,7 +105,14 @@ namespace Grow.Kernel.Entry {
             }
 
             if (_options.AutoStart) {
-                host.Start();
+                try {
+                    host.Start();
+                } catch {
+                    // A failed start must not keep the slot, the AutoInitialize capture or a host the
+                    // caller never received; Dispose releases both and rolls back best-effort.
+                    host.Dispose();
+                    throw;
+                }
             }
 
             return host;

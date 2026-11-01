@@ -8,13 +8,17 @@ This page shows how a game starts Grow and how a module can take more than one f
 using Grow.Kernel.Entry;
 using Grow.Kernel.Modules;
 
-[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
 private static void Main() {
     new GrowBuilder()
         .AddModule(new GameModule())
         .Build();                       // builds and starts; dispose the host to stop
 }
 ```
+
+Build the host in `AfterAssembliesLoaded`, not `SubsystemRegistration`: the kernel resets its own
+static state from a `SubsystemRegistration` hook, Unity does not order that hook against yours, and a
+host built too early would be released by the reset.
 
 `Build` registers the modules, turns off `GrowApp.AutoInitialize` while the host lives and starts
 the kernel. With `AutoStart = false` you start it yourself:

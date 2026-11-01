@@ -67,6 +67,22 @@ namespace Grow.Tests.Editor.Entry {
         }
 
         [Test]
+        public void Shutdown_ThenInitialize_DropsQueuedTimersAndPostedActions() {
+            GrowApp.Initialize();
+            var fired = 0;
+            GrowScheduler.NextFrame(() => fired++);
+            GrowScheduler.Post(() => fired++);
+
+            GrowApp.Shutdown();
+            GrowApp.Initialize();
+
+            GrowScheduler.Tick(0f, 0f);
+            GrowScheduler.FlushPosted();
+
+            Assert.AreEqual(0, fired, "a new cycle must not run the previous cycle's queued work");
+        }
+
+        [Test]
         public void Shutdown_UnwindsEverything() {
             GrowApp.Initialize();
 

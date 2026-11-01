@@ -171,6 +171,47 @@ namespace Grow.Tests.Editor.Entry {
         }
 
         [Test]
+        public void Build_WhenStartThrows_ReleasesTheSlotAndRestoresAutoInitialize() {
+            var broken = new ThrowingDependenciesModule();
+
+            Assert.Throws<InvalidOperationException>(() => new GrowBuilder().AddModule(broken).Build());
+
+            Assert.IsTrue(GrowApp.AutoInitialize, "a failed start must restore the startup entry point");
+            Assert.IsFalse(GrowApp.IsInitialized);
+
+            GrowModules.Reset();
+
+            Assert.DoesNotThrow(() => new GrowBuilder()
+                .ConfigureBoot(options => options.AutoStart = false)
+                .Build()
+                .Dispose());
+        }
+
+        private sealed class ThrowingDependenciesModule : IModule {
+            public string Name => "Broken";
+
+            public int Priority => 0;
+
+            public IReadOnlyList<Type> Dependencies =>
+                throw new InvalidOperationException("dependencies boom");
+
+            public void OnRegister(IModuleContext context) {
+            }
+
+            public void OnInitialize(IModuleContext context) {
+            }
+
+            public void OnStart(IModuleContext context) {
+            }
+
+            public void OnStop() {
+            }
+
+            public void OnDispose() {
+            }
+        }
+
+        [Test]
         public void AddModuleAndConfigureBoot_RejectUseAfterBuild() {
             var builder = new GrowBuilder();
             builder.Build();
