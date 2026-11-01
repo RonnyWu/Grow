@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `StoreBuilderExtensions.UseStore()` so a composition can add the store capability without the
+  kernel knowing about it.
 - Versioned bucket files, a scope-wide `manifests` index and `manifests.bak` recovery.
 - `byte[]` values stored in per-store `<store>.blobs/` directories with length and CRC32
   verification.

@@ -4,6 +4,9 @@
     "references": [
         "Grow.Core",
         "Grow.Kernel",
+        "Grow.Store",
+        "Grow.Store.Contracts",
+        "Grow.Scenes",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
