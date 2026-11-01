@@ -19,6 +19,7 @@
       "filter": [
         "Packages/com.ronny.grow/Documentation~/TableOfContents.md",
         "Packages/com.ronny.grow.store/Documentation~/TableOfContents.md",
+        "Packages/com.ronny.grow.scenes/Documentation~/TableOfContents.md",
         "Packages/com.ronny.grow.lens/Documentation~/TableOfContents.md"
       ],
       "config": { "MD041": false },

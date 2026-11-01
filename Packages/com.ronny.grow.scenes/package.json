@@ -1,0 +1,24 @@
+{
+  "name": "com.ronny.grow.scenes",
+  "displayName": "Grow Scenes",
+  "version": "3.0.0-exp.1",
+  "unity": "2022.3",
+  "description": "Scene flow for Grow: load, activate and unload scenes through one controlled path.",
+  "keywords": [
+    "grow",
+    "scenes",
+    "loading"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Ronny Wu",
+    "url": "https://github.com/RonnyWu"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RonnyWu/Grow.git"
+  },
+  "dependencies": {
+    "com.ronny.grow": "3.0.0-exp.1"
+  }
+}

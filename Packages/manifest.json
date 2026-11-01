@@ -42,6 +42,7 @@
   "testables": [
     "com.ronny.grow",
     "com.ronny.grow.lens",
+    "com.ronny.grow.scenes",
     "com.ronny.grow.store"
   ]
 }

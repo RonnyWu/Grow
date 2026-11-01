@@ -1,0 +1,17 @@
+{
+    "name": "Grow.Scenes",
+    "rootNamespace": "Grow",
+    "references": [
+        "Grow.Core",
+        "Grow.Kernel"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
