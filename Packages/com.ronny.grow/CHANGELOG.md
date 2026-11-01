@@ -95,6 +95,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Frame delays, scaled time and unscaled time use separate queues; callback faults are logged and
   isolated, and scheduling or cancelling from a callback defers the new entry to the next tick.
   `TimeKind` selects the clock and `TimerHandle` carries a generation so a stale cancel is a no-op.
+- `Grow.Kernel.Modules.IBootLoadable` — an optional asynchronous preparation phase driven between
+  `IModule.OnInitialize` and `IModule.OnStart`. `Load` returns an `IEnumerator`: `null` means "nothing
+  to wait for", `yield return null` waits one frame, `yield return <AsyncOperation>` waits for
+  `isDone`, and any other value is treated as one frame and reported once in the editor. Modules load
+  serially in dependency order; a load that throws aborts the boot. `IModule` itself is unchanged, so
+  a module with nothing to load pays nothing.
+- `GrowBoot.Progress`, `GrowBoot.LoadingModule` and `GrowBoot.FailureMessage` — read-only boot
+  observation for the asynchronous barrier. Progress is clamped to 0..1 and monotonic; the failure
+  message survives the rollback until the next initialization.
 - `Grow.Kernel.Entry.GrowSession` — the kernel-side `SubsystemRegistration` entry. It resets
   `GrowApp`, `GrowRuntime`, `IOC`, `MonoManager`, `LifecycleSession`, `GrowLoop`,
   `GrowScheduler`, `PlayerLoopManager`, `GrowLog` and `StringBuilderPool` in a fixed order; Core
@@ -121,6 +130,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-service queue and no longer requires `UpdateFlag.Update`. Actions still run inline on the
   main thread; queued actions run on the next `PreUpdate`, or from `OnUpdate` when no loop host
   is attached.
+- **Boot barrier:** `GrowState` gains `Loading` (a state that may span frames) and `Failed` (a
+  terminal state observed before the composition rolls back), and `GrowState.Shutdown` moved to
+  the end of the enum. `GrowModules.Bootstrap` now stops in the new `ModulePhase.Load` when a module
+  implements `IBootLoadable`, so `GrowApp.Initialize()` can return before the kernel is ready. In
+  that case `GrowApp.IsInitialized` stays false and `GrowBoot.IsReady` becomes true only after every
+  load and every `OnStart` finished. A graph without `IBootLoadable` still reaches `Ready` before
+  `Initialize()` returns, and `GrowModules.Bootstrap()` called directly still ends in
+  `ModulePhase.Running`.
 - `GrowApp.Initialize` now publishes `GrowState.Installed` after `GrowModules.Bootstrap()`.
   Module hooks therefore observe `GrowState.Reset`, and a `StateChanged` handler for
   `Installed` observes a fully composed kernel.

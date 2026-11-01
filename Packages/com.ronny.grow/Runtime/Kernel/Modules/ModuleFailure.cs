@@ -19,7 +19,10 @@ namespace Grow.Kernel.Modules {
         HookException,
 
         /// <summary>A container-driven managed-service hook threw and was isolated.</summary>
-        ManagedServiceHookException
+        ManagedServiceHookException,
+
+        /// <summary>An <see cref="IBootLoadable.Load"/> pass threw and aborted the boot.</summary>
+        LoadException
     }
 
     /// <summary>One structured assembly failure: subject, kind, phase and reason.</summary>
