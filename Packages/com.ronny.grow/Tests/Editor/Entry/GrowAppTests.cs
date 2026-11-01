@@ -8,6 +8,7 @@ using Grow.Kernel.Ioc;
 using Grow.Kernel.Lifecycle;
 using Grow.Kernel.Loop;
 using Grow.Kernel.Modules;
+using Grow.Kernel.Scheduling;
 using NUnit.Framework;
 
 namespace Grow.Tests.Editor.Entry {
@@ -22,6 +23,7 @@ namespace Grow.Tests.Editor.Entry {
             GrowApp.ResetStaticState();
             GrowLoop.ResetStaticState();
             MonoManager.ResetStaticState();
+            GrowScheduler.ResetStaticState();
             GrowModules.ResetStaticState();
             IOC.Clear();
             GrowBoot.Shutdown();
@@ -34,6 +36,7 @@ namespace Grow.Tests.Editor.Entry {
             GrowApp.ResetStaticState();
             GrowLoop.ResetStaticState();
             MonoManager.ResetStaticState();
+            GrowScheduler.ResetStaticState();
             GrowModules.ResetStaticState();
             IOC.Clear();
             GrowBoot.Shutdown();

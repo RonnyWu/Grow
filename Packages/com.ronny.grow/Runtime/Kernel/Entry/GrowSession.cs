@@ -6,6 +6,7 @@ using Grow.Kernel.Ioc;
 using Grow.Kernel.Lifecycle;
 using Grow.Kernel.Lifecycle.Impl;
 using Grow.Kernel.Loop;
+using Grow.Kernel.Scheduling;
 using UnityEngine;
 
 namespace Grow.Kernel.Entry {
@@ -17,7 +18,8 @@ namespace Grow.Kernel.Entry {
     /// kernel's resets here makes their order explicit; Core primitives may keep their own hooks
     /// because they cannot depend on the kernel. The sequence clears composition flags, the IOC
     /// root, lifecycle bindings, the loop host and the player-loop registry before clearing logging
-    /// and pooling statics.
+    /// and pooling statics. The scheduler is reset right after the loop host, because its frame
+    /// subscriptions belong to that host.
     /// <para>
     /// Capabilities are deliberately absent: a capability owns its runtime state in its module and
     /// releases it through <c>IModule.OnDispose</c>. The composition root settles the module registry
@@ -36,6 +38,7 @@ namespace Grow.Kernel.Entry {
             MonoManager.ResetStaticState();
             LifecycleSession.ResetForSession();
             GrowLoop.ResetStaticState();
+            GrowScheduler.ResetStaticState();
             PlayerLoopManager.ResetStaticState();
             GrowLog.Reset();
             StringBuilderPool.ResetStaticState();

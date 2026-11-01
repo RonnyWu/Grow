@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 
 using System;
-using System.Collections.Concurrent;
-using System.Threading;
 using Grow.Core.Log;
 using Grow.Kernel.Lifecycle.Impl;
+using Grow.Kernel.Scheduling;
 
 namespace Grow.Kernel.Lifecycle {
     /// <summary>
@@ -17,8 +16,9 @@ namespace Grow.Kernel.Lifecycle {
     /// cannot forget a base call; subclasses override the <c>OnService*</c> hooks instead.
     /// <para>
     /// Each stage has its own success flag. A hook that throws is logged and does not set its flag,
-    /// so the next entry can retry without repeating the stages that already succeeded. The
-    /// cross-thread queue is drained on the main thread before <see cref="OnServiceUpdate"/>.
+    /// so the next entry can retry without repeating the stages that already succeeded. Cross-thread
+    /// actions handed to <see cref="PostToMain"/> go through <see cref="GrowScheduler.Post"/> and are
+    /// drained before <see cref="OnServiceUpdate"/>.
     /// </para>
     /// </remarks>
     /// <typeparam name="T">The concrete service type.</typeparam>
@@ -26,7 +26,6 @@ namespace Grow.Kernel.Lifecycle {
         where T : UnifiedClassService<T>, new() {
         private const string LogCategory = "Lifecycle";
 
-        private ConcurrentQueue<Action> _mainThreadQueue;
         private bool _serviceInitialized;
         private bool _contractsRegistered;
         private bool _serviceStarted;
@@ -67,8 +66,14 @@ namespace Grow.Kernel.Lifecycle {
 
         /// <summary>
         /// Runs <paramref name="action"/> on the main thread: inline on the main thread, otherwise
-        /// queued for the next <see cref="OnUpdate"/>.
+        /// handed to the kernel scheduler.
         /// </summary>
+        /// <remarks>
+        /// Off the main thread the action goes into <see cref="GrowScheduler.Post"/>, which is the one
+        /// cross-thread hand-off the kernel owns. It runs on the next <c>PreUpdate</c>, or from
+        /// <see cref="OnUpdate"/> when no loop host is attached (see
+        /// <see cref="FlushMainThreadQueue"/>).
+        /// </remarks>
         protected void PostToMain(Action action) {
             if (action == null) {
                 return;
@@ -79,39 +84,12 @@ namespace Grow.Kernel.Lifecycle {
                 return;
             }
 
-            if ((DeclaredUpdateFlag & UpdateFlag.Update) == 0) {
-                GrowLog.Error(
-                    $"{typeof(T).Name} cannot queue PostToMain actions without UpdateFlag.Update; " +
-                    "the action was dropped.",
-                    LogCategory);
-                return;
-            }
-
-            MainThreadQueue.Enqueue(action);
+            GrowScheduler.Post(action);
         }
 
-        private ConcurrentQueue<Action> MainThreadQueue {
-            get {
-                var queue = _mainThreadQueue;
-                if (queue != null) {
-                    return queue;
-                }
-
-                var created = new ConcurrentQueue<Action>();
-                return Interlocked.CompareExchange(ref _mainThreadQueue, created, null) ?? created;
-            }
-        }
-
-        /// <summary>Drains queued cross-thread actions on the main thread, isolating each failure.</summary>
+        /// <summary>Drains actions queued by <see cref="PostToMain"/>; isolates each failure.</summary>
         protected void FlushMainThreadQueue() {
-            var queue = MainThreadQueue;
-            while (queue.TryDequeue(out var action)) {
-                try {
-                    action();
-                } catch (Exception exception) {
-                    GrowLog.Error($"PostToMain callback threw: {exception}", LogCategory);
-                }
-            }
+            GrowScheduler.FlushPosted();
         }
 
         private void AwakeService() {
@@ -203,11 +181,6 @@ namespace Grow.Kernel.Lifecycle {
 
         protected sealed override void OnDestroyed() {
             TeardownService();
-
-            var queue = MainThreadQueue;
-            while (queue.TryDequeue(out _)) {
-            }
-
             base.OnDestroyed();
         }
     }

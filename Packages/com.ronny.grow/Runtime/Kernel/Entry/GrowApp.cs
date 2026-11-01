@@ -8,6 +8,7 @@ using Grow.Core.Log;
 using Grow.Kernel.Lifecycle;
 using Grow.Kernel.Loop;
 using Grow.Kernel.Modules;
+using Grow.Kernel.Scheduling;
 using UnityEngine;
 
 namespace Grow.Kernel.Entry {
@@ -16,13 +17,14 @@ namespace Grow.Kernel.Entry {
     /// </summary>
     /// <remarks>
     /// Initialization order is fixed: <see cref="GrowBoot.Reset"/>, <see cref="GrowLoop.Install"/>,
-    /// <see cref="MonoManager.Bind"/>, <see cref="GrowModules.Shutdown"/>,
+    /// <see cref="MonoManager.Bind"/>, <see cref="GrowScheduler.Attach"/>,
+    /// <see cref="GrowModules.Shutdown"/>,
     /// <see cref="GrowModules.Bootstrap"/>, <see cref="GrowBoot.Install"/>, then
     /// <see cref="GrowBoot.Boot"/>. The defensive shutdown settles a module table left by a previous
     /// session before the new bootstrap. The Installed notification is published only after the
     /// modules have started, so an observer never sees Installed while the module graph is still
     /// coming up. Shutdown reverses the ownership order: modules first (they may use the loop), then
-    /// the manager binding, the loop host and the boot state.
+    /// the scheduler subscriptions, the manager binding, the loop host and the boot state.
     /// <para>
     /// Initialize and shutdown are idempotent and safe to repeat. A failed initialization performs
     /// best-effort cleanup in reverse order and rethrows. Modules must be registered before
@@ -108,6 +110,7 @@ namespace Grow.Kernel.Entry {
                 GrowBoot.Reset();
                 GrowLoop.Install();
                 MonoManager.Instance.Bind(GrowLoop.Executor);
+                GrowScheduler.Attach(MonoManager.Instance);
                 GrowModules.Shutdown();
                 GrowModules.Bootstrap();
                 GrowBoot.Install();
@@ -148,6 +151,7 @@ namespace Grow.Kernel.Entry {
 
             try {
                 Step("modules", GrowModules.Shutdown);
+                Step("scheduler", GrowScheduler.Detach);
                 Step("manager", MonoManager.Instance.Unbind);
                 Step("loop", GrowLoop.Uninstall);
                 Step("boot", GrowBoot.Shutdown);
@@ -187,6 +191,7 @@ namespace Grow.Kernel.Entry {
 
         private static void Rollback() {
             Step("modules", GrowModules.Shutdown);
+            Step("scheduler", GrowScheduler.Detach);
             Step("manager", MonoManager.Instance.Unbind);
             Step("loop", GrowLoop.Uninstall);
             Step("boot", GrowBoot.Shutdown);
