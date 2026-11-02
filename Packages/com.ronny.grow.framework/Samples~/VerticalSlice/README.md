@@ -9,6 +9,9 @@ them after a Play Mode restart.
 1. Import this sample (Package Manager → Grow Framework → Samples → Import).
 2. Press Play.
 
+> The sample starts its own composition from `SampleEntry`. If your project already starts Grow,
+> remove or adapt that class before importing; only one `GrowHost` may exist per session.
+
 What happens:
 
 - `SampleEntry` composes `GrowFramework.Create()` with the two sample modules and starts it.
