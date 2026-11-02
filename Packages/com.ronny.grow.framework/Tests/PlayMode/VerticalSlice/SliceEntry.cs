@@ -3,28 +3,25 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Grow.Framework;
 using Grow.Kernel.Entry;
 using Grow.Kernel.Modules;
-using Grow.Scenes;
-using Grow.Store;
 using Grow.Store.Contracts;
 
 namespace Grow.Samples.VerticalSlice {
     /// <summary>
-    /// The composition of the vertical slice: one game module, one session module and the two
-    /// capabilities, assembled with public API only.
+    /// The composition of the vertical slice: one game module and one session module on top of the
+    /// framework's default capability set.
     /// </summary>
     /// <remarks>
-    /// This is the shape a game uses: the framework is not asked for anything beyond
-    /// <see cref="GrowBuilder"/>, <see cref="IModule"/> and the capability extension methods.
+    /// This is the shape a game uses: `GrowFramework.Create()` supplies the capabilities, and the
+    /// game supplies its own modules and its own decisions.
     /// </remarks>
     internal static class SliceEntry {
         internal static GrowHost Start(string saveName) {
-            return new GrowBuilder()
+            return GrowFramework.Create()
                 .AddModule(new SliceGameModule())
                 .AddModule(new SliceSessionModule(saveName))
-                .UseStore()
-                .UseScenes()
                 .Build();
         }
     }

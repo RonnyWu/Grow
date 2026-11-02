@@ -1,0 +1,33 @@
+{
+  "name": "com.ronny.grow.framework",
+  "displayName": "Grow Framework",
+  "version": "3.0.0-exp.1",
+  "unity": "2022.3",
+  "description": "The Grow meta package: one call that composes the default capability set.",
+  "keywords": [
+    "grow",
+    "framework",
+    "meta"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Ronny Wu",
+    "url": "https://github.com/RonnyWu"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RonnyWu/Grow.git"
+  },
+  "dependencies": {
+    "com.ronny.grow": "3.0.0-exp.1",
+    "com.ronny.grow.store": "3.0.0-exp.1",
+    "com.ronny.grow.scenes": "3.0.0-exp.1"
+  },
+  "samples": [
+    {
+      "displayName": "Vertical Slice",
+      "description": "A minimal game: boot over two frames, a saved session and the default capabilities.",
+      "path": "Samples~/VerticalSlice"
+    }
+  ]
+}

@@ -33,7 +33,7 @@ namespace Grow.Kernel.Entry {
     /// <para>
     /// The builder knows only kernel types: capability convenience such as <c>UseStore()</c> is an
     /// extension method in that capability's package, so the kernel never learns about a capability.
-    /// The future meta package, when it exists, is this same shape with a default list of
+    /// The meta package (<c>com.ronny.grow.framework</c>) is this same shape with a default list of
     /// capabilities.
     /// </para>
     /// <para>

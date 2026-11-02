@@ -6,6 +6,16 @@
       "source": "embedded",
       "dependencies": {}
     },
+    "com.ronny.grow.framework": {
+      "version": "file:com.ronny.grow.framework",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.ronny.grow": "3.0.0-exp.1",
+        "com.ronny.grow.scenes": "3.0.0-exp.1",
+        "com.ronny.grow.store": "3.0.0-exp.1"
+      }
+    },
     "com.ronny.grow.lens": {
       "version": "file:com.ronny.grow.lens",
       "depth": 0,

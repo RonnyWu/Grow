@@ -1,0 +1,19 @@
+{
+    "name": "Grow.Samples.VerticalSlice",
+    "rootNamespace": "Grow.Samples",
+    "references": [
+        "Grow.Kernel",
+        "Grow.Store.Contracts",
+        "Grow.Scenes",
+        "Grow.Framework"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
