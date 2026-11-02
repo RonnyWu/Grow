@@ -12,13 +12,13 @@ using Grow.Store.Contracts;
 using NUnit.Framework;
 using UnityEngine.TestTools;
 
-namespace Grow.Tests.PlayMode {
+namespace Grow.Framework.Tests.PlayMode {
     /// <summary>
-    /// The First Boot acceptance slice: a game assembled from public API only must reach Ready
-    /// through the loading barrier and survive a restart with its saved session intact.
+    /// The acceptance slice, run through the meta package: a game assembled from public API only must
+    /// reach Ready through the loading barrier and survive a restart with its saved session intact.
     /// </summary>
     /// <remarks>
-    /// The slice lives in the test assembly on purpose. Unity does not import <c>Samples~</c>, so a
+    /// The slice lives in the test assembly on purpose. Unity does not import <c>Samples~</c>, so the
     /// sample there cannot be compiled or executed by CI; this copy is the executable acceptance and
     /// uses the same public surface a game would.
     /// </remarks>

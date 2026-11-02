@@ -1,4 +1,4 @@
-<!-- source: README.md @ blob:de5919cbd7519e0ad4d3485abde1563cc0c56a7f -->
+<!-- source: README.md @ blob:a5ce4e6956783c501da9670fe280434450563f2f -->
 <!-- 中文译文；以英文 README.md 为准，译文可能滞后于原文。blob 是 README.md 的内容 sha，可用 git hash-object README.md 核验。 -->
 
 # Grow
@@ -12,7 +12,8 @@
   [`Packages/com.ronny.grow`](../Packages/com.ronny.grow) · Store 契约
   [`Packages/com.ronny.grow.store.contracts`](../Packages/com.ronny.grow.store.contracts) ·
   Store 实现 [`Packages/com.ronny.grow.store`](../Packages/com.ronny.grow.store) · 场景流程
-  [`Packages/com.ronny.grow.scenes`](../Packages/com.ronny.grow.scenes) · 可选编辑器增强
+  [`Packages/com.ronny.grow.scenes`](../Packages/com.ronny.grow.scenes) · 元包
+  [`Packages/com.ronny.grow.framework`](../Packages/com.ronny.grow.framework) · 可选编辑器增强
   [`Packages/com.ronny.grow.lens`](../Packages/com.ronny.grow.lens)
 - Unity：**2022.3 LTS**
 
@@ -28,7 +29,7 @@ Grow 采用**薄内核 + 能力层**的结构：内核只负责机制，游戏�
 | 层 | 内容 | 状态 |
 |---|---|---|
 | Game | 你自己的游戏 / 应用代码 | — |
-| Framework | 元包：把一组推荐能力装配到一起 | 规划中 |
+| Framework | 元包：把一组推荐能力装配到一起 | 进行中 |
 | Capabilities | 实现；有多个后端时才拆契约包 | 进行中 |
 | Kernel | 机制——入口、模块、服务注册表、生命周期、循环、调度 | 进行中 |
 | Core | 被动原语（如日志），不依赖任何第三方 | 进行中 |
