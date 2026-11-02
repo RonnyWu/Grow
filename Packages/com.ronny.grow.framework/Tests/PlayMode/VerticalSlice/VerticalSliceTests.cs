@@ -14,9 +14,8 @@ using UnityEngine.TestTools;
 
 namespace Grow.Framework.Tests.PlayMode {
     /// <summary>
-    /// The First Boot acceptance slice, run through the meta package: a game assembled from public
-    /// API only must reach Ready through the loading barrier and survive a restart with its saved
-    /// session intact.
+    /// The acceptance slice, run through the meta package: a game assembled from public API only must
+    /// reach Ready through the loading barrier and survive a restart with its saved session intact.
     /// </summary>
     /// <remarks>
     /// The slice lives in the test assembly on purpose. Unity does not import <c>Samples~</c>, so the
