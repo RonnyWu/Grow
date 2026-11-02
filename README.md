@@ -9,7 +9,8 @@ A modular Unity game framework built on a thin kernel.
   [`Packages/com.ronny.grow`](Packages/com.ronny.grow) · Store contracts
   [`Packages/com.ronny.grow.store.contracts`](Packages/com.ronny.grow.store.contracts) · Store
   implementation [`Packages/com.ronny.grow.store`](Packages/com.ronny.grow.store) · scene flow
-  [`Packages/com.ronny.grow.scenes`](Packages/com.ronny.grow.scenes) · optional editor lens
+  [`Packages/com.ronny.grow.scenes`](Packages/com.ronny.grow.scenes) · meta package
+  [`Packages/com.ronny.grow.framework`](Packages/com.ronny.grow.framework) · optional editor lens
   [`Packages/com.ronny.grow.lens`](Packages/com.ronny.grow.lens)
 - Unity: **2022.3 LTS**
 
@@ -30,7 +31,7 @@ Each layer depends only on the layers below it:
 | Layer | Contents | State |
 |---|---|---|
 | Game | Your own game / application code | — |
-| Framework | Meta package: assembles a recommended set of capabilities | Planned |
+| Framework | Meta package: assembles a recommended set of capabilities | In progress |
 | Capabilities | Implementation, plus a contract when a capability has more than one backend | In progress |
 | Kernel | Mechanisms — entry, modules, service registry, lifetime, loop, scheduling | In progress |
 | Core | Passive primitives (e.g. logging); no third-party dependencies | In progress |
