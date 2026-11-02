@@ -3,6 +3,7 @@
     "rootNamespace": "Grow.Samples",
     "references": [
         "Grow.Kernel",
+        "Grow.Store",
         "Grow.Store.Contracts",
         "Grow.Scenes",
         "Grow.Framework"
