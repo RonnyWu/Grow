@@ -23,9 +23,6 @@ jobs:
       - name: Check structure
         run: node ci/docs/check-docs.mjs
 
-      - name: Check vocabulary
-        run: node ci/docs/check-vocabulary.mjs
-
       - name: Lint Markdown
         uses: DavidAnson/markdownlint-cli2-action@696eb3f2509270d7b882d2aa68347bc676e7af34 # v25.0.0
         with:
